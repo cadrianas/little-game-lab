@@ -21895,10 +21895,11 @@ $("#helpButton").addEventListener("click", () => $("#howTo").showModal());
 $("#closeHowTo").addEventListener("click", () => $("#howTo").close());
 
 const resumedCompleteSet = restoreSession();
+const firstVisit = !localStorage.getItem(`${key}:welcomed`);
 renderRound();
 if (resumedCompleteSet) showResults();
-if (!localStorage.getItem(`${key}:welcomed`)) {
-  $("#howTo").showModal();
+else if (firstVisit) {
+  setFeedback("Start typing whenever you’re ready. New here? Tap ? for a quick example.");
   localStorage.setItem(`${key}:welcomed`, "1");
 }
 </script>
