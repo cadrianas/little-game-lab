@@ -1,0 +1,9 @@
+# Curated additions to Letter Economy's accepted dictionary.
+#
+# Format: lowercase_word [optional_frequency_rank]
+#
+# A word without a rank is accepted as a guess but cannot become a generated
+# answer. Add a conservative rank (lower means more common) only after editorial
+# review if the word should also be eligible as an answer or side-goal word.
+
+teaze

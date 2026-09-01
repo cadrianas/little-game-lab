@@ -1,0 +1,2031 @@
+{
+  "version": 2,
+  "bandKm": 1000,
+  "countries": [
+    {
+      "name": "Afghanistan",
+      "lat": 33,
+      "lon": 65
+    },
+    {
+      "name": "Albania",
+      "lat": 41,
+      "lon": 20
+    },
+    {
+      "name": "Algeria",
+      "lat": 28,
+      "lon": 3
+    },
+    {
+      "name": "Andorra",
+      "lat": 42.5,
+      "lon": 1.5
+    },
+    {
+      "name": "Angola",
+      "lat": -12.5,
+      "lon": 18.5
+    },
+    {
+      "name": "Antigua and Barbuda",
+      "lat": 17.05,
+      "lon": -61.8
+    },
+    {
+      "name": "Argentina",
+      "lat": -34,
+      "lon": -64
+    },
+    {
+      "name": "Armenia",
+      "lat": 40,
+      "lon": 45
+    },
+    {
+      "name": "Australia",
+      "lat": -27,
+      "lon": 133
+    },
+    {
+      "name": "Austria",
+      "lat": 47.33333333,
+      "lon": 13.33333333
+    },
+    {
+      "name": "Azerbaijan",
+      "lat": 40.5,
+      "lon": 47.5
+    },
+    {
+      "name": "Bahamas",
+      "lat": 24.25,
+      "lon": -76
+    },
+    {
+      "name": "Bahrain",
+      "lat": 26,
+      "lon": 50.55
+    },
+    {
+      "name": "Bangladesh",
+      "lat": 24,
+      "lon": 90
+    },
+    {
+      "name": "Barbados",
+      "lat": 13.16666666,
+      "lon": -59.53333333
+    },
+    {
+      "name": "Belarus",
+      "lat": 53,
+      "lon": 28
+    },
+    {
+      "name": "Belgium",
+      "lat": 50.83333333,
+      "lon": 4
+    },
+    {
+      "name": "Belize",
+      "lat": 17.25,
+      "lon": -88.75
+    },
+    {
+      "name": "Benin",
+      "lat": 9.5,
+      "lon": 2.25
+    },
+    {
+      "name": "Bhutan",
+      "lat": 27.5,
+      "lon": 90.5
+    },
+    {
+      "name": "Bolivia",
+      "lat": -17,
+      "lon": -65
+    },
+    {
+      "name": "Bosnia and Herzegovina",
+      "lat": 44,
+      "lon": 18
+    },
+    {
+      "name": "Botswana",
+      "lat": -22,
+      "lon": 24
+    },
+    {
+      "name": "Brazil",
+      "lat": -10,
+      "lon": -55
+    },
+    {
+      "name": "Brunei",
+      "lat": 4.5,
+      "lon": 114.66666666
+    },
+    {
+      "name": "Bulgaria",
+      "lat": 43,
+      "lon": 25
+    },
+    {
+      "name": "Burkina Faso",
+      "lat": 13,
+      "lon": -2
+    },
+    {
+      "name": "Burundi",
+      "lat": -3.5,
+      "lon": 30
+    },
+    {
+      "name": "Cambodia",
+      "lat": 13,
+      "lon": 105
+    },
+    {
+      "name": "Cameroon",
+      "lat": 6,
+      "lon": 12
+    },
+    {
+      "name": "Canada",
+      "lat": 60,
+      "lon": -95
+    },
+    {
+      "name": "Cape Verde",
+      "lat": 16,
+      "lon": -24
+    },
+    {
+      "name": "Central African Republic",
+      "lat": 7,
+      "lon": 21
+    },
+    {
+      "name": "Chad",
+      "lat": 15,
+      "lon": 19
+    },
+    {
+      "name": "Chile",
+      "lat": -30,
+      "lon": -71
+    },
+    {
+      "name": "China",
+      "lat": 35,
+      "lon": 105
+    },
+    {
+      "name": "Colombia",
+      "lat": 4,
+      "lon": -72
+    },
+    {
+      "name": "Comoros",
+      "lat": -12.16666666,
+      "lon": 44.25
+    },
+    {
+      "name": "Congo",
+      "lat": -1,
+      "lon": 15
+    },
+    {
+      "name": "Costa Rica",
+      "lat": 10,
+      "lon": -84
+    },
+    {
+      "name": "Croatia",
+      "lat": 45.16666666,
+      "lon": 15.5
+    },
+    {
+      "name": "Cuba",
+      "lat": 21.5,
+      "lon": -80
+    },
+    {
+      "name": "Cyprus",
+      "lat": 35,
+      "lon": 33
+    },
+    {
+      "name": "Czechia",
+      "lat": 49.75,
+      "lon": 15.5
+    },
+    {
+      "name": "DR Congo",
+      "lat": 0,
+      "lon": 25
+    },
+    {
+      "name": "Denmark",
+      "lat": 56,
+      "lon": 10
+    },
+    {
+      "name": "Djibouti",
+      "lat": 11.5,
+      "lon": 43
+    },
+    {
+      "name": "Dominica",
+      "lat": 15.41666666,
+      "lon": -61.33333333
+    },
+    {
+      "name": "Dominican Republic",
+      "lat": 19,
+      "lon": -70.66666666
+    },
+    {
+      "name": "Ecuador",
+      "lat": -2,
+      "lon": -77.5
+    },
+    {
+      "name": "Egypt",
+      "lat": 27,
+      "lon": 30
+    },
+    {
+      "name": "El Salvador",
+      "lat": 13.83333333,
+      "lon": -88.91666666
+    },
+    {
+      "name": "Equatorial Guinea",
+      "lat": 2,
+      "lon": 10
+    },
+    {
+      "name": "Eritrea",
+      "lat": 15,
+      "lon": 39
+    },
+    {
+      "name": "Estonia",
+      "lat": 59,
+      "lon": 26
+    },
+    {
+      "name": "Eswatini",
+      "lat": -26.5,
+      "lon": 31.5
+    },
+    {
+      "name": "Ethiopia",
+      "lat": 8,
+      "lon": 38
+    },
+    {
+      "name": "Fiji",
+      "lat": -18,
+      "lon": 175
+    },
+    {
+      "name": "Finland",
+      "lat": 64,
+      "lon": 26
+    },
+    {
+      "name": "France",
+      "lat": 46,
+      "lon": 2
+    },
+    {
+      "name": "Gabon",
+      "lat": -1,
+      "lon": 11.75
+    },
+    {
+      "name": "Gambia",
+      "lat": 13.46666666,
+      "lon": -16.56666666
+    },
+    {
+      "name": "Georgia",
+      "lat": 42,
+      "lon": 43.5
+    },
+    {
+      "name": "Germany",
+      "lat": 51,
+      "lon": 9
+    },
+    {
+      "name": "Ghana",
+      "lat": 8,
+      "lon": -2
+    },
+    {
+      "name": "Greece",
+      "lat": 39,
+      "lon": 22
+    },
+    {
+      "name": "Grenada",
+      "lat": 12.11666666,
+      "lon": -61.66666666
+    },
+    {
+      "name": "Guatemala",
+      "lat": 15.5,
+      "lon": -90.25
+    },
+    {
+      "name": "Guinea",
+      "lat": 11,
+      "lon": -10
+    },
+    {
+      "name": "Guinea-Bissau",
+      "lat": 12,
+      "lon": -15
+    },
+    {
+      "name": "Guyana",
+      "lat": 5,
+      "lon": -59
+    },
+    {
+      "name": "Haiti",
+      "lat": 19,
+      "lon": -72.41666666
+    },
+    {
+      "name": "Honduras",
+      "lat": 15,
+      "lon": -86.5
+    },
+    {
+      "name": "Hungary",
+      "lat": 47,
+      "lon": 20
+    },
+    {
+      "name": "Iceland",
+      "lat": 65,
+      "lon": -18
+    },
+    {
+      "name": "India",
+      "lat": 20,
+      "lon": 77
+    },
+    {
+      "name": "Indonesia",
+      "lat": -5,
+      "lon": 120
+    },
+    {
+      "name": "Iran",
+      "lat": 32,
+      "lon": 53
+    },
+    {
+      "name": "Iraq",
+      "lat": 33,
+      "lon": 44
+    },
+    {
+      "name": "Ireland",
+      "lat": 53,
+      "lon": -8
+    },
+    {
+      "name": "Israel",
+      "lat": 31.47,
+      "lon": 35.13
+    },
+    {
+      "name": "Italy",
+      "lat": 42.83333333,
+      "lon": 12.83333333
+    },
+    {
+      "name": "Ivory Coast",
+      "lat": 8,
+      "lon": -5
+    },
+    {
+      "name": "Jamaica",
+      "lat": 18.25,
+      "lon": -77.5
+    },
+    {
+      "name": "Japan",
+      "lat": 36,
+      "lon": 138
+    },
+    {
+      "name": "Jordan",
+      "lat": 31,
+      "lon": 36
+    },
+    {
+      "name": "Kazakhstan",
+      "lat": 48,
+      "lon": 68
+    },
+    {
+      "name": "Kenya",
+      "lat": 1,
+      "lon": 38
+    },
+    {
+      "name": "Kiribati",
+      "lat": 1.41666666,
+      "lon": 173
+    },
+    {
+      "name": "Kuwait",
+      "lat": 29.5,
+      "lon": 45.75
+    },
+    {
+      "name": "Kyrgyzstan",
+      "lat": 41,
+      "lon": 75
+    },
+    {
+      "name": "Laos",
+      "lat": 18,
+      "lon": 105
+    },
+    {
+      "name": "Latvia",
+      "lat": 57,
+      "lon": 25
+    },
+    {
+      "name": "Lebanon",
+      "lat": 33.83333333,
+      "lon": 35.83333333
+    },
+    {
+      "name": "Lesotho",
+      "lat": -29.5,
+      "lon": 28.5
+    },
+    {
+      "name": "Liberia",
+      "lat": 6.5,
+      "lon": -9.5
+    },
+    {
+      "name": "Libya",
+      "lat": 25,
+      "lon": 17
+    },
+    {
+      "name": "Liechtenstein",
+      "lat": 47.26666666,
+      "lon": 9.53333333
+    },
+    {
+      "name": "Lithuania",
+      "lat": 56,
+      "lon": 24
+    },
+    {
+      "name": "Luxembourg",
+      "lat": 49.75,
+      "lon": 6.16666666
+    },
+    {
+      "name": "Madagascar",
+      "lat": -20,
+      "lon": 47
+    },
+    {
+      "name": "Malawi",
+      "lat": -13.5,
+      "lon": 34
+    },
+    {
+      "name": "Malaysia",
+      "lat": 2.5,
+      "lon": 112.5
+    },
+    {
+      "name": "Maldives",
+      "lat": 3.25,
+      "lon": 73
+    },
+    {
+      "name": "Mali",
+      "lat": 17,
+      "lon": -4
+    },
+    {
+      "name": "Malta",
+      "lat": 35.83333333,
+      "lon": 14.58333333
+    },
+    {
+      "name": "Marshall Islands",
+      "lat": 9,
+      "lon": 168
+    },
+    {
+      "name": "Mauritania",
+      "lat": 20,
+      "lon": -12
+    },
+    {
+      "name": "Mauritius",
+      "lat": -20.28333333,
+      "lon": 57.55
+    },
+    {
+      "name": "Mexico",
+      "lat": 23,
+      "lon": -102
+    },
+    {
+      "name": "Micronesia",
+      "lat": 6.91666666,
+      "lon": 158.25
+    },
+    {
+      "name": "Moldova",
+      "lat": 47,
+      "lon": 29
+    },
+    {
+      "name": "Monaco",
+      "lat": 43.73333333,
+      "lon": 7.4
+    },
+    {
+      "name": "Mongolia",
+      "lat": 46,
+      "lon": 105
+    },
+    {
+      "name": "Montenegro",
+      "lat": 42.5,
+      "lon": 19.3
+    },
+    {
+      "name": "Morocco",
+      "lat": 32,
+      "lon": -5
+    },
+    {
+      "name": "Mozambique",
+      "lat": -18.25,
+      "lon": 35
+    },
+    {
+      "name": "Myanmar",
+      "lat": 22,
+      "lon": 98
+    },
+    {
+      "name": "Namibia",
+      "lat": -22,
+      "lon": 17
+    },
+    {
+      "name": "Nauru",
+      "lat": -0.53333333,
+      "lon": 166.91666666
+    },
+    {
+      "name": "Nepal",
+      "lat": 28,
+      "lon": 84
+    },
+    {
+      "name": "Netherlands",
+      "lat": 52.5,
+      "lon": 5.75
+    },
+    {
+      "name": "New Zealand",
+      "lat": -41,
+      "lon": 174
+    },
+    {
+      "name": "Nicaragua",
+      "lat": 13,
+      "lon": -85
+    },
+    {
+      "name": "Niger",
+      "lat": 16,
+      "lon": 8
+    },
+    {
+      "name": "Nigeria",
+      "lat": 10,
+      "lon": 8
+    },
+    {
+      "name": "North Korea",
+      "lat": 40,
+      "lon": 127
+    },
+    {
+      "name": "North Macedonia",
+      "lat": 41.83333333,
+      "lon": 22
+    },
+    {
+      "name": "Norway",
+      "lat": 62,
+      "lon": 10
+    },
+    {
+      "name": "Oman",
+      "lat": 21,
+      "lon": 57
+    },
+    {
+      "name": "Pakistan",
+      "lat": 30,
+      "lon": 70
+    },
+    {
+      "name": "Palau",
+      "lat": 7.5,
+      "lon": 134.5
+    },
+    {
+      "name": "Panama",
+      "lat": 9,
+      "lon": -80
+    },
+    {
+      "name": "Papua New Guinea",
+      "lat": -6,
+      "lon": 147
+    },
+    {
+      "name": "Paraguay",
+      "lat": -23,
+      "lon": -58
+    },
+    {
+      "name": "Peru",
+      "lat": -10,
+      "lon": -76
+    },
+    {
+      "name": "Philippines",
+      "lat": 13,
+      "lon": 122
+    },
+    {
+      "name": "Poland",
+      "lat": 52,
+      "lon": 20
+    },
+    {
+      "name": "Portugal",
+      "lat": 39.5,
+      "lon": -8
+    },
+    {
+      "name": "Qatar",
+      "lat": 25.5,
+      "lon": 51.25
+    },
+    {
+      "name": "Romania",
+      "lat": 46,
+      "lon": 25
+    },
+    {
+      "name": "Russia",
+      "lat": 60,
+      "lon": 100
+    },
+    {
+      "name": "Rwanda",
+      "lat": -2,
+      "lon": 30
+    },
+    {
+      "name": "Saint Kitts and Nevis",
+      "lat": 17.33333333,
+      "lon": -62.75
+    },
+    {
+      "name": "Saint Lucia",
+      "lat": 13.88333333,
+      "lon": -60.96666666
+    },
+    {
+      "name": "Saint Vincent and the Grenadines",
+      "lat": 13.25,
+      "lon": -61.2
+    },
+    {
+      "name": "Samoa",
+      "lat": -13.58333333,
+      "lon": -172.33333333
+    },
+    {
+      "name": "San Marino",
+      "lat": 43.76666666,
+      "lon": 12.41666666
+    },
+    {
+      "name": "Saudi Arabia",
+      "lat": 25,
+      "lon": 45
+    },
+    {
+      "name": "Senegal",
+      "lat": 14,
+      "lon": -14
+    },
+    {
+      "name": "Serbia",
+      "lat": 44,
+      "lon": 21
+    },
+    {
+      "name": "Seychelles",
+      "lat": -4.58333333,
+      "lon": 55.66666666
+    },
+    {
+      "name": "Sierra Leone",
+      "lat": 8.5,
+      "lon": -11.5
+    },
+    {
+      "name": "Singapore",
+      "lat": 1.36666666,
+      "lon": 103.8
+    },
+    {
+      "name": "Slovakia",
+      "lat": 48.66666666,
+      "lon": 19.5
+    },
+    {
+      "name": "Slovenia",
+      "lat": 46.11666666,
+      "lon": 14.81666666
+    },
+    {
+      "name": "Solomon Islands",
+      "lat": -8,
+      "lon": 159
+    },
+    {
+      "name": "Somalia",
+      "lat": 10,
+      "lon": 49
+    },
+    {
+      "name": "South Africa",
+      "lat": -29,
+      "lon": 24
+    },
+    {
+      "name": "South Korea",
+      "lat": 37,
+      "lon": 127.5
+    },
+    {
+      "name": "South Sudan",
+      "lat": 7,
+      "lon": 30
+    },
+    {
+      "name": "Spain",
+      "lat": 40,
+      "lon": -4
+    },
+    {
+      "name": "Sri Lanka",
+      "lat": 7,
+      "lon": 81
+    },
+    {
+      "name": "Sudan",
+      "lat": 15,
+      "lon": 30
+    },
+    {
+      "name": "Suriname",
+      "lat": 4,
+      "lon": -56
+    },
+    {
+      "name": "Sweden",
+      "lat": 62,
+      "lon": 15
+    },
+    {
+      "name": "Switzerland",
+      "lat": 47,
+      "lon": 8
+    },
+    {
+      "name": "Syria",
+      "lat": 35,
+      "lon": 38
+    },
+    {
+      "name": "São Tomé and Príncipe",
+      "lat": 1,
+      "lon": 7
+    },
+    {
+      "name": "Tajikistan",
+      "lat": 39,
+      "lon": 71
+    },
+    {
+      "name": "Tanzania",
+      "lat": -6,
+      "lon": 35
+    },
+    {
+      "name": "Thailand",
+      "lat": 15,
+      "lon": 100
+    },
+    {
+      "name": "Timor-Leste",
+      "lat": -8.83333333,
+      "lon": 125.91666666
+    },
+    {
+      "name": "Togo",
+      "lat": 8,
+      "lon": 1.16666666
+    },
+    {
+      "name": "Tonga",
+      "lat": -20,
+      "lon": -175
+    },
+    {
+      "name": "Trinidad and Tobago",
+      "lat": 11,
+      "lon": -61
+    },
+    {
+      "name": "Tunisia",
+      "lat": 34,
+      "lon": 9
+    },
+    {
+      "name": "Turkmenistan",
+      "lat": 40,
+      "lon": 60
+    },
+    {
+      "name": "Tuvalu",
+      "lat": -8,
+      "lon": 178
+    },
+    {
+      "name": "Türkiye",
+      "lat": 39,
+      "lon": 35
+    },
+    {
+      "name": "Uganda",
+      "lat": 1,
+      "lon": 32
+    },
+    {
+      "name": "Ukraine",
+      "lat": 49,
+      "lon": 32
+    },
+    {
+      "name": "United Arab Emirates",
+      "lat": 24,
+      "lon": 54
+    },
+    {
+      "name": "United Kingdom",
+      "lat": 54,
+      "lon": -2
+    },
+    {
+      "name": "United States",
+      "lat": 38,
+      "lon": -97
+    },
+    {
+      "name": "Uruguay",
+      "lat": -33,
+      "lon": -56
+    },
+    {
+      "name": "Uzbekistan",
+      "lat": 41,
+      "lon": 64
+    },
+    {
+      "name": "Vanuatu",
+      "lat": -16,
+      "lon": 167
+    },
+    {
+      "name": "Vatican City",
+      "lat": 41.9,
+      "lon": 12.45
+    },
+    {
+      "name": "Venezuela",
+      "lat": 8,
+      "lon": -66
+    },
+    {
+      "name": "Vietnam",
+      "lat": 16.16666666,
+      "lon": 107.83333333
+    },
+    {
+      "name": "Yemen",
+      "lat": 15,
+      "lon": 48
+    },
+    {
+      "name": "Zambia",
+      "lat": -15,
+      "lon": 30
+    },
+    {
+      "name": "Zimbabwe",
+      "lat": -20,
+      "lon": 30
+    }
+  ],
+  "tutorial": {
+    "answer": "Panama",
+    "clues": [
+      {
+        "anchor": "Spain",
+        "minKm": 8000,
+        "maxKm": 8999,
+        "signal": "Cool",
+        "candidates": 19
+      },
+      {
+        "anchor": "United States",
+        "minKm": 3000,
+        "maxKm": 3999,
+        "signal": "Warm",
+        "candidates": 3
+      },
+      {
+        "anchor": "Thailand",
+        "minKm": 17000,
+        "maxKm": 17999,
+        "signal": "Distant",
+        "candidates": 2
+      },
+      {
+        "anchor": "Portugal",
+        "minKm": 7000,
+        "maxKm": 7999,
+        "signal": "Cool",
+        "candidates": 1
+      }
+    ]
+  },
+  "sets": [
+    {
+      "id": 1,
+      "rounds": [
+        {
+          "answer": "Croatia",
+          "clues": [
+            {
+              "anchor": "Ireland",
+              "minKm": 1000,
+              "maxKm": 1999,
+              "signal": "Hot",
+              "candidates": 22
+            },
+            {
+              "anchor": "Sri Lanka",
+              "minKm": 7000,
+              "maxKm": 7999,
+              "signal": "Cool",
+              "candidates": 9
+            },
+            {
+              "anchor": "Nigeria",
+              "minKm": 3000,
+              "maxKm": 3999,
+              "signal": "Warm",
+              "candidates": 4
+            },
+            {
+              "anchor": "Vietnam",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Cambodia",
+          "clues": [
+            {
+              "anchor": "Norway",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 20
+            },
+            {
+              "anchor": "Cameroon",
+              "minKm": 10000,
+              "maxKm": 10999,
+              "signal": "Distant",
+              "candidates": 6
+            },
+            {
+              "anchor": "Türkiye",
+              "minKm": 7000,
+              "maxKm": 7999,
+              "signal": "Cool",
+              "candidates": 3
+            },
+            {
+              "anchor": "Colombia",
+              "minKm": 18000,
+              "maxKm": 18999,
+              "signal": "Distant",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Cameroon",
+          "clues": [
+            {
+              "anchor": "Greece",
+              "minKm": 3000,
+              "maxKm": 3999,
+              "signal": "Warm",
+              "candidates": 21
+            },
+            {
+              "anchor": "Madagascar",
+              "minKm": 4000,
+              "maxKm": 4999,
+              "signal": "Warm",
+              "candidates": 4
+            },
+            {
+              "anchor": "Germany",
+              "minKm": 5000,
+              "maxKm": 5999,
+              "signal": "Warm",
+              "candidates": 3
+            },
+            {
+              "anchor": "Uruguay",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Mexico",
+          "clues": [
+            {
+              "anchor": "Ireland",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 19
+            },
+            {
+              "anchor": "Croatia",
+              "minKm": 10000,
+              "maxKm": 10999,
+              "signal": "Distant",
+              "candidates": 3
+            },
+            {
+              "anchor": "Czechia",
+              "minKm": 9000,
+              "maxKm": 9999,
+              "signal": "Cool",
+              "candidates": 2
+            },
+            {
+              "anchor": "Dominican Republic",
+              "minKm": 3000,
+              "maxKm": 3999,
+              "signal": "Warm",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Iceland",
+          "clues": [
+            {
+              "anchor": "Croatia",
+              "minKm": 2000,
+              "maxKm": 2999,
+              "signal": "Hot",
+              "candidates": 15
+            },
+            {
+              "anchor": "Switzerland",
+              "minKm": 2000,
+              "maxKm": 2999,
+              "signal": "Hot",
+              "candidates": 11
+            },
+            {
+              "anchor": "Ecuador",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 2
+            },
+            {
+              "anchor": "Tunisia",
+              "minKm": 3000,
+              "maxKm": 3999,
+              "signal": "Warm",
+              "candidates": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "rounds": [
+        {
+          "answer": "Thailand",
+          "clues": [
+            {
+              "anchor": "Netherlands",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 18
+            },
+            {
+              "anchor": "Switzerland",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 8
+            },
+            {
+              "anchor": "Indonesia",
+              "minKm": 3000,
+              "maxKm": 3999,
+              "signal": "Warm",
+              "candidates": 2
+            },
+            {
+              "anchor": "France",
+              "minKm": 9000,
+              "maxKm": 9999,
+              "signal": "Cool",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Romania",
+          "clues": [
+            {
+              "anchor": "Portugal",
+              "minKm": 2000,
+              "maxKm": 2999,
+              "signal": "Hot",
+              "candidates": 23
+            },
+            {
+              "anchor": "Cameroon",
+              "minKm": 4000,
+              "maxKm": 4999,
+              "signal": "Warm",
+              "candidates": 10
+            },
+            {
+              "anchor": "Thailand",
+              "minKm": 7000,
+              "maxKm": 7999,
+              "signal": "Cool",
+              "candidates": 4
+            },
+            {
+              "anchor": "Brazil",
+              "minKm": 10000,
+              "maxKm": 10999,
+              "signal": "Distant",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Spain",
+          "clues": [
+            {
+              "anchor": "Tunisia",
+              "minKm": 1000,
+              "maxKm": 1999,
+              "signal": "Hot",
+              "candidates": 28
+            },
+            {
+              "anchor": "Nepal",
+              "minKm": 7000,
+              "maxKm": 7999,
+              "signal": "Cool",
+              "candidates": 3
+            },
+            {
+              "anchor": "Nigeria",
+              "minKm": 3000,
+              "maxKm": 3999,
+              "signal": "Warm",
+              "candidates": 2
+            },
+            {
+              "anchor": "Belgium",
+              "minKm": 1000,
+              "maxKm": 1999,
+              "signal": "Hot",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Israel",
+          "clues": [
+            {
+              "anchor": "Tunisia",
+              "minKm": 2000,
+              "maxKm": 2999,
+              "signal": "Hot",
+              "candidates": 25
+            },
+            {
+              "anchor": "Pakistan",
+              "minKm": 3000,
+              "maxKm": 3999,
+              "signal": "Warm",
+              "candidates": 9
+            },
+            {
+              "anchor": "Indonesia",
+              "minKm": 9000,
+              "maxKm": 9999,
+              "signal": "Cool",
+              "candidates": 5
+            },
+            {
+              "anchor": "Japan",
+              "minKm": 9000,
+              "maxKm": 9999,
+              "signal": "Cool",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Colombia",
+          "clues": [
+            {
+              "anchor": "Iceland",
+              "minKm": 7000,
+              "maxKm": 7999,
+              "signal": "Cool",
+              "candidates": 26
+            },
+            {
+              "anchor": "Germany",
+              "minKm": 9000,
+              "maxKm": 9999,
+              "signal": "Cool",
+              "candidates": 9
+            },
+            {
+              "anchor": "Jordan",
+              "minKm": 11000,
+              "maxKm": 11999,
+              "signal": "Distant",
+              "candidates": 2
+            },
+            {
+              "anchor": "Japan",
+              "minKm": 14000,
+              "maxKm": 14999,
+              "signal": "Distant",
+              "candidates": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "rounds": [
+        {
+          "answer": "Cuba",
+          "clues": [
+            {
+              "anchor": "Ireland",
+              "minKm": 6000,
+              "maxKm": 6999,
+              "signal": "Cool",
+              "candidates": 28
+            },
+            {
+              "anchor": "Bolivia",
+              "minKm": 4000,
+              "maxKm": 4999,
+              "signal": "Warm",
+              "candidates": 4
+            },
+            {
+              "anchor": "Ghana",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 2
+            },
+            {
+              "anchor": "Switzerland",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Bolivia",
+          "clues": [
+            {
+              "anchor": "Tunisia",
+              "minKm": 9000,
+              "maxKm": 9999,
+              "signal": "Cool",
+              "candidates": 16
+            },
+            {
+              "anchor": "Czechia",
+              "minKm": 10000,
+              "maxKm": 10999,
+              "signal": "Distant",
+              "candidates": 3
+            },
+            {
+              "anchor": "Israel",
+              "minKm": 11000,
+              "maxKm": 11999,
+              "signal": "Distant",
+              "candidates": 2
+            },
+            {
+              "anchor": "Singapore",
+              "minKm": 17000,
+              "maxKm": 17999,
+              "signal": "Distant",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Canada",
+          "clues": [
+            {
+              "anchor": "Chile",
+              "minKm": 10000,
+              "maxKm": 10999,
+              "signal": "Distant",
+              "candidates": 16
+            },
+            {
+              "anchor": "France",
+              "minKm": 6000,
+              "maxKm": 6999,
+              "signal": "Cool",
+              "candidates": 3
+            },
+            {
+              "anchor": "New Zealand",
+              "minKm": 13000,
+              "maxKm": 13999,
+              "signal": "Distant",
+              "candidates": 2
+            },
+            {
+              "anchor": "Thailand",
+              "minKm": 11000,
+              "maxKm": 11999,
+              "signal": "Distant",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Argentina",
+          "clues": [
+            {
+              "anchor": "Tanzania",
+              "minKm": 10000,
+              "maxKm": 10999,
+              "signal": "Distant",
+              "candidates": 16
+            },
+            {
+              "anchor": "Sri Lanka",
+              "minKm": 15000,
+              "maxKm": 15999,
+              "signal": "Distant",
+              "candidates": 11
+            },
+            {
+              "anchor": "India",
+              "minKm": 15000,
+              "maxKm": 15999,
+              "signal": "Distant",
+              "candidates": 2
+            },
+            {
+              "anchor": "Türkiye",
+              "minKm": 13000,
+              "maxKm": 13999,
+              "signal": "Distant",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Slovakia",
+          "clues": [
+            {
+              "anchor": "Thailand",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 33
+            },
+            {
+              "anchor": "France",
+              "minKm": 1000,
+              "maxKm": 1999,
+              "signal": "Hot",
+              "candidates": 12
+            },
+            {
+              "anchor": "Greece",
+              "minKm": 1000,
+              "maxKm": 1999,
+              "signal": "Hot",
+              "candidates": 3
+            },
+            {
+              "anchor": "India",
+              "minKm": 5000,
+              "maxKm": 5999,
+              "signal": "Warm",
+              "candidates": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "rounds": [
+        {
+          "answer": "Ecuador",
+          "clues": [
+            {
+              "anchor": "Cameroon",
+              "minKm": 9000,
+              "maxKm": 9999,
+              "signal": "Cool",
+              "candidates": 15
+            },
+            {
+              "anchor": "Mexico",
+              "minKm": 3000,
+              "maxKm": 3999,
+              "signal": "Warm",
+              "candidates": 4
+            },
+            {
+              "anchor": "United States",
+              "minKm": 4000,
+              "maxKm": 4999,
+              "signal": "Warm",
+              "candidates": 2
+            },
+            {
+              "anchor": "China",
+              "minKm": 16000,
+              "maxKm": 16999,
+              "signal": "Distant",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Ukraine",
+          "clues": [
+            {
+              "anchor": "Switzerland",
+              "minKm": 1000,
+              "maxKm": 1999,
+              "signal": "Hot",
+              "candidates": 23
+            },
+            {
+              "anchor": "Denmark",
+              "minKm": 1000,
+              "maxKm": 1999,
+              "signal": "Hot",
+              "candidates": 11
+            },
+            {
+              "anchor": "Croatia",
+              "minKm": 1000,
+              "maxKm": 1999,
+              "signal": "Hot",
+              "candidates": 5
+            },
+            {
+              "anchor": "Philippines",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Norway",
+          "clues": [
+            {
+              "anchor": "Sri Lanka",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 20
+            },
+            {
+              "anchor": "Bulgaria",
+              "minKm": 2000,
+              "maxKm": 2999,
+              "signal": "Hot",
+              "candidates": 4
+            },
+            {
+              "anchor": "United States",
+              "minKm": 7000,
+              "maxKm": 7999,
+              "signal": "Cool",
+              "candidates": 2
+            },
+            {
+              "anchor": "Japan",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Netherlands",
+          "clues": [
+            {
+              "anchor": "Czechia",
+              "minKm": 0,
+              "maxKm": 999,
+              "signal": "Near",
+              "candidates": 23
+            },
+            {
+              "anchor": "Sri Lanka",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 8
+            },
+            {
+              "anchor": "Panama",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 3
+            },
+            {
+              "anchor": "Tunisia",
+              "minKm": 2000,
+              "maxKm": 2999,
+              "signal": "Hot",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "South Africa",
+          "clues": [
+            {
+              "anchor": "Cuba",
+              "minKm": 12000,
+              "maxKm": 12999,
+              "signal": "Distant",
+              "candidates": 32
+            },
+            {
+              "anchor": "Mexico",
+              "minKm": 14000,
+              "maxKm": 14999,
+              "signal": "Distant",
+              "candidates": 11
+            },
+            {
+              "anchor": "Cameroon",
+              "minKm": 4000,
+              "maxKm": 4999,
+              "signal": "Warm",
+              "candidates": 2
+            },
+            {
+              "anchor": "Ukraine",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "rounds": [
+        {
+          "answer": "Tunisia",
+          "clues": [
+            {
+              "anchor": "Nepal",
+              "minKm": 7000,
+              "maxKm": 7999,
+              "signal": "Cool",
+              "candidates": 15
+            },
+            {
+              "anchor": "Argentina",
+              "minKm": 10000,
+              "maxKm": 10999,
+              "signal": "Distant",
+              "candidates": 3
+            },
+            {
+              "anchor": "Ecuador",
+              "minKm": 9000,
+              "maxKm": 9999,
+              "signal": "Cool",
+              "candidates": 2
+            },
+            {
+              "anchor": "Canada",
+              "minKm": 7000,
+              "maxKm": 7999,
+              "signal": "Cool",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Uganda",
+          "clues": [
+            {
+              "anchor": "Bolivia",
+              "minKm": 10000,
+              "maxKm": 10999,
+              "signal": "Distant",
+              "candidates": 31
+            },
+            {
+              "anchor": "Thailand",
+              "minKm": 7000,
+              "maxKm": 7999,
+              "signal": "Cool",
+              "candidates": 8
+            },
+            {
+              "anchor": "France",
+              "minKm": 5000,
+              "maxKm": 5999,
+              "signal": "Warm",
+              "candidates": 2
+            },
+            {
+              "anchor": "Netherlands",
+              "minKm": 6000,
+              "maxKm": 6999,
+              "signal": "Cool",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Zambia",
+          "clues": [
+            {
+              "anchor": "Ethiopia",
+              "minKm": 2000,
+              "maxKm": 2999,
+              "signal": "Hot",
+              "candidates": 20
+            },
+            {
+              "anchor": "Spain",
+              "minKm": 7000,
+              "maxKm": 7999,
+              "signal": "Cool",
+              "candidates": 5
+            },
+            {
+              "anchor": "Thailand",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 2
+            },
+            {
+              "anchor": "Sweden",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Denmark",
+          "clues": [
+            {
+              "anchor": "Italy",
+              "minKm": 1000,
+              "maxKm": 1999,
+              "signal": "Hot",
+              "candidates": 19
+            },
+            {
+              "anchor": "Finland",
+              "minKm": 1000,
+              "maxKm": 1999,
+              "signal": "Hot",
+              "candidates": 8
+            },
+            {
+              "anchor": "Czechia",
+              "minKm": 0,
+              "maxKm": 999,
+              "signal": "Near",
+              "candidates": 5
+            },
+            {
+              "anchor": "Madagascar",
+              "minKm": 9000,
+              "maxKm": 9999,
+              "signal": "Cool",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Peru",
+          "clues": [
+            {
+              "anchor": "Colombia",
+              "minKm": 1000,
+              "maxKm": 1999,
+              "signal": "Hot",
+              "candidates": 17
+            },
+            {
+              "anchor": "Philippines",
+              "minKm": 18000,
+              "maxKm": 18999,
+              "signal": "Distant",
+              "candidates": 3
+            },
+            {
+              "anchor": "Canada",
+              "minKm": 7000,
+              "maxKm": 7999,
+              "signal": "Cool",
+              "candidates": 2
+            },
+            {
+              "anchor": "New Zealand",
+              "minKm": 10000,
+              "maxKm": 10999,
+              "signal": "Distant",
+              "candidates": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "rounds": [
+        {
+          "answer": "Germany",
+          "clues": [
+            {
+              "anchor": "New Zealand",
+              "minKm": 18000,
+              "maxKm": 18999,
+              "signal": "Distant",
+              "candidates": 20
+            },
+            {
+              "anchor": "Egypt",
+              "minKm": 3000,
+              "maxKm": 3999,
+              "signal": "Warm",
+              "candidates": 5
+            },
+            {
+              "anchor": "Mexico",
+              "minKm": 9000,
+              "maxKm": 9999,
+              "signal": "Cool",
+              "candidates": 4
+            },
+            {
+              "anchor": "Hungary",
+              "minKm": 0,
+              "maxKm": 999,
+              "signal": "Near",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Singapore",
+          "clues": [
+            {
+              "anchor": "Madagascar",
+              "minKm": 6000,
+              "maxKm": 6999,
+              "signal": "Cool",
+              "candidates": 19
+            },
+            {
+              "anchor": "South Africa",
+              "minKm": 9000,
+              "maxKm": 9999,
+              "signal": "Cool",
+              "candidates": 3
+            },
+            {
+              "anchor": "Peru",
+              "minKm": 19000,
+              "maxKm": 19999,
+              "signal": "Distant",
+              "candidates": 2
+            },
+            {
+              "anchor": "Sweden",
+              "minKm": 9000,
+              "maxKm": 9999,
+              "signal": "Cool",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Japan",
+          "clues": [
+            {
+              "anchor": "Mexico",
+              "minKm": 10000,
+              "maxKm": 10999,
+              "signal": "Distant",
+              "candidates": 32
+            },
+            {
+              "anchor": "Dominican Republic",
+              "minKm": 13000,
+              "maxKm": 13999,
+              "signal": "Distant",
+              "candidates": 5
+            },
+            {
+              "anchor": "Colombia",
+              "minKm": 14000,
+              "maxKm": 14999,
+              "signal": "Distant",
+              "candidates": 2
+            },
+            {
+              "anchor": "Malaysia",
+              "minKm": 4000,
+              "maxKm": 4999,
+              "signal": "Warm",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Laos",
+          "clues": [
+            {
+              "anchor": "Mexico",
+              "minKm": 14000,
+              "maxKm": 14999,
+              "signal": "Distant",
+              "candidates": 23
+            },
+            {
+              "anchor": "Tanzania",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 3
+            },
+            {
+              "anchor": "Uruguay",
+              "minKm": 17000,
+              "maxKm": 17999,
+              "signal": "Distant",
+              "candidates": 2
+            },
+            {
+              "anchor": "Morocco",
+              "minKm": 10000,
+              "maxKm": 10999,
+              "signal": "Distant",
+              "candidates": 1
+            }
+          ]
+        },
+        {
+          "answer": "Estonia",
+          "clues": [
+            {
+              "anchor": "United States",
+              "minKm": 8000,
+              "maxKm": 8999,
+              "signal": "Cool",
+              "candidates": 30
+            },
+            {
+              "anchor": "Poland",
+              "minKm": 0,
+              "maxKm": 999,
+              "signal": "Near",
+              "candidates": 13
+            },
+            {
+              "anchor": "Austria",
+              "minKm": 1000,
+              "maxKm": 1999,
+              "signal": "Hot",
+              "candidates": 4
+            },
+            {
+              "anchor": "Cameroon",
+              "minKm": 6000,
+              "maxKm": 6999,
+              "signal": "Cool",
+              "candidates": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

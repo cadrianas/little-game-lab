@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#17162b">
+<meta name="description" content="Word Orbit is a word-connection puzzle. Find the word linked to every clue.">
+<title>Word Orbit — Playtest</title>
+<style>
+  :root {
+    --space: #17162b;
+    --space-2: #201e39;
+    --paper: #f4f0e6;
+    --paper-2: #e8e1d2;
+    --ink: #1b1930;
+    --muted: #777285;
+    --line: #aca5b3;
+    --violet: #6556c8;
+    --violet-dark: #3d347f;
+    --sun: #ffca57;
+    --coral: #ef705e;
+    --mint: #6ed4b3;
+    --white: #fffdf7;
+  }
+
+  * { box-sizing: border-box; }
+  html { color-scheme: dark; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--space);
+    color: var(--paper);
+    font-family: ui-rounded, "Arial Rounded MT Bold", "Avenir Next", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button, input { font: inherit; }
+  button { cursor: pointer; }
+  button:focus-visible, input:focus-visible {
+    outline: 3px solid var(--sun);
+    outline-offset: 3px;
+  }
+
+  .stars, .stars::before, .stars::after {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    content: "";
+    background-image:
+      radial-gradient(circle at 8% 14%, rgba(255,255,255,.65) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 78% 9%, rgba(255,202,87,.7) 0 1.5px, transparent 2px),
+      radial-gradient(circle at 93% 42%, rgba(255,255,255,.45) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 14% 72%, rgba(110,212,179,.55) 0 1.5px, transparent 2px),
+      radial-gradient(circle at 72% 82%, rgba(255,255,255,.5) 0 1px, transparent 1.5px);
+  }
+  .stars::before { transform: rotate(37deg) scale(.83); opacity: .55; }
+  .stars::after { transform: rotate(-21deg) scale(.67); opacity: .35; }
+
+  .shell {
+    width: min(100%, 66rem);
+    margin: 0 auto;
+    padding: 1.15rem clamp(1rem, 4vw, 2rem) 3rem;
+    position: relative;
+  }
+
+  .masthead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .brand { display: flex; align-items: center; gap: .72rem; }
+  .brand-mark {
+    width: 2.55rem;
+    height: 2.55rem;
+    border: 2px solid var(--sun);
+    border-radius: 50%;
+    position: relative;
+  }
+  .brand-mark::before {
+    content: "";
+    position: absolute;
+    width: .72rem;
+    height: .72rem;
+    background: var(--sun);
+    border-radius: 50%;
+    left: .78rem;
+    top: .78rem;
+  }
+  .brand-mark::after {
+    content: "";
+    position: absolute;
+    width: 3rem;
+    height: .78rem;
+    border: 2px solid var(--mint);
+    border-radius: 50%;
+    left: -.38rem;
+    top: .72rem;
+    transform: rotate(-18deg);
+  }
+  .brand h1 { margin: 0; font-size: clamp(1.25rem, 4vw, 1.7rem); letter-spacing: -.035em; }
+  .brand p { margin: -.1rem 0 0; color: #aaa4c1; font-size: .72rem; letter-spacing: .09em; text-transform: uppercase; }
+  .icon-button {
+    width: 2.4rem;
+    height: 2.4rem;
+    border: 1px solid #4b4769;
+    border-radius: 50%;
+    background: var(--space-2);
+    color: var(--paper);
+    font-weight: 800;
+  }
+
+  .game-card {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 1.65rem;
+    padding: clamp(1.1rem, 4vw, 2rem);
+    box-shadow: 0 1.3rem 4rem rgba(0,0,0,.28);
+    overflow: hidden;
+    position: relative;
+  }
+  .game-card::after {
+    content: "";
+    position: absolute;
+    width: 9rem;
+    height: 9rem;
+    border: 1px solid rgba(101,86,200,.16);
+    border-radius: 50%;
+    right: -4rem;
+    top: -4rem;
+  }
+
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    z-index: 1;
+  }
+  .eyebrow { margin: 0; color: var(--violet-dark); font-weight: 800; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
+  .set-picker { display: flex; align-items: center; gap: .4rem; }
+  .set-picker button {
+    width: 1.9rem; height: 1.9rem; border: 1px solid #cec7d0; border-radius: 50%;
+    background: transparent; color: var(--ink); line-height: 1;
+  }
+  .set-picker button:disabled { opacity: .3; cursor: default; }
+  .set-name { min-width: 5.7rem; text-align: center; color: var(--muted); font-size: .78rem; font-weight: 700; }
+  .mode-picker {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .35rem;
+    max-width: 24rem;
+    margin: .8rem auto 0;
+    padding: .28rem;
+    border: 1px solid #d2cbd3;
+    border-radius: 999px;
+    background: var(--paper-2);
+    position: relative;
+    z-index: 1;
+  }
+  .mode-picker button {
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    padding: .48rem .65rem;
+    font-size: .74rem;
+    font-weight: 900;
+  }
+  .mode-picker button.active { background: var(--violet-dark); color: white; box-shadow: 0 .2rem .5rem rgba(61,52,127,.2); }
+
+  .progress {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    margin: .9rem 0 .2rem;
+  }
+  .progress-dot {
+    width: .68rem; height: .68rem; border: 2px solid #c4bdc8; border-radius: 50%;
+    background: transparent; position: relative;
+  }
+  .progress-dot.current { width: 1.05rem; height: 1.05rem; background: var(--sun); border-color: var(--ink); }
+  .progress-dot.done { background: var(--mint); border-color: var(--violet-dark); }
+  .progress-line { height: 1px; width: 1.15rem; background: #cfc8cc; }
+
+  .prompt { text-align: center; margin: .5rem 0 0; }
+  .prompt h2 { margin: 0; font-size: clamp(1.3rem, 4vw, 1.7rem); letter-spacing: -.03em; }
+  .prompt p { color: var(--muted); margin: .25rem 0 0; font-size: .88rem; }
+
+  .orbit {
+    width: min(100%, 36rem);
+    height: 27rem;
+    margin: .4rem auto 0;
+    position: relative;
+  }
+  .orbit-ring {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 70%; height: 58%;
+    transform: translate(-50%, -50%) rotate(-9deg);
+    border: 1px dashed #c5bdc8;
+    border-radius: 50%;
+  }
+  .orbit-ring::after {
+    content: "";
+    position: absolute;
+    width: .62rem; height: .62rem; border-radius: 50%; background: var(--violet);
+    right: 11%; top: 5%; box-shadow: 0 0 0 5px var(--paper);
+  }
+  .clue {
+    position: absolute;
+    width: 8.6rem;
+    min-height: 4.35rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: var(--white);
+    border: 1px solid #cdc6cf;
+    border-radius: .95rem;
+    box-shadow: 0 .35rem .9rem rgba(27,25,48,.08);
+    z-index: 2;
+    transition: opacity .25s, transform .25s, border-color .2s;
+  }
+  .clue.top { top: .35rem; left: 50%; transform: translateX(-50%); }
+  .clue.bottom { bottom: .2rem; left: 50%; transform: translateX(-50%); }
+  .clue.left { top: 50%; left: 0; transform: translateY(-50%); }
+  .clue.right { top: 50%; right: 0; transform: translateY(-50%); }
+  .clue.hidden { opacity: 0; pointer-events: none; transform: translateX(-50%) scale(.75); }
+  .clue.correct-link { border-color: var(--mint); box-shadow: 0 0 0 3px rgba(110,212,179,.25); }
+  .clue.wrong-link { border-color: var(--coral); }
+  .relation { color: var(--violet-dark); font-size: .64rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+  .clue-word { font-size: 1.25rem; font-weight: 900; letter-spacing: .08em; margin-top: .12rem; }
+
+  .center {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 11rem;
+    min-height: 9.3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    background: var(--violet-dark);
+    color: white;
+    border: .48rem solid var(--paper-2);
+    border-radius: 50%;
+    z-index: 3;
+    box-shadow: 0 .7rem 1.5rem rgba(61,52,127,.28);
+  }
+  .center::before {
+    content: "";
+    position: absolute; inset: -.82rem;
+    border: 1px solid rgba(61,52,127,.35); border-radius: 50%;
+  }
+  .center-label { font-size: .62rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; color: #c7c1f5; }
+  .answer-input {
+    width: 100%;
+    border: 0;
+    border-bottom: 2px solid #a9a0e7;
+    background: transparent;
+    color: white;
+    text-align: center;
+    text-transform: uppercase;
+    font-weight: 900;
+    letter-spacing: .09em;
+    font-size: 1.45rem;
+    padding: .25rem 0 .18rem;
+    border-radius: 0;
+  }
+  .answer-input::placeholder { color: #9288d0; letter-spacing: .04em; }
+  .answer-input:disabled { opacity: 1; }
+  .submit {
+    margin-top: .62rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--sun);
+    color: var(--ink);
+    font-size: .75rem;
+    font-weight: 900;
+    padding: .5rem .9rem;
+  }
+
+  .feedback {
+    min-height: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: .45rem;
+    color: var(--muted);
+    text-align: center;
+    font-size: .86rem;
+  }
+  .feedback.error { color: #a13930; font-weight: 700; }
+  .feedback.success { color: #276f5b; font-weight: 800; }
+  .feedback .new-clue { color: var(--violet-dark); background: #e7e2ff; border-radius: 999px; padding: .12rem .48rem; font-size: .7rem; }
+  .rescue-clue {
+    width: fit-content;
+    margin: -.1rem auto .55rem;
+    padding: .55rem .8rem;
+    border: 1px solid #bcb2df;
+    border-radius: .8rem;
+    background: #ece8ff;
+    color: var(--violet-dark);
+    text-align: center;
+  }
+  .rescue-clue[hidden] { display: none; }
+  .rescue-clue .relation { display: block; }
+  .rescue-clue .clue-word { display: block; }
+  .actions { display: flex; justify-content: center; gap: .65rem; min-height: 2.8rem; }
+  .primary, .secondary {
+    border-radius: 999px;
+    padding: .72rem 1.15rem;
+    font-weight: 900;
+    border: 1px solid var(--violet-dark);
+  }
+  .primary { background: var(--violet-dark); color: white; }
+  .secondary { background: transparent; color: var(--violet-dark); }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: .45rem;
+    margin-top: .8rem;
+  }
+  .legend span { border: 1px solid #cfc8d0; color: var(--muted); border-radius: 999px; padding: .25rem .55rem; font-size: .7rem; }
+  .legend b { color: var(--violet-dark); }
+
+  .results { display: none; text-align: center; padding: 2rem .5rem .8rem; }
+  .results.show { display: block; }
+  .results-planet {
+    width: 7.5rem; height: 7.5rem; border-radius: 50%; background: var(--sun); margin: .8rem auto 1.4rem;
+    position: relative; display: grid; place-items: center; color: var(--ink); font-size: 2.3rem; font-weight: 900;
+  }
+  .results-planet::after {
+    content: ""; position: absolute; width: 10rem; height: 2.1rem; border: .55rem solid var(--violet);
+    border-radius: 50%; transform: rotate(-13deg);
+  }
+  .results h2 { font-size: 2rem; margin: 0; letter-spacing: -.04em; }
+  .results p { color: var(--muted); margin: .4rem auto 1.2rem; }
+  .score-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: .6rem; max-width: 25rem; margin: 0 auto 1.4rem; }
+  .score { background: var(--white); border: 1px solid #d5cfd5; border-radius: .8rem; padding: .75rem .35rem; }
+  .score strong { display: block; font-size: 1.35rem; color: var(--violet-dark); }
+  .score span { font-size: .65rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .result-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: .6rem; }
+
+  dialog {
+    width: min(calc(100% - 2rem), 31rem);
+    border: 0;
+    border-radius: 1.35rem;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    box-shadow: 0 2rem 5rem rgba(0,0,0,.45);
+  }
+  dialog::backdrop { background: rgba(13,12,28,.76); }
+  .howto { padding: 1.5rem; }
+  .howto h2 { margin: 0; font-size: 1.6rem; }
+  .howto > p { color: var(--muted); margin: .35rem 0 1.2rem; }
+  .example { background: var(--white); border: 1px solid #d4cdd5; border-radius: 1rem; padding: 1rem; }
+  .example-center { width: fit-content; margin: 0 auto .75rem; background: var(--violet-dark); color: white; border-radius: 999px; padding: .45rem .9rem; font-weight: 900; letter-spacing: .08em; }
+  .example-row { display: grid; grid-template-columns: 1fr auto; gap: .75rem; padding: .48rem 0; border-top: 1px solid #e4dee2; }
+  .example-row b { color: var(--violet-dark); }
+  .howto .primary { width: 100%; margin-top: 1rem; }
+
+  .shake { animation: shake .3s linear; }
+  .pop { animation: pop .42s ease-out; }
+  @keyframes shake { 25% { transform: translate(-53%,-50%); } 75% { transform: translate(-47%,-50%); } }
+  @keyframes pop { 0% { transform: translate(-50%,-50%) scale(.9); } 65% { transform: translate(-50%,-50%) scale(1.06); } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+  @media (max-width: 580px) {
+    .shell { padding-inline: .75rem; }
+    .game-card { border-radius: 1.25rem; padding-inline: .8rem; }
+    .orbit { height: 25.3rem; }
+    .clue { width: 7.25rem; min-height: 3.9rem; }
+    .clue-word { font-size: 1.05rem; }
+    .relation { font-size: .55rem; }
+    .center { width: 9.5rem; min-height: 8.5rem; }
+    .clue.left { left: -.1rem; }
+    .clue.right { right: -.1rem; }
+    .brand p { display: none; }
+  }
+
+  @media (max-width: 390px) {
+    .clue { width: 6.6rem; }
+    .center { width: 8.8rem; min-height: 8rem; }
+    .answer-input { font-size: 1.25rem; }
+  }
+</style>
+</head>
+<body>
+<div class="stars" aria-hidden="true"></div>
+<main class="shell">
+  <header class="masthead">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"></div>
+      <div><h1>Word Orbit</h1><p>Find the word at the centre</p></div>
+    </div>
+    <button class="icon-button" id="helpButton" aria-label="How to play">?</button>
+  </header>
+
+  <section class="game-card" aria-live="polite">
+    <div id="playView">
+      <div class="status-row">
+        <p class="eyebrow" id="roundLabel">Round 1 of 5</p>
+        <div class="set-picker">
+          <button id="prevSet" aria-label="Previous playtest set">←</button>
+          <span class="set-name" id="setName">Playtest 01</span>
+          <button id="nextSet" aria-label="Next playtest set">→</button>
+        </div>
+      </div>
+      <div class="mode-picker" role="radiogroup" aria-label="Difficulty mode">
+        <button type="button" data-mode="easy" role="radio">Easy · 4</button>
+        <button type="button" data-mode="medium" role="radio">Medium · 2</button>
+        <button type="button" data-mode="hard" role="radio">Hard · 1</button>
+      </div>
+      <div class="progress" id="progress" aria-label="Round progress"></div>
+      <div class="prompt"><h2>What connects every clue?</h2><p id="clueMeter">2 of 4 clues shown</p></div>
+      <div class="orbit" id="orbit">
+        <div class="orbit-ring" aria-hidden="true"></div>
+        <div id="clues"></div>
+        <form class="center" id="answerForm">
+          <label class="center-label" for="answer">Centre word</label>
+          <input class="answer-input" id="answer" name="answer" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="6" placeholder="TYPE HERE">
+          <button class="submit" type="submit">Check orbit</button>
+        </form>
+      </div>
+      <div class="rescue-clue" id="rescueClue" hidden></div>
+      <div class="feedback" id="feedback">One word satisfies every relationship.</div>
+      <div class="actions" id="actions"></div>
+      <div class="legend" aria-label="Relationship definitions">
+        <span><b>Change</b> replaces one letter</span>
+        <span><b>Remove</b> takes one letter away</span>
+        <span><b>Anagram rescue</b> comes after all four clues</span>
+      </div>
+    </div>
+
+    <div class="results" id="resultsView">
+      <p class="eyebrow">Orbit complete</p>
+      <div class="results-planet" aria-hidden="true">5</div>
+      <h2>Five worlds aligned.</h2>
+      <p id="resultSummary"></p>
+      <div class="score-grid">
+        <div class="score"><strong id="clueScore">0</strong><span>Avg. clues</span></div>
+        <div class="score"><strong id="missScore">0</strong><span>Misses</span></div>
+        <div class="score"><strong id="timeScore">0:00</strong><span>Time</span></div>
+      </div>
+      <div class="result-actions">
+        <button class="primary" id="shareButton">Copy result</button>
+        <button class="secondary" id="anotherButton">Play another set</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<dialog id="howTo">
+  <div class="howto">
+    <h2>Find the shared word.</h2>
+    <p>Every clue connects to the same centre word. The label tells you exactly what kind of move to make.</p>
+    <div class="example">
+      <div class="example-center">PLATE</div>
+      <div class="example-row"><span><b>Change one letter</b></span><span>PLANE</span></div>
+      <div class="example-row"><span><b>Remove one letter</b></span><span>LATE</span></div>
+      <div class="example-row"><span><b>Change one letter</b></span><span>SLATE</span></div>
+    </div>
+    <p>Anagrams stay hidden during a clean solve. Once all four main clues are shown, a miss unlocks one as a rescue.</p>
+    <p><b>Easy</b> shows four clues. <b>Medium</b> starts with two. <b>Hard</b> starts with one. Reveal only what you need; a plausible early guess never counts as a miss.</p>
+    <button class="primary" id="closeHowTo">Start playing</button>
+  </div>
+</dialog>
+
+<script>
+const DATA = __WORD_ORBIT_DATA__;
+const WORDS = new Set(DATA.words);
+const RELATION_NAMES = { change: "Change one letter", remove: "Remove one letter", anagram: "Anagram" };
+const POSITIONS = { 4: ["top", "right", "bottom", "left"], 3: ["top", "right", "left"], 2: ["left", "right"], 1: ["top"] };
+const key = "word-orbit:playtest:v5";
+const DIFFICULTY_NAMES = ["Warm-up", "Cruising", "Drift", "Deep space", "Outer rim"];
+const MODE_CLUES = { easy: 4, medium: 2, hard: 1 };
+let setIndex = 0;
+let roundIndex = 0;
+let mode = "medium";
+let visibleCount = MODE_CLUES[mode];
+let roundMisses = 0;
+let roundSolved = false;
+let revealedExtra = false;
+let startedAt = Date.now();
+let results = [];
+
+const $ = selector => document.querySelector(selector);
+const playView = $("#playView");
+const resultsView = $("#resultsView");
+const answerInput = $("#answer");
+const answerForm = $("#answerForm");
+const feedback = $("#feedback");
+const actions = $("#actions");
+
+function puzzle() { return DATA.sets[setIndex].rounds[roundIndex]; }
+function elapsed() { return Math.max(1, Math.round((Date.now() - startedAt) / 1000)); }
+function formatTime(seconds) { return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`; }
+
+function changedOne(a, b) {
+  return a.length === b.length && [...a].filter((letter, i) => letter !== b[i]).length === 1;
+}
+function removesTo(longer, shorter) {
+  if (longer.length !== shorter.length + 1) return false;
+  return [...longer].some((_, i) => longer.slice(0, i) + longer.slice(i + 1) === shorter);
+}
+function matches(word, clue) {
+  if (clue.type === "change") return changedOne(word, clue.word);
+  if (clue.type === "remove") return removesTo(word, clue.word);
+  return word !== clue.word && [...word].sort().join("") === [...clue.word].sort().join("");
+}
+
+function save() {
+  localStorage.setItem(key, JSON.stringify({ setIndex, roundIndex, mode, results, startedAt }));
+}
+
+function setFeedback(message, kind = "") {
+  feedback.className = `feedback ${kind}`;
+  feedback.innerHTML = message;
+}
+
+function renderProgress() {
+  const holder = $("#progress");
+  holder.innerHTML = "";
+  for (let i = 0; i < 5; i++) {
+    if (i) holder.insertAdjacentHTML("beforeend", '<span class="progress-line" aria-hidden="true"></span>');
+    const dot = document.createElement("span");
+    dot.className = `progress-dot ${i < roundIndex ? "done" : i === roundIndex ? "current" : ""}`;
+    dot.setAttribute("aria-label", `Round ${i + 1}${i < roundIndex ? ", complete" : i === roundIndex ? ", current" : ""}`);
+    holder.append(dot);
+  }
+}
+
+function renderClues(checkedWord = "") {
+  const current = puzzle();
+  const holder = $("#clues");
+  holder.innerHTML = "";
+  const shown = current.clues.slice(0, visibleCount);
+  const positions = POSITIONS[shown.length];
+  shown.forEach((clue, index) => {
+    const node = document.createElement("div");
+    const checkClass = checkedWord ? (matches(checkedWord, clue) ? "correct-link" : "wrong-link") : "";
+    node.className = `clue ${positions[index]} ${checkClass}`;
+    node.innerHTML = `<span class="relation">${RELATION_NAMES[clue.type]}</span><span class="clue-word">${clue.word.toUpperCase()}</span>`;
+    holder.append(node);
+  });
+}
+
+function renderModePicker() {
+  document.querySelectorAll("[data-mode]").forEach(button => {
+    const active = button.dataset.mode === mode;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-checked", active ? "true" : "false");
+  });
+}
+
+function updateClueMeter() {
+  const label = mode[0].toUpperCase() + mode.slice(1);
+  $("#clueMeter").textContent = `${visibleCount} of 4 clues shown · ${label}`;
+}
+
+function updateClueActions() {
+  if (roundSolved) return;
+  const button = document.createElement("button");
+  button.className = "secondary";
+  if (visibleCount < 4) {
+    button.textContent = "Reveal next clue";
+    button.addEventListener("click", () => revealNextClue(false));
+    actions.replaceChildren(button);
+  } else if (roundMisses > 0 && !revealedExtra) {
+    button.textContent = "Reveal anagram rescue";
+    button.addEventListener("click", revealAnagramRescue);
+    actions.replaceChildren(button);
+  } else {
+    actions.innerHTML = "";
+  }
+}
+
+function revealNextClue(fromGuess) {
+  if (visibleCount >= 4) return;
+  visibleCount++;
+  renderClues();
+  updateClueMeter();
+  updateClueActions();
+  if (!fromGuess) setFeedback(`Clue ${visibleCount} joined the orbit. Fewer clues earns a stronger result.`);
+}
+
+function renderRound() {
+  roundMisses = 0;
+  roundSolved = false;
+  revealedExtra = false;
+  visibleCount = MODE_CLUES[mode];
+  $("#roundLabel").textContent = `Round ${roundIndex + 1} of 5 · ${DIFFICULTY_NAMES[roundIndex]}`;
+  $("#setName").textContent = `Playtest ${String(setIndex + 1).padStart(2, "0")}`;
+  $("#prevSet").disabled = setIndex === 0;
+  $("#nextSet").disabled = setIndex === DATA.sets.length - 1;
+  renderProgress();
+  renderModePicker();
+  renderClues();
+  updateClueMeter();
+  answerInput.value = "";
+  answerInput.disabled = false;
+  answerInput.placeholder = `${puzzle().answer.length} LETTERS`;
+  answerForm.querySelector("button").hidden = false;
+  $("#rescueClue").hidden = true;
+  if (mode === "easy") {
+    setFeedback("All four clues are in orbit.");
+  } else if (mode === "medium") {
+    setFeedback("One change and one remove clue. Guess when confident, or reveal another.");
+  } else {
+    const firstType = RELATION_NAMES[puzzle().clues[0].type].toLowerCase();
+    setFeedback(`Starting with one ${firstType} clue. Reveal only what you need.`);
+  }
+  updateClueActions();
+  setTimeout(() => answerInput.focus(), 50);
+  save();
+}
+
+function submitAnswer(event) {
+  event.preventDefault();
+  if (roundSolved) return;
+  const guess = answerInput.value.trim().toLowerCase();
+  if (!guess) return;
+  if (!WORDS.has(guess)) {
+    applyMiss(guess, "That word isn’t in this prototype’s word list.");
+    return;
+  }
+  if (guess !== puzzle().answer) {
+    const shown = puzzle().clues.slice(0, visibleCount);
+    if (visibleCount < 4 && shown.every(clue => matches(guess, clue))) {
+      revealNextClue(true);
+      renderClues(guess);
+      setFeedback("That fits every clue shown, so it doesn’t count as a miss. Another clue joined.");
+      answerInput.select();
+      return;
+    }
+    applyMiss(guess, "Close the broken links and try another centre word.");
+    return;
+  }
+  solveRound();
+}
+
+function applyMiss(guess, message) {
+  roundMisses++;
+  const addedClue = visibleCount < 4;
+  if (addedClue) visibleCount++;
+  renderClues(WORDS.has(guess) ? guess : "");
+  updateClueMeter();
+  updateClueActions();
+  failGuess(guess, message, addedClue ? `Clue ${visibleCount} revealed` : visibleCount === 4 && !revealedExtra ? "Anagram rescue unlocked" : "");
+}
+
+function revealAnagramRescue() {
+  revealedExtra = true;
+  const hint = puzzle().hint;
+  const panel = $("#rescueClue");
+  panel.innerHTML = `<span class="relation">Anagram rescue</span><span class="clue-word">${hint.word.toUpperCase()}</span>`;
+  panel.hidden = false;
+  actions.innerHTML = "";
+  setFeedback("Rescue revealed: rearrange every letter to reach the centre.");
+}
+
+function failGuess(guess, message, badge = "") {
+  const extra = badge ? ` <span class="new-clue">${badge}</span>` : "";
+  setFeedback(message + extra, "error");
+  const center = answerForm;
+  center.classList.remove("shake");
+  void center.offsetWidth;
+  center.classList.add("shake");
+  answerInput.select();
+}
+
+function solveRound() {
+  roundSolved = true;
+  const current = puzzle();
+  answerInput.value = current.answer.toUpperCase();
+  answerInput.disabled = true;
+  answerForm.querySelector("button").hidden = true;
+  answerForm.classList.add("pop");
+  renderClues(current.answer);
+  setFeedback(roundMisses ? `Orbit complete in ${roundMisses + 1} tries.` : "Perfect orbit — first try!", "success");
+  results.push({ misses: roundMisses, extra: revealedExtra, clues: visibleCount, mode });
+  save();
+  const button = document.createElement("button");
+  button.className = "primary";
+  button.textContent = roundIndex === 4 ? "See results" : "Next orbit";
+  button.addEventListener("click", nextRound);
+  actions.replaceChildren(button);
+}
+
+function nextRound() {
+  answerForm.classList.remove("pop");
+  if (roundIndex === 4) return showResults();
+  roundIndex++;
+  renderRound();
+}
+
+function showResults() {
+  const seconds = elapsed();
+  const misses = results.reduce((sum, result) => sum + result.misses, 0);
+  const averageClues = results.reduce((sum, result) => sum + result.clues, 0) / results.length;
+  playView.hidden = true;
+  resultsView.classList.add("show");
+  $("#clueScore").textContent = averageClues.toFixed(1);
+  $("#missScore").textContent = misses;
+  $("#timeScore").textContent = formatTime(seconds);
+  $("#resultSummary").textContent = `${mode[0].toUpperCase() + mode.slice(1)} mode · ${averageClues.toFixed(1)} clues used per orbit.`;
+  localStorage.setItem(`${key}:set:${setIndex}`, JSON.stringify({ results, seconds }));
+}
+
+function shareText() {
+  const clueLine = results.map(result => result.clues).join(" · ");
+  const misses = results.reduce((sum, result) => sum + result.misses, 0);
+  return `WORD ORBIT · PLAYTEST ${String(setIndex + 1).padStart(2, "0")} · ${mode.toUpperCase()}\n🪐 ${clueLine} clues\n${misses} miss${misses === 1 ? "" : "es"}`;
+}
+
+async function copyResult() {
+  const text = shareText();
+  try { await navigator.clipboard.writeText(text); }
+  catch { window.prompt("Copy your result:", text); }
+  $("#shareButton").textContent = "Copied!";
+  setTimeout(() => $("#shareButton").textContent = "Copy result", 1600);
+}
+
+function changeSet(nextIndex) {
+  if (nextIndex < 0 || nextIndex >= DATA.sets.length) return;
+  setIndex = nextIndex;
+  roundIndex = 0;
+  results = [];
+  startedAt = Date.now();
+  playView.hidden = false;
+  resultsView.classList.remove("show");
+  renderRound();
+}
+
+function selectMode(nextMode) {
+  if (!MODE_CLUES[nextMode] || nextMode === mode) return;
+  mode = nextMode;
+  roundIndex = 0;
+  results = [];
+  startedAt = Date.now();
+  playView.hidden = false;
+  resultsView.classList.remove("show");
+  renderRound();
+}
+
+function restoreSession() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(key));
+    if (!saved || !Number.isInteger(saved.setIndex) || !Number.isInteger(saved.roundIndex)) return false;
+    if (!DATA.sets[saved.setIndex] || !DATA.sets[saved.setIndex].rounds[saved.roundIndex]) return false;
+    setIndex = saved.setIndex;
+    roundIndex = saved.roundIndex;
+    mode = MODE_CLUES[saved.mode] ? saved.mode : "medium";
+    results = Array.isArray(saved.results) ? saved.results.slice(0, 5) : [];
+    startedAt = Number.isFinite(saved.startedAt) ? saved.startedAt : Date.now();
+    if (results.length > roundIndex && roundIndex < 4) roundIndex++;
+    return results.length >= 5;
+  } catch {
+    return false;
+  }
+}
+
+answerForm.addEventListener("submit", submitAnswer);
+document.querySelectorAll("[data-mode]").forEach(button => button.addEventListener("click", () => selectMode(button.dataset.mode)));
+$("#prevSet").addEventListener("click", () => changeSet(setIndex - 1));
+$("#nextSet").addEventListener("click", () => changeSet(setIndex + 1));
+$("#anotherButton").addEventListener("click", () => changeSet((setIndex + 1) % DATA.sets.length));
+$("#shareButton").addEventListener("click", copyResult);
+$("#helpButton").addEventListener("click", () => $("#howTo").showModal());
+$("#closeHowTo").addEventListener("click", () => $("#howTo").close());
+
+const resumedCompleteSet = restoreSession();
+renderRound();
+if (resumedCompleteSet) showResults();
+if (!localStorage.getItem(`${key}:welcomed`)) {
+  $("#howTo").showModal();
+  localStorage.setItem(`${key}:welcomed`, "1");
+}
+</script>
+</body>
+</html>

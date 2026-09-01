@@ -1,0 +1,1574 @@
+<meta charset="utf-8">
+<title>Branching Ladder</title>
+<script>
+  if (new URLSearchParams(location.search).has("verify")) {
+    window.__BRANCHING_ERRORS__ = [];
+    addEventListener("error", (event) => {
+      window.__BRANCHING_ERRORS__.push(event.message || "unknown page error");
+    });
+    addEventListener("unhandledrejection", (event) => {
+      window.__BRANCHING_ERRORS__.push(String(event.reason || "unhandled rejection"));
+    });
+  } else {
+    // Keep automated browser checks independent of external font servers.
+    for (const href of ["https://fonts.googleapis.com", "https://fonts.gstatic.com"]) {
+      const preconnect = document.createElement("link");
+      preconnect.rel = "preconnect";
+      preconnect.href = href;
+      if (href.includes("gstatic")) preconnect.crossOrigin = "anonymous";
+      document.head.appendChild(preconnect);
+    }
+    const fonts = document.createElement("link");
+    fonts.rel = "stylesheet";
+    fonts.href = "https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap";
+    document.head.appendChild(fonts);
+  }
+</script>
+
+<style>
+  :root {
+    --paper: #edeee9;
+    --card: #f7f8f4;
+    --ink: #16191c;
+    --muted: #697077;
+    --rule: #d1d4cc;
+    --rule-soft: #e1e3db;
+    --accent: #1b6a55;
+    --accent-soft: #cadcd4;
+    --warn: #96382a;
+
+    --step-0: .8125rem;
+    --step-1: .9375rem;
+    --step-2: 1.125rem;
+    --step-3: 1.5rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #121517;
+      --card: #191d20;
+      --ink: #e4e6e1;
+      --muted: #868d95;
+      --rule: #2a2f33;
+      --rule-soft: #22272a;
+      --accent: #52ab8c;
+      --accent-soft: #234137;
+      --warn: #cc6d55;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #121517;
+    --card: #191d20;
+    --ink: #e4e6e1;
+    --muted: #868d95;
+    --rule: #2a2f33;
+    --rule-soft: #22272a;
+    --accent: #52ab8c;
+    --accent-soft: #234137;
+    --warn: #cc6d55;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size: var(--step-1);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 33rem;
+    margin: 0 auto;
+    padding: 1.75rem 1.125rem 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  h1 {
+    font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    font-weight: 800;
+    font-size: var(--step-3);
+    letter-spacing: -.02em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .masthead { display: flex; flex-direction: column; gap: .3rem; }
+  .tagline { color: var(--muted); font-size: var(--step-0); margin: 0; }
+
+  .label {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .6875rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+
+  button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button:hover:not(:disabled) { background: var(--rule-soft); }
+  button:disabled { opacity: .4; cursor: default; }
+
+  /* ---- day bar ---------------------------------------------------- */
+
+  .daybar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    border-block: 1px solid var(--rule);
+    padding: .5rem 0;
+  }
+
+  .daybar .who { display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; }
+  .puzzle-date { color: var(--muted); font-size: var(--step-0); }
+  .stepper { display: flex; gap: .375rem; }
+
+  .stepper button {
+    width: 1.75rem;
+    height: 1.75rem;
+    display: grid;
+    place-items: center;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    line-height: 1;
+  }
+
+  .archivebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin-top: -.75rem;
+  }
+
+  .archive-open {
+    padding: .4rem .65rem;
+    font-size: var(--step-0);
+    font-weight: 600;
+  }
+
+  .archive-filter {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+
+  .archive-filter select {
+    padding: .4rem .55rem;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    font: var(--step-0) "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  .archive-filter select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .history-stats {
+    display: flex;
+    gap: .75rem;
+    color: var(--muted);
+    font-size: var(--step-0);
+  }
+
+  .history-stats b {
+    color: var(--ink);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  /* ---- archive ---------------------------------------------------- */
+
+  dialog {
+    width: min(34rem, calc(100% - 2rem));
+    max-height: calc(100dvh - 2rem);
+    padding: 0;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+  }
+
+  dialog::backdrop { background: #080b0dcc; }
+
+  .archive-shell { padding: 1rem; }
+
+  .archive-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .archive-head h2 {
+    margin: 0;
+    font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    font-size: var(--step-3);
+  }
+
+  .archive-head button { padding: .35rem .6rem; font-size: var(--step-0); }
+  .archive-intro { margin: .4rem 0 1rem; color: var(--muted); font-size: var(--step-0); }
+
+  .archive-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .5rem;
+    margin-bottom: 1rem;
+  }
+
+  .archive-stat {
+    border-top: 1px solid var(--rule);
+    padding-top: .45rem;
+  }
+
+  .archive-stat span,
+  .archive-stat b { display: block; }
+  .archive-stat b { margin-top: .15rem; font-family: "IBM Plex Mono", ui-monospace, monospace; }
+
+  .archive-tools {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: .75rem;
+  }
+
+  .archive-list { min-height: 5rem; }
+  .archive-empty { color: var(--muted); font-size: var(--step-0); }
+  .archive-month + .archive-month { margin-top: 1rem; }
+  .archive-month h3 { margin: 0 0 .5rem; font-size: var(--step-0); color: var(--muted); }
+
+  .archive-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .45rem;
+  }
+
+  .archive-item {
+    padding: .55rem .6rem;
+    text-align: left;
+    font-size: var(--step-0);
+  }
+
+  .archive-item strong,
+  .archive-item span { display: block; }
+  .archive-item strong { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+  .archive-item span { margin-top: .15rem; color: var(--muted); }
+  .archive-item.complete { border-color: var(--accent); }
+  .archive-item.complete strong { color: var(--accent); }
+  .archive-item[aria-current="date"] { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  /* ---- brief ------------------------------------------------------ */
+
+  .brief {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: .875rem;
+    display: flex;
+    flex-direction: column;
+    gap: .625rem;
+  }
+
+  .brief-row { display: flex; align-items: center; gap: .625rem; flex-wrap: wrap; }
+
+  .from {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 700;
+    font-size: var(--step-2);
+    letter-spacing: .12em;
+  }
+
+  .chips { display: flex; gap: .375rem; flex-wrap: wrap; }
+
+  .chip {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 600;
+    font-size: var(--step-0);
+    letter-spacing: .1em;
+    padding: .25rem .5rem;
+    border: 1px dashed var(--rule);
+    border-radius: 2px;
+    color: var(--muted);
+  }
+
+  .chip.reached {
+    border-style: solid;
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .mode-rule {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    padding-top: .625rem;
+    border-top: 1px solid var(--rule-soft);
+    color: var(--muted);
+    font-size: var(--step-0);
+  }
+
+  .mode-rule .label { color: var(--accent); }
+
+  /* ---- input ------------------------------------------------------ */
+
+  .compose { display: flex; gap: .5rem; }
+
+  input[type="text"] {
+    flex: 1;
+    min-width: 0;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: var(--step-2);
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    padding: .5rem .625rem;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+  }
+
+  input[type="text"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .compose button { padding: .5rem .875rem; font-weight: 600; }
+
+  .note { font-size: var(--step-0); min-height: 1.25rem; }
+  .note.bad { color: var(--warn); }
+  .note.good { color: var(--accent); }
+
+  /* ---- tree ------------------------------------------------------- */
+
+  .tree { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: var(--step-1); }
+  .tree ul { list-style: none; margin: 0; padding: 0 0 0 1.1rem; }
+  .tree > ul { padding-left: 0; }
+
+  .tree li { position: relative; padding: .14rem 0 .14rem .95rem; }
+  .tree > ul > li { padding-left: 0; }
+
+  .tree li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: calc(50% - .05rem);
+    width: .65rem;
+    border-left: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .tree li::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: calc(50% - .05rem);
+    bottom: 0;
+    border-left: 1px solid var(--rule);
+  }
+
+  .tree li:last-child::after { display: none; }
+  .tree > ul > li::before, .tree > ul > li::after { display: none; }
+
+  .w { letter-spacing: .14em; }
+  .w b { color: var(--accent); font-weight: 700; }
+
+  .w.start { font-weight: 700; }
+
+  .w.trunk {
+    background: linear-gradient(to top, var(--accent-soft) 0 .28rem, transparent .28rem);
+    font-weight: 600;
+  }
+
+  .w.fork {
+    background: var(--accent-soft);
+    color: var(--accent);
+    outline: 1px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 1px;
+  }
+
+  .fork-badge {
+    margin-left: .6rem;
+    color: var(--accent);
+    font-size: .625rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .w.target {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 700;
+    padding: .05rem .3rem;
+    border-radius: 2px;
+  }
+
+  .w.target b { color: inherit; }
+
+  .leaf-control {
+    border: 0;
+    padding: .05rem .25rem;
+    margin: -.05rem -.25rem;
+    display: inline-flex;
+    align-items: baseline;
+    gap: .4rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    background: transparent;
+  }
+
+  .leaf-control:hover { background: var(--rule-soft); }
+
+  .prune-mark {
+    color: var(--warn);
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    opacity: .45;
+  }
+
+  .leaf-control:hover .prune-mark,
+  .leaf-control:focus-visible .prune-mark { opacity: 1; }
+
+  .tree-summary {
+    min-height: 1.25rem;
+    margin-top: .4rem;
+    color: var(--muted);
+    font-size: var(--step-0);
+  }
+
+  .tree-summary.forked { color: var(--accent); }
+
+  @keyframes completion-path {
+    0% { opacity: .35; transform: translateY(2px); }
+    55% { color: var(--accent); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  .tree.celebrating .w {
+    display: inline-block;
+    animation: completion-path .5s ease-out both;
+    animation-delay: var(--completion-delay, 0ms);
+  }
+
+  /* ---- completion ------------------------------------------------- */
+
+  .completion,
+  .comparison {
+    background: var(--card);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    padding: .875rem;
+  }
+
+  .completion[hidden],
+  .comparison[hidden] { display: none; }
+
+  .completion-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+  }
+
+  .completion h2,
+  .comparison h2 {
+    margin: 0;
+    font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    font-size: var(--step-2);
+  }
+
+  .completion-verdict {
+    color: var(--accent);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: var(--step-0);
+    font-weight: 700;
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: .5rem;
+    margin: .75rem 0;
+  }
+
+  .result-stat {
+    min-width: 0;
+    border-top: 1px solid var(--rule-soft);
+    padding-top: .45rem;
+  }
+
+  .result-stat span { display: block; }
+  .result-stat b {
+    display: block;
+    margin-top: .15rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: var(--step-1);
+  }
+
+  .completion-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .completion-actions button { padding: .45rem .7rem; font-size: var(--step-0); }
+  .completion-actions .primary { background: var(--accent); border-color: var(--accent); color: var(--card); }
+
+  .comparison { border-color: var(--rule); }
+  .comparison-copy { margin: .25rem 0 .75rem; color: var(--muted); font-size: var(--step-0); }
+  .comparison .tree { padding-top: .25rem; }
+
+  /* ---- hints ------------------------------------------------------ */
+
+  .hint-panel {
+    background: var(--card);
+    border-left: 3px solid var(--accent);
+    padding: .75rem .875rem;
+  }
+
+  .hint-panel[hidden] { display: none; }
+  .hint-panel .label { color: var(--accent); }
+
+  .hint-list {
+    margin: .45rem 0 0;
+    padding-left: 1.35rem;
+    font-size: var(--step-0);
+  }
+
+  .hint-list li + li { margin-top: .3rem; }
+
+  /* ---- score ------------------------------------------------------ */
+
+  .score {
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--card);
+    padding: .875rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+
+  .score .row { display: flex; justify-content: space-between; gap: 1rem; font-size: var(--step-0); }
+  .score .row b { font-family: "IBM Plex Mono", ui-monospace, monospace; font-weight: 600; }
+  .score .hit { color: var(--accent); }
+
+  .actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .actions button { padding: .45rem .7rem; font-size: var(--step-0); }
+
+  .foot { color: var(--muted); font-size: var(--step-0); border-top: 1px solid var(--rule); padding-top: .75rem; }
+  .foot p { margin: 0 0 .5rem; }
+  .foot p:last-child { margin-bottom: 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  @media (max-width: 30rem) {
+    .result-grid { grid-template-columns: repeat(3, 1fr); }
+    .archive-stats { grid-template-columns: repeat(2, 1fr); }
+    .archive-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <h1>Branching Ladder</h1>
+    <p class="tagline">Grow one tree from the start word to all three targets, in any order. Each new word must be a real word, one letter different from something already on your tree. Fewest rungs wins &mdash; so find the trunk they share.</p>
+  </header>
+
+  <div class="daybar">
+    <div class="who">
+      <span class="label">Day</span>
+      <span class="mono" id="dayNo">1</span>
+      <time class="puzzle-date" id="puzzleDate"></time>
+    </div>
+    <div class="stepper">
+      <button id="prev" type="button" aria-label="Previous day">&larr;</button>
+      <button id="next" type="button" aria-label="Next day">&rarr;</button>
+    </div>
+  </div>
+
+  <div class="archivebar">
+    <button class="archive-open" id="openArchive" type="button">Archive</button>
+    <div class="history-stats" aria-label="Standard Mode completion history">
+      <span><b id="completedTotal">0</b> completed</span>
+      <span><b id="streak">0</b> day streak</span>
+    </div>
+  </div>
+
+  <dialog id="archiveDialog" aria-labelledby="archiveTitle">
+    <div class="archive-shell">
+      <header class="archive-head">
+        <h2 id="archiveTitle">Puzzle archive</h2>
+        <button id="closeArchive" type="button" aria-label="Close archive">Close</button>
+      </header>
+      <p class="archive-intro">Play any released Branching Ladder. Future puzzles stay hidden until their date.</p>
+      <div class="archive-stats" aria-label="Standard Mode statistics">
+        <div class="archive-stat"><span class="label">Played</span><b id="archivePlayed">0</b></div>
+        <div class="archive-stat"><span class="label">Completed</span><b id="archiveCompleted">0</b></div>
+        <div class="archive-stat"><span class="label">Current streak</span><b id="archiveStreak">0</b></div>
+        <div class="archive-stat"><span class="label">Best streak</span><b id="archiveBestStreak">0</b></div>
+      </div>
+      <div class="archive-tools">
+        <span class="label">Newest first</span>
+        <label class="archive-filter" for="archiveFilter">
+          <span class="label">Show</span>
+          <select id="archiveFilter">
+            <option value="all">All</option>
+            <option value="unfinished">Unfinished</option>
+            <option value="completed">Completed</option>
+          </select>
+        </label>
+      </div>
+      <div class="archive-list" id="archiveList"></div>
+    </div>
+  </dialog>
+
+  <div class="brief">
+    <div class="brief-row">
+      <span class="label">From</span>
+      <span class="from" id="startWord">TREE</span>
+    </div>
+    <div class="brief-row">
+      <span class="label">Targets</span>
+      <span class="chips" id="chips" aria-label="Targets; reach in any order"></span>
+    </div>
+    <div class="mode-rule" id="orderRule">
+      <span class="label">Standard mode</span>
+      <span>Reach the targets in any order.</span>
+    </div>
+  </div>
+
+  <div>
+    <form class="compose" id="form">
+      <input type="text" id="entry" maxlength="4" autocomplete="off" autocapitalize="off"
+             autocorrect="off" spellcheck="false" aria-label="Next word" placeholder="next word">
+      <button type="submit" id="addBtn">Add</button>
+    </form>
+    <div class="note" id="note" role="status" aria-live="polite">&nbsp;</div>
+  </div>
+
+  <div>
+    <div class="tree" id="tree"></div>
+    <div class="tree-summary" id="treeSummary" role="status" aria-live="polite"></div>
+  </div>
+
+  <section class="completion" id="completion" aria-labelledby="completionTitle" aria-live="polite" hidden>
+    <div class="completion-head">
+      <h2 id="completionTitle">Tree complete</h2>
+      <span class="completion-verdict" id="completionVerdict"></span>
+    </div>
+    <div class="result-grid">
+      <div class="result-stat"><span class="label">Rungs</span><b id="resultRungs"></b></div>
+      <div class="result-stat"><span class="label">Par</span><b id="resultPar"></b></div>
+      <div class="result-stat"><span class="label">Hints</span><b id="resultHints"></b></div>
+      <div class="result-stat"><span class="label">Trunk</span><b id="resultTrunk"></b></div>
+      <div class="result-stat"><span class="label">Saved</span><b id="resultSaved"></b></div>
+    </div>
+    <div class="completion-actions">
+      <button id="improve" type="button" class="primary">Keep improving</button>
+      <button id="compare" type="button">Compare with par</button>
+      <button id="completionShare" type="button">Copy result</button>
+    </div>
+  </section>
+
+  <section class="comparison" id="comparison" aria-labelledby="comparisonTitle" hidden>
+    <h2 id="comparisonTitle">Par tree</h2>
+    <p class="comparison-copy">Your tree remains above. This is one optimal solution at <span id="comparisonPar"></span> rungs.</p>
+    <div class="tree" id="parTree" aria-label="Official par tree"></div>
+  </section>
+
+  <section class="hint-panel" id="hintPanel" aria-label="Progressive hints" aria-live="polite" hidden>
+    <div class="label">Hints <span id="hintProgress"></span></div>
+    <ol class="hint-list" id="hintList"></ol>
+  </section>
+
+  <section class="score">
+    <div class="row"><span>Rungs used</span><b id="rungs">0</b></div>
+    <div class="row"><span>Shared trunk</span><b id="sharedTrunk">&mdash;</b></div>
+    <div class="row"><span>Hints used</span><b id="hintsUsed">0</b></div>
+    <div class="row"><span>Par</span><b id="par">&mdash;</b></div>
+    <div class="row"><span>Without sharing</span><b id="separate">&mdash;</b></div>
+    <div class="actions">
+      <button id="undo" type="button">Undo</button>
+      <button id="reset" type="button">Start over</button>
+      <button id="hintBtn" type="button" aria-controls="hintPanel">Hint</button>
+      <button id="reveal" type="button">Compare with par</button>
+      <button id="share" type="button">Copy result</button>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>The highlighted letter is the one that changed from the word above it.</p>
+    <p>The green path is the shared trunk; the outlined word is its first fork.</p>
+    <p>Select any leaf word marked × to prune it without disturbing other branches.</p>
+    <p id="hint">Solving the three ladders one at a time works, but costs more rungs than sharing a trunk does.</p>
+  </footer>
+</div>
+
+<script>
+  const DATA = __DAYS__;
+  const WORDS = new Set(DATA.words);
+  const DAYS = DATA.days;
+  const HINT_COUNT = 4;
+  const PARAMS = new URLSearchParams(location.search);
+  const VERIFY_MODE = PARAMS.has("verify");
+  const STORAGE_KEY = "branching-ladder:standard:v2";
+  const HARD_STORAGE_KEY = "branching-ladder:hard:v1";
+  const LEGACY_STORAGE_KEY = "branching-ladder";
+  let verifyStore = { version: 2, puzzles: {}, history: {} };
+
+  if (VERIFY_MODE) {
+    window.__BRANCHING_VERIFY__ = Object.freeze({
+      dayCount: DAYS.length,
+      puzzleIds: DAYS.map((puzzle) => puzzle.id),
+      dates: DAYS.map((puzzle) => puzzle.date),
+      storageKeys: { standard: STORAGE_KEY, hard: HARD_STORAGE_KEY },
+      historyFor,
+      migrateLegacy,
+      playOptimal,
+      releasedCountFor,
+      shareText,
+    });
+  }
+
+  const state = {
+    day: 0,
+    parent: {},
+    order: [],
+    revealed: false,
+    hints: 0,
+    completionOpen: false,
+    celebrate: false,
+  };
+  const el = (id) => document.getElementById(id);
+
+  function todayISO() {
+    if (VERIFY_MODE) return DAYS[DAYS.length - 1].date;
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const date = String(now.getDate()).padStart(2, "0");
+    return year + "-" + month + "-" + date;
+  }
+
+  function releasedCountFor(date) {
+    return DAYS.filter((puzzle) => puzzle.date <= date).length;
+  }
+
+  function availableCount() {
+    return VERIFY_MODE ? DAYS.length : releasedCountFor(todayISO());
+  }
+
+  function formatDate(value) {
+    return new Intl.DateTimeFormat(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }).format(new Date(value + "T12:00:00"));
+  }
+
+  function migrateLegacy(legacy) {
+    const migrated = { version: 2, puzzles: {}, history: {} };
+    for (let i = 0; i < DAYS.length; i++) {
+      if (legacy[i] && typeof legacy[i] === "object") {
+        migrated.puzzles[DAYS[i].id] = legacy[i];
+      }
+    }
+    return migrated;
+  }
+
+  const store = {
+    empty() { return { version: 2, puzzles: {}, history: {} }; },
+    read() {
+      if (VERIFY_MODE) return verifyStore;
+      try {
+        const current = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        if (current && current.version === 2 && current.puzzles) {
+          if (!current.history || typeof current.history !== "object") {
+            current.history = {};
+          }
+          return current;
+        }
+
+        // One-time migration from the original day-indexed save format. Once
+        // written under the v2 key, later schedule changes cannot remap it.
+        const legacy = JSON.parse(localStorage.getItem(LEGACY_STORAGE_KEY) || "{}");
+        const migrated = migrateLegacy(legacy);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+        return migrated;
+      } catch { return this.empty(); }
+    },
+    write(d) {
+      if (VERIFY_MODE) { verifyStore = d; return; }
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
+      catch { /* blocked storage: play on without it */ }
+    },
+  };
+
+  function day() { return DAYS[state.day]; }
+
+  function oneApart(a, b) {
+    if (a.length !== b.length) return false;
+    let diff = 0;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) diff++;
+    return diff === 1;
+  }
+
+  function depth(w) {
+    let n = 0;
+    while (state.parent[w] != null) { w = state.parent[w]; n++; }
+    return n;
+  }
+
+  function onTree(w) { return Object.prototype.hasOwnProperty.call(state.parent, w); }
+
+  function reached() { return day().targets.filter(onTree); }
+
+  function solved() { return reached().length === day().targets.length; }
+
+  function completedIn(data, puzzle) {
+    const result = data.history[puzzle.date];
+    return !!result && result.puzzleId === puzzle.id;
+  }
+
+  function historyFor(date) {
+    return store.read().history[date] || null;
+  }
+
+  function streakCount(data = store.read()) {
+    let index = availableCount() - 1;
+    if (index < 0) return 0;
+
+    // A streak may remain alive through today before today's puzzle is done.
+    if (DAYS[index].date === todayISO() && !completedIn(data, DAYS[index])) index--;
+    let streak = 0;
+    while (index >= 0 && completedIn(data, DAYS[index])) {
+      streak++;
+      index--;
+    }
+    return streak;
+  }
+
+  function bestStreakCount(data = store.read()) {
+    let best = 0;
+    let current = 0;
+    for (const puzzle of DAYS.slice(0, availableCount())) {
+      current = completedIn(data, puzzle) ? current + 1 : 0;
+      best = Math.max(best, current);
+    }
+    return best;
+  }
+
+  function playedIn(data, puzzle) {
+    const saved = data.puzzles[puzzle.id];
+    return completedIn(data, puzzle) || !!saved && (
+      saved.revealed
+      || Number(saved.hints) > 0
+      || Array.isArray(saved.order) && saved.order.length > 0
+    );
+  }
+
+  function loadDay(i) {
+    if (availableCount() === 0) {
+      renderLocked();
+      return;
+    }
+    const latest = Math.max(0, availableCount() - 1);
+    state.day = Math.max(0, Math.min(i, latest));
+    const saved = store.read().puzzles[day().id] || {};
+    state.order = Array.isArray(saved.order) ? saved.order : [];
+    state.revealed = !!saved.revealed;
+    state.hints = Math.max(0, Math.min(HINT_COUNT, Number(saved.hints) || 0));
+    rebuild();
+    state.completionOpen = solved();
+    state.celebrate = false;
+    if (solved() && !state.revealed) persist();
+    say("");
+    render();
+  }
+
+  function renderLocked() {
+    el("dayNo").textContent = "—";
+    const date = el("puzzleDate");
+    date.dateTime = DAYS[0].date;
+    date.textContent = "First puzzle: " + formatDate(DAYS[0].date);
+    el("startWord").textContent = "????";
+    el("chips").innerHTML = "";
+    el("tree").innerHTML = "";
+    el("treeSummary").textContent = "No daily puzzle has been released yet.";
+    el("completion").hidden = true;
+    el("comparison").hidden = true;
+    el("hintPanel").hidden = true;
+    el("completedTotal").textContent = "0/0";
+    el("streak").textContent = "0";
+    el("openArchive").disabled = true;
+    for (const id of [
+      "prev", "next", "entry", "addBtn", "undo", "reset",
+      "hintBtn", "reveal", "share",
+    ]) el(id).disabled = true;
+    say("The first daily puzzle unlocks on " + formatDate(DAYS[0].date) + ".");
+  }
+
+  function rebuild() {
+    // Replay the insertion order so parents are always recomputed the same way.
+    const words = state.order.slice();
+    state.parent = { [day().start]: null };
+    state.order = [];
+    for (const w of words) attach(w);
+  }
+
+  function attach(w) {
+    const candidates = Object.keys(state.parent).filter((p) => oneApart(p, w));
+    if (!candidates.length) return false;
+    candidates.sort((a, b) => depth(a) - depth(b));
+    state.parent[w] = candidates[0];
+    state.order.push(w);
+    return true;
+  }
+
+  function persist() {
+    const d = store.read();
+    d.puzzles[day().id] = {
+      order: state.order.slice(),
+      revealed: state.revealed,
+      hints: state.hints,
+    };
+    if (solved() && !state.revealed) {
+      const previous = d.history[day().date];
+      const used = state.order.length;
+      const better = !previous
+        || used < previous.bestRungs
+        || (used === previous.bestRungs && state.hints < previous.bestHints);
+      d.history[day().date] = {
+        puzzleId: day().id,
+        firstCompletedAt: previous?.firstCompletedAt || new Date().toISOString(),
+        lastCompletedAt: new Date().toISOString(),
+        bestRungs: better ? used : previous.bestRungs,
+        bestHints: better ? state.hints : previous.bestHints,
+      };
+    }
+    store.write(d);
+  }
+
+  function say(text, kind) {
+    const n = el("note");
+    n.textContent = text || " ";
+    n.className = "note" + (kind ? " " + kind : "");
+  }
+
+  function add(raw) {
+    const w = raw.trim().toLowerCase();
+    const d = day();
+    const wasSolved = solved();
+
+    if (!w) return;
+    if (!/^[a-z]+$/.test(w)) { say("Letters only.", "bad"); return; }
+    if (w.length !== d.start.length) {
+      say("Every word is " + d.start.length + " letters.", "bad");
+      return;
+    }
+    if (onTree(w)) { say(w.toUpperCase() + " is already on your tree.", "bad"); return; }
+    if (!WORDS.has(w)) { say(w.toUpperCase() + " is not in the word list.", "bad"); return; }
+    if (!attach(w)) {
+      say(w.toUpperCase() + " is not one letter from anything on your tree.", "bad");
+      return;
+    }
+
+    persist();
+    if (solved()) {
+      const used = state.order.length;
+      const delta = used - d.par;
+      if (!wasSolved) {
+        state.completionOpen = true;
+        state.celebrate = true;
+      }
+      say(
+        delta === 0 ? "All three reached in " + used + " rungs. That is par."
+          : delta > 0 ? "All three reached in " + used + " rungs, " + delta + " over par."
+          : "All three reached in " + used + " rungs, " + Math.abs(delta) + " under par.",
+        "good"
+      );
+    } else if (d.targets.includes(w)) {
+      say(w.toUpperCase() + " reached. " + reached().length + " of 3.", "good");
+    } else {
+      say("");
+    }
+    render();
+  }
+
+  function childrenMap() {
+    const kids = {};
+    for (const w of Object.keys(state.parent)) kids[w] = [];
+    for (const w of state.order) kids[state.parent[w]].push(w);
+    return kids;
+  }
+
+  function branchStructure(kids) {
+    const trunk = [day().start];
+    let node = day().start;
+    while (kids[node] && kids[node].length === 1) {
+      node = kids[node][0];
+      trunk.push(node);
+    }
+    return {
+      trunk: new Set(trunk),
+      fork: kids[node] && kids[node].length > 1 ? node : null,
+      rungs: trunk.length - 1,
+    };
+  }
+
+  function wordHTML(w, parent, isTarget, isStart, onTrunk, isFork, removable) {
+    let html = "";
+    for (let i = 0; i < w.length; i++) {
+      const changed = parent && w[i] !== parent[i];
+      html += changed ? "<b>" + w[i].toUpperCase() + "</b>" : w[i].toUpperCase();
+    }
+    const cls = "w"
+      + (isStart ? " start" : "")
+      + (isTarget ? " target" : "")
+      + (onTrunk ? " trunk" : "")
+      + (isFork ? " fork" : "");
+    const word = '<span class="' + cls + '">' + html + "</span>";
+    const rendered = removable
+      ? '<button type="button" class="leaf-control" data-prune="' + w
+        + '" aria-label="Prune leaf ' + w.toUpperCase()
+        + '" title="Prune this leaf">' + word
+        + '<span class="prune-mark" aria-hidden="true">×</span></button>'
+      : word;
+    const badge = isFork ? '<span class="fork-badge">first fork</span>' : "";
+    return rendered + badge;
+  }
+
+  function pruneLeaf(w) {
+    const kids = childrenMap();
+    if (
+      state.revealed
+      || w === day().start
+      || !onTree(w)
+      || (kids[w] && kids[w].length)
+    ) return;
+
+    const wasSolved = solved();
+    const parent = state.parent[w];
+    const wasTarget = day().targets.includes(w);
+    delete state.parent[w];
+    state.order = state.order.filter((word) => word !== w);
+    if (wasSolved && solved()) {
+      state.completionOpen = true;
+      state.celebrate = true;
+    }
+    persist();
+    say(
+      wasSolved && solved()
+        ? "Pruned " + w.toUpperCase() + ". Tree still complete in "
+          + state.order.length + " rungs."
+        : wasTarget
+        ? "Pruned " + w.toUpperCase() + ". " + reached().length + " of 3 targets remain."
+        : "Pruned " + w.toUpperCase() + "."
+    );
+    render();
+
+    const nextLeaf = el("tree").querySelector('[data-prune="' + parent + '"]');
+    if (nextLeaf) nextLeaf.focus();
+    else el("entry").focus();
+  }
+
+  function renderTree() {
+    const d = day();
+    const kids = childrenMap();
+    const targets = new Set(d.targets);
+    const structure = branchStructure(kids);
+
+    function node(w) {
+      const li = document.createElement("li");
+      li.innerHTML = wordHTML(
+        w,
+        state.parent[w],
+        targets.has(w),
+        w === d.start,
+        structure.trunk.has(w),
+        w === structure.fork,
+        w !== d.start && kids[w].length === 0 && !state.revealed
+      );
+      const prune = li.querySelector("[data-prune]");
+      if (prune) prune.addEventListener("click", () => pruneLeaf(w));
+      if (kids[w] && kids[w].length) {
+        const ul = document.createElement("ul");
+        for (const c of kids[w]) ul.appendChild(node(c));
+        li.appendChild(ul);
+      }
+      return li;
+    }
+
+    const root = document.createElement("ul");
+    root.appendChild(node(d.start));
+    const host = el("tree");
+    host.innerHTML = "";
+    host.appendChild(root);
+    host.classList.toggle("celebrating", state.celebrate);
+    if (state.celebrate) {
+      const trunkWords = [...host.querySelectorAll(".w.trunk")];
+      const branchWords = [...host.querySelectorAll(".w:not(.trunk)")];
+      [...trunkWords, ...branchWords].forEach((word, index) => {
+        word.style.setProperty("--completion-delay", index * 70 + "ms");
+      });
+      state.celebrate = false;
+    }
+
+    const summary = el("treeSummary");
+    const shared = el("sharedTrunk");
+    if (structure.fork) {
+      const unit = structure.rungs === 1 ? "rung" : "rungs";
+      summary.textContent = "First fork at " + structure.fork.toUpperCase()
+        + " after " + structure.rungs + " shared " + unit + ".";
+      summary.className = "tree-summary forked";
+      shared.textContent = structure.rungs + " " + unit;
+      host.setAttribute(
+        "aria-label",
+        "Word tree. First fork at " + structure.fork.toUpperCase()
+        + " after " + structure.rungs + " shared " + unit + "."
+      );
+    } else {
+      summary.textContent = state.order.length
+        ? "No fork yet · one path from " + d.start.toUpperCase() + "."
+        : "Build one shared path, then fork toward the three targets.";
+      summary.className = "tree-summary";
+      shared.textContent = "—";
+      host.setAttribute("aria-label", "Word tree. No fork yet.");
+    }
+  }
+
+  function solutionTree() {
+    const d = day();
+    const parent = { [d.start]: null };
+    const kids = { [d.start]: [] };
+    for (const [p, c] of d.solution) {
+      parent[c] = p;
+      if (!kids[p]) kids[p] = [];
+      if (!kids[c]) kids[c] = [];
+      kids[p].push(c);
+    }
+    return { parent, kids };
+  }
+
+  function renderParTree() {
+    const d = day();
+    const host = el("parTree");
+    const { parent, kids } = solutionTree();
+    const targets = new Set(d.targets);
+    const structure = branchStructure(kids);
+
+    function node(w) {
+      const li = document.createElement("li");
+      li.innerHTML = wordHTML(
+        w,
+        parent[w],
+        targets.has(w),
+        w === d.start,
+        structure.trunk.has(w),
+        w === structure.fork,
+        false
+      );
+      if (kids[w].length) {
+        const ul = document.createElement("ul");
+        for (const child of kids[w]) ul.appendChild(node(child));
+        li.appendChild(ul);
+      }
+      return li;
+    }
+
+    const root = document.createElement("ul");
+    root.appendChild(node(d.start));
+    host.innerHTML = "";
+    host.appendChild(root);
+    host.setAttribute(
+      "aria-label",
+      "Official par tree. First fork at " + structure.fork.toUpperCase()
+      + " after " + structure.rungs + " shared rungs."
+    );
+  }
+
+  function optimalStructure() {
+    const kids = {};
+    for (const [parent, child] of day().solution) {
+      if (!kids[parent]) kids[parent] = [];
+      kids[parent].push(child);
+      if (!kids[child]) kids[child] = [];
+    }
+    const path = [day().start];
+    let node = day().start;
+    while (kids[node] && kids[node].length === 1) {
+      node = kids[node][0];
+      path.push(node);
+    }
+    return { first: path[1], fork: node };
+  }
+
+  function ordinal(n) {
+    return ["first", "second", "third", "fourth"][n - 1] || String(n);
+  }
+
+  function hintTexts() {
+    const d = day();
+    const optimal = optimalStructure();
+    let changed = 0;
+    while (d.start[changed] === optimal.first[changed]) changed++;
+    const unit = d.trunk === 1 ? "rung" : "rungs";
+    return [
+      "The optimal tree stays together for " + d.trunk + " shared " + unit
+        + " before splitting.",
+      "First, change the " + ordinal(changed + 1) + " letter of "
+        + d.start.toUpperCase() + ".",
+      "The first shared rung is " + optimal.first.toUpperCase() + ".",
+      "The optimal first fork is " + optimal.fork.toUpperCase()
+        + ". Build toward it before splitting.",
+    ];
+  }
+
+  function renderHints() {
+    const panel = el("hintPanel");
+    const list = el("hintList");
+    panel.hidden = state.hints === 0;
+    el("hintProgress").textContent = state.hints + " of " + HINT_COUNT;
+    list.innerHTML = "";
+    for (const text of hintTexts().slice(0, state.hints)) {
+      const li = document.createElement("li");
+      li.textContent = text;
+      list.appendChild(li);
+    }
+    el("hintsUsed").textContent = state.hints;
+    const button = el("hintBtn");
+    button.textContent = state.hints === 0
+      ? "Hint"
+      : state.hints < HINT_COUNT ? "Next hint" : "All hints shown";
+    button.disabled = state.revealed || solved() || state.hints >= HINT_COUNT;
+  }
+
+  function renderCompletion() {
+    const d = day();
+    const panel = el("completion");
+    const done = solved();
+    panel.hidden = !done || !state.completionOpen;
+    if (!done) return;
+
+    const used = state.order.length;
+    const delta = used - d.par;
+    const structure = branchStructure(childrenMap());
+    el("completionVerdict").textContent = delta === 0 ? "PAR"
+      : delta > 0 ? "+" + delta + " RUNGS"
+      : Math.abs(delta) + " UNDER PAR";
+    el("resultRungs").textContent = used;
+    el("resultPar").textContent = d.par;
+    el("resultHints").textContent = state.hints;
+    el("resultTrunk").textContent = structure.rungs;
+    el("resultSaved").textContent = d.separate - used;
+
+    const improve = el("improve");
+    improve.hidden = delta <= 0 || state.revealed;
+    const compare = el("compare");
+    compare.textContent = state.revealed ? "Par tree shown" : "Compare with par";
+    compare.disabled = state.revealed;
+  }
+
+  function renderComparison() {
+    const panel = el("comparison");
+    panel.hidden = !state.revealed;
+    if (!state.revealed) return;
+    el("comparisonPar").textContent = day().par;
+    renderParTree();
+  }
+
+  function renderDaily() {
+    const d = day();
+    const data = store.read();
+    const count = availableCount();
+    const date = el("puzzleDate");
+    date.dateTime = d.date;
+    date.textContent = formatDate(d.date);
+
+    let completed = 0;
+    for (let index = 0; index < count; index++) {
+      const puzzle = DAYS[index];
+      const done = completedIn(data, puzzle);
+      if (done) completed++;
+    }
+    el("openArchive").disabled = count === 0;
+    el("completedTotal").textContent = completed + "/" + count;
+    el("streak").textContent = streakCount(data);
+    el("prev").disabled = state.day === 0;
+    el("next").disabled = state.day >= count - 1;
+  }
+
+  function renderArchive() {
+    const data = store.read();
+    const count = availableCount();
+    const filter = el("archiveFilter").value;
+    const puzzles = [];
+    let played = 0;
+    let completed = 0;
+
+    for (let index = 0; index < count; index++) {
+      const puzzle = DAYS[index];
+      const done = completedIn(data, puzzle);
+      const started = playedIn(data, puzzle);
+      if (started) played++;
+      if (done) completed++;
+      if (
+        filter === "all"
+        || filter === "completed" && done
+        || filter === "unfinished" && !done
+      ) puzzles.push({ index, puzzle, done, started });
+    }
+
+    el("archivePlayed").textContent = played;
+    el("archiveCompleted").textContent = completed;
+    el("archiveStreak").textContent = streakCount(data);
+    el("archiveBestStreak").textContent = bestStreakCount(data);
+
+    const host = el("archiveList");
+    host.innerHTML = "";
+    if (!puzzles.length) {
+      const empty = document.createElement("p");
+      empty.className = "archive-empty";
+      empty.textContent = filter === "completed"
+        ? "No completed puzzles yet."
+        : "No unfinished puzzles in the released archive.";
+      host.appendChild(empty);
+      return;
+    }
+
+    const monthFormat = new Intl.DateTimeFormat(undefined, {
+      month: "long",
+      year: "numeric",
+    });
+    let monthKey = "";
+    let grid = null;
+    for (const item of puzzles.reverse()) {
+      const date = new Date(item.puzzle.date + "T12:00:00");
+      const key = item.puzzle.date.slice(0, 7);
+      if (key !== monthKey) {
+        monthKey = key;
+        const section = document.createElement("section");
+        section.className = "archive-month";
+        const heading = document.createElement("h3");
+        heading.textContent = monthFormat.format(date);
+        grid = document.createElement("div");
+        grid.className = "archive-grid";
+        section.append(heading, grid);
+        host.appendChild(section);
+      }
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "archive-item" + (item.done ? " complete" : "");
+      if (item.index === state.day) button.setAttribute("aria-current", "date");
+      const best = data.history[item.puzzle.date];
+      const saved = data.puzzles[item.puzzle.id];
+      const status = item.done
+        ? "Complete · best " + best.bestRungs
+        : item.started
+          ? "In progress · " + (saved.order?.length || 0) + " rungs"
+          : "Unplayed";
+      button.innerHTML = "<strong>Day " + (item.index + 1)
+        + (item.puzzle.date === todayISO() ? " · Today" : "")
+        + "</strong><span>" + formatDate(item.puzzle.date) + " · " + status + "</span>";
+      button.addEventListener("click", () => {
+        loadDay(item.index);
+        el("archiveDialog").close();
+      });
+      grid.appendChild(button);
+    }
+  }
+
+  function render() {
+    const d = day();
+    el("dayNo").textContent = state.day + 1;
+    el("startWord").textContent = d.start.toUpperCase();
+    renderDaily();
+
+    const chips = el("chips");
+    chips.innerHTML = "";
+    for (const t of d.targets) {
+      const s = document.createElement("span");
+      s.className = "chip" + (onTree(t) ? " reached" : "");
+      s.textContent = t.toUpperCase();
+      chips.appendChild(s);
+    }
+
+    renderTree();
+    renderHints();
+    renderCompletion();
+    renderComparison();
+
+    const used = state.order.length;
+    el("rungs").textContent = used;
+    el("separate").textContent = d.separate;
+    const par = el("par");
+    if (solved() || state.revealed) {
+      par.innerHTML = used <= d.par && solved()
+        ? '<span class="hit">' + d.par + " · reached</span>"
+        : String(d.par);
+    } else {
+      par.textContent = d.par;
+    }
+
+    el("undo").disabled = used === 0 || state.revealed;
+    el("reset").disabled = used === 0 && !state.revealed;
+    el("reveal").disabled = state.revealed;
+    el("entry").disabled = state.revealed;
+    el("addBtn").disabled = state.revealed;
+    el("hint").textContent = state.revealed
+      ? "This is one optimal tree. Others of the same size may exist."
+      : "Solving the three ladders one at a time works, but costs more rungs than sharing a trunk does.";
+  }
+
+  el("form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    add(el("entry").value);
+    el("entry").value = "";
+    el("entry").focus();
+  });
+
+  el("undo").addEventListener("click", () => {
+    const wasSolved = solved();
+    const last = state.order.pop();
+    if (!last) return;
+    delete state.parent[last];
+    if (wasSolved && solved()) {
+      state.completionOpen = true;
+      state.celebrate = true;
+    }
+    persist();
+    say(wasSolved && solved()
+      ? "Removed " + last.toUpperCase() + ". Tree still complete in "
+        + state.order.length + " rungs."
+      : "Removed " + last.toUpperCase() + ".");
+    render();
+  });
+
+  el("reset").addEventListener("click", () => {
+    state.order = [];
+    state.revealed = false;
+    state.completionOpen = false;
+    state.celebrate = false;
+    rebuild();
+    persist();
+    say("");
+    render();
+  });
+
+  el("hintBtn").addEventListener("click", () => {
+    if (state.hints >= HINT_COUNT || state.revealed || solved()) return;
+    state.hints++;
+    persist();
+    render();
+  });
+
+  el("reveal").addEventListener("click", () => {
+    state.revealed = true;
+    persist();
+    say("Par comparison shown. Your tree remains above.");
+    render();
+  });
+
+  el("improve").addEventListener("click", () => {
+    state.completionOpen = false;
+    say("Keep pruning leaves, then regrow a shorter tree.");
+    render();
+    const firstLeaf = el("tree").querySelector("[data-prune]");
+    (firstLeaf || el("entry")).focus();
+  });
+
+  el("compare").addEventListener("click", () => el("reveal").click());
+
+  el("prev").addEventListener("click", () => loadDay(state.day - 1));
+  el("next").addEventListener("click", () => loadDay(state.day + 1));
+  el("openArchive").addEventListener("click", () => {
+    renderArchive();
+    el("archiveDialog").showModal();
+  });
+  el("closeArchive").addEventListener("click", () => el("archiveDialog").close());
+  el("archiveFilter").addEventListener("change", renderArchive);
+
+  function shareText() {
+    const d = day();
+    const used = state.order.length;
+    const done = solved();
+    const structure = branchStructure(childrenMap());
+    const shared = structure.fork ? structure.rungs : 0;
+    const trunk = "━".repeat(Math.max(1, shared));
+    const targetRows = d.targets.map((target, index) =>
+      (index === d.targets.length - 1 ? "  └─ " : "  ├─ ")
+      + target.toUpperCase() + " " + (onTree(target) ? "✓" : "○")
+    );
+    return [
+      "Branching Ladder #" + (state.day + 1) + " · " + formatDate(d.date)
+        + " · Standard",
+      d.start.toUpperCase() + " " + trunk + "┳",
+      ...targetRows,
+      done
+        ? used + "/" + d.par + " rungs"
+          + (used === d.par ? " · PAR ✓"
+            : used > d.par ? " · +" + (used - d.par)
+            : " · " + (d.par - used) + " under")
+        : reached().length + "/3 targets · " + used + " rungs · par " + d.par,
+      shared + " shared · " + (d.separate - used) + " saved · "
+        + state.hints + " hint" + (state.hints === 1 ? "" : "s"),
+    ].join("\n");
+  }
+
+  async function copyResult() {
+    const text = shareText();
+    try {
+      await navigator.clipboard.writeText(text);
+      say("Result copied to clipboard.", "good");
+    } catch {
+      say("Could not reach the clipboard. " + state.order.length
+        + " rungs, par " + day().par + ".");
+    }
+  }
+
+  el("share").addEventListener("click", copyResult);
+  el("completionShare").addEventListener("click", copyResult);
+
+  function playOptimal(extraRungs = 0) {
+    if (!VERIFY_MODE) return;
+    const { parent } = solutionTree();
+    state.parent = parent;
+    state.order = day().solution.map((edge) => edge[1]);
+    state.revealed = false;
+    for (let n = 0; n < extraRungs; n++) {
+      const candidate = [...WORDS].find((word) =>
+        !onTree(word)
+        && !day().targets.includes(word)
+        && Object.keys(state.parent).some((placed) => oneApart(placed, word))
+      );
+      if (candidate) attach(candidate);
+    }
+    state.completionOpen = true;
+    state.celebrate = true;
+    persist();
+    say("Verification solve loaded.", "good");
+    render();
+  }
+
+  loadDay(VERIFY_MODE ? 0 : availableCount() - 1);
+  el("entry").focus();
+</script>

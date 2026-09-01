@@ -1,0 +1,9 @@
+{
+  "name": "branching-ladder-release-gates",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Headless browser dependency for the Branching Ladder release gate",
+  "devDependencies": {
+    "playwright-core": "1.62.1"
+  }
+}

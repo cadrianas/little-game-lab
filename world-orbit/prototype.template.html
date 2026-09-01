@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b2030">
+<meta name="description" content="World Orbit is a geographic triangulation puzzle. Find the hidden country from distance signals.">
+<title>World Orbit — Playtest</title>
+<style>
+  :root {
+    --night: #0b2030;
+    --night-2: #102d40;
+    --paper: #f1f0e7;
+    --white: #fffef8;
+    --ink: #10212b;
+    --muted: #68747a;
+    --line: #c8cec9;
+    --ocean: #176b87;
+    --deep: #11485f;
+    --lime: #b9e75d;
+    --coral: #ef765d;
+    --yellow: #f6c85f;
+    --ice: #91ccdc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--night);
+    color: var(--paper);
+    font-family: ui-rounded, "Arial Rounded MT Bold", "Avenir Next", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  button, input { font: inherit; }
+  button { cursor: pointer; }
+  button:focus-visible, input:focus-visible { outline: 3px solid var(--lime); outline-offset: 3px; }
+  .sky, .sky::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(circle at 10% 15%, rgba(255,255,255,.65) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 84% 11%, rgba(185,231,93,.7) 0 1.5px, transparent 2px),
+      radial-gradient(circle at 93% 56%, rgba(255,255,255,.45) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 18% 79%, rgba(145,204,220,.6) 0 1.5px, transparent 2px),
+      radial-gradient(circle at 70% 88%, rgba(255,255,255,.5) 0 1px, transparent 1.5px);
+  }
+  .sky::before { transform: rotate(31deg) scale(.78); opacity: .55; }
+  .shell { width: min(100%, 68rem); margin: 0 auto; padding: 1rem clamp(.75rem, 4vw, 2rem) 3rem; position: relative; }
+  .masthead { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+  .brand { display: flex; align-items: center; gap: .75rem; }
+  .globe-mark { width: 2.7rem; height: 2.7rem; border: 2px solid var(--lime); border-radius: 50%; position: relative; }
+  .globe-mark::before { content: ""; position: absolute; inset: .3rem .75rem; border-inline: 1px solid var(--ice); border-radius: 50%; }
+  .globe-mark::after { content: ""; position: absolute; left: .18rem; right: .18rem; top: 1.18rem; border-top: 1px solid var(--ice); }
+  h1 { margin: 0; font-size: clamp(1.3rem, 4vw, 1.75rem); letter-spacing: -.04em; }
+  .brand p { margin: 0; color: #9eb5c0; font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; }
+  .icon-button { width: 2.4rem; height: 2.4rem; border-radius: 50%; border: 1px solid #356075; background: var(--night-2); color: white; font-weight: 900; }
+  .card { background: var(--paper); color: var(--ink); border-radius: 1.6rem; padding: clamp(1rem, 4vw, 2rem); box-shadow: 0 1.4rem 4rem rgba(0,0,0,.32); overflow: hidden; }
+  .status { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .eyebrow { margin: 0; color: var(--deep); font-size: .7rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+  .set-picker { display: flex; align-items: center; gap: .4rem; }
+  .set-picker button { width: 1.9rem; height: 1.9rem; border: 1px solid var(--line); border-radius: 50%; background: transparent; color: var(--ink); }
+  .set-picker button:disabled { opacity: .3; }
+  .set-name { min-width: 5.8rem; text-align: center; color: var(--muted); font-size: .76rem; font-weight: 800; }
+  .mode-picker { display: grid; grid-template-columns: repeat(3,1fr); max-width: 25rem; margin: .8rem auto 0; padding: .28rem; gap: .35rem; border: 1px solid var(--line); border-radius: 999px; background: #e3e5dc; }
+  .mode-picker button { border: 0; border-radius: 999px; background: transparent; color: var(--muted); padding: .5rem; font-size: .73rem; font-weight: 900; }
+  .mode-picker button.active { background: var(--deep); color: white; }
+  .progress { display: flex; align-items: center; gap: .42rem; margin: .9rem 0 0; }
+  .dot { width: .68rem; height: .68rem; border: 2px solid #bbc3be; border-radius: 50%; }
+  .dot.current { width: 1.02rem; height: 1.02rem; background: var(--yellow); border-color: var(--ink); }
+  .dot.done { background: var(--lime); border-color: var(--deep); }
+  .line { width: 1.1rem; height: 1px; background: var(--line); }
+  .prompt { text-align: center; margin-top: .35rem; }
+  .prompt h2 { margin: 0; font-size: clamp(1.25rem, 4vw, 1.7rem); letter-spacing: -.03em; }
+  .prompt p { margin: .2rem 0 0; color: var(--muted); font-size: .83rem; }
+  .prompt .method-note { margin-top: .38rem; color: #7a8587; font-size: .68rem; }
+  .orbit { width: min(100%, 38rem); height: 28rem; margin: .35rem auto 0; position: relative; }
+  .orbit-ring { position: absolute; left: 50%; top: 50%; width: 71%; height: 58%; transform: translate(-50%,-50%) rotate(-8deg); border: 1px dashed #aebcbb; border-radius: 50%; pointer-events: none; }
+  .orbit-ring::after { content: ""; position: absolute; width: .65rem; height: .65rem; right: 10%; top: 5%; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 5px var(--paper); }
+  .signal { position: absolute; width: 9.4rem; min-height: 5rem; padding: .55rem; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--white); border: 1px solid var(--line); border-top: .32rem solid var(--ice); border-radius: .95rem; box-shadow: 0 .35rem .9rem rgba(16,33,43,.1); z-index: 2; text-align: center; }
+  .signal.top { top: 0; left: 50%; transform: translateX(-50%); }
+  .signal.bottom { bottom: 0; left: 50%; transform: translateX(-50%); }
+  .signal.left { top: 50%; left: 0; transform: translateY(-50%); }
+  .signal.right { top: 50%; right: 0; transform: translateY(-50%); }
+  .signal.hot { border-top-color: var(--coral); }
+  .signal.warm { border-top-color: var(--yellow); }
+  .signal.near { border-top-color: var(--lime); }
+  .signal.distant { border-top-color: #8d9ab7; }
+  .signal.good { box-shadow: 0 0 0 3px rgba(185,231,93,.45); }
+  .signal.bad { box-shadow: 0 0 0 3px rgba(239,118,93,.35); }
+  .signal-kind { color: var(--muted); font-size: .58rem; font-weight: 900; letter-spacing: .09em; text-transform: uppercase; }
+  .anchor { margin: .08rem 0; font-size: 1rem; font-weight: 900; line-height: 1.1; }
+  .band { color: var(--deep); font-size: .7rem; font-weight: 900; }
+  .center { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 12rem; min-height: 10rem; padding: 1rem; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--deep); color: white; border: .5rem solid #dce3da; border-radius: 50%; box-shadow: 0 .8rem 1.6rem rgba(17,72,95,.25); z-index: 3; }
+  .center::before { content: ""; position: absolute; inset: -.85rem; border: 1px solid rgba(17,72,95,.3); border-radius: 50%; pointer-events: none; }
+  .guess-probes { position: absolute; left: calc(100% + 1rem); top: 50%; width: 9.2rem; transform: translateY(-50%); display: grid; gap: .45rem; z-index: 5; }
+  .guess-probe { position: relative; padding: .52rem .6rem; border: 2px solid var(--coral); border-radius: .85rem; background: var(--white); color: var(--ink); box-shadow: 0 .45rem 1rem rgba(16,33,43,.18); text-align: center; }
+  .guess-probe::before { content: ""; position: absolute; left: -.38rem; top: 50%; width: .6rem; height: .6rem; transform: translateY(-50%) rotate(45deg); border-left: 2px solid var(--coral); border-bottom: 2px solid var(--coral); background: var(--white); }
+  .guess-probe.previous { border-width: 1px; opacity: .82; transform: scale(.9); }
+  .guess-probe.previous::before { border-width: 0 0 1px 1px; }
+  .guess-probe.correct { border-color: var(--lime); }
+  .guess-probe.correct::before { border-color: var(--lime); }
+  .guess-label { display: block; color: var(--muted); font-size: .56rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+  .guess-name { display: block; margin: .08rem 0; font-size: .88rem; font-weight: 900; line-height: 1.1; }
+  .guess-match { display: block; color: var(--deep); font-size: .64rem; font-weight: 800; }
+  .center-label { color: #b9d7e0; font-size: .6rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+  .answer { width: 100%; border: 0; border-bottom: 2px solid #80b4c5; border-radius: 0; background: transparent; color: white; padding: .32rem 0; text-align: center; font-size: 1.05rem; font-weight: 900; }
+  .answer::placeholder { color: #82a9b8; }
+  .submit { margin-top: .65rem; padding: .5rem .9rem; border: 0; border-radius: 999px; background: var(--lime); color: var(--ink); font-size: .72rem; font-weight: 900; }
+  .feedback { min-height: 2rem; display: flex; justify-content: center; align-items: center; text-align: center; color: var(--muted); font-size: .84rem; }
+  .feedback.error { color: #aa3f32; font-weight: 800; }
+  .feedback.success { color: #1b725c; font-weight: 900; }
+  .badge { margin-left: .35rem; padding: .13rem .45rem; border-radius: 999px; background: #dcead4; color: var(--deep); font-size: .68rem; }
+  .actions { min-height: 2.8rem; display: flex; justify-content: center; }
+  .primary,.secondary { padding: .7rem 1.1rem; border-radius: 999px; font-weight: 900; }
+  .primary { border: 1px solid var(--deep); background: var(--deep); color: white; }
+  .secondary { border: 1px solid var(--deep); background: transparent; color: var(--deep); }
+  .results { display: none; text-align: center; padding: 1.8rem .5rem .8rem; }
+  .results.show { display: block; }
+  .result-globe { width: 7rem; height: 7rem; margin: 1rem auto; display: grid; place-items: center; border-radius: 50%; background: var(--ocean); color: var(--lime); font-size: 2.2rem; font-weight: 900; box-shadow: inset 1.1rem 0 rgba(185,231,93,.16); }
+  .results h2 { margin: 0; font-size: 2rem; }
+  .results p { color: var(--muted); }
+  .scores { display: grid; grid-template-columns: repeat(3,1fr); gap: .55rem; max-width: 25rem; margin: 1rem auto 1.35rem; }
+  .score { padding: .75rem .3rem; background: var(--white); border: 1px solid var(--line); border-radius: .8rem; }
+  .score strong { display: block; color: var(--deep); font-size: 1.3rem; }
+  .score span { color: var(--muted); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; }
+  .result-actions { display: flex; justify-content: center; gap: .55rem; flex-wrap: wrap; }
+  .histogram { height: 12rem; display: grid; grid-template-columns: repeat(4,1fr); align-items: end; gap: .65rem; margin: 1.2rem 0 .7rem; padding: 1rem 1rem 0; border-bottom: 2px solid var(--line); background: var(--white); border-radius: 1rem 1rem .25rem .25rem; }
+  .histogram-bin { height: 100%; display: flex; flex-direction: column; justify-content: end; align-items: center; gap: .3rem; }
+  .histogram-count { color: var(--deep); font-size: .78rem; font-weight: 900; }
+  .histogram-bar { width: min(100%,3rem); min-height: .35rem; border-radius: .55rem .55rem 0 0; background: var(--ocean); box-shadow: inset 0 .3rem rgba(255,255,255,.14); }
+  .histogram-bin:nth-child(1) .histogram-bar { background: var(--lime); }
+  .histogram-bin:nth-child(2) .histogram-bar { background: var(--ice); }
+  .histogram-bin:nth-child(3) .histogram-bar { background: var(--yellow); }
+  .histogram-bin:nth-child(4) .histogram-bar { background: var(--coral); }
+  .histogram-label { color: var(--muted); font-size: .62rem; font-weight: 900; text-transform: uppercase; }
+  .result-dialog { text-align: center; }
+  .result-dialog .eyebrow { margin-bottom: .35rem; }
+  .result-dialog h2 { margin: 0; }
+  .result-dialog > p { margin: .35rem 0 0; color: var(--muted); }
+  .result-dialog .scores { margin-bottom: .4rem; }
+  .confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 9999; }
+  .confetti-piece { position: absolute; top: -1.5rem; width: .6rem; height: 1rem; border-radius: .12rem; animation: confetti-fall 2.8s cubic-bezier(.18,.75,.45,1) forwards; }
+  .source { margin: .9rem 0 0; text-align: center; color: #829ca7; font-size: .65rem; }
+  dialog { width: min(calc(100% - 2rem),38rem); max-height: calc(100vh - 2rem); border: 0; border-radius: 1.3rem; padding: 0; background: var(--paper); color: var(--ink); box-shadow: 0 2rem 5rem rgba(0,0,0,.45); }
+  dialog::backdrop { background: rgba(4,19,29,.8); }
+  .howto { padding: 1.5rem; }
+  .howto h2 { margin: 0; }
+  .howto > p { color: var(--muted); }
+  .tutorial-steps { display: grid; gap: .55rem; margin-top: 1rem; }
+  .tutorial-step { display: grid; grid-template-columns: 2rem 1fr; gap: .7rem; padding: .8rem; border: 1px solid var(--line); border-radius: 1rem; background: var(--white); }
+  .step-number { width: 2rem; height: 2rem; display: grid; place-items: center; border-radius: 50%; background: var(--deep); color: white; font-weight: 900; }
+  .tutorial-step h3 { margin: 0; font-size: .92rem; }
+  .tutorial-step p { margin: .2rem 0 0; color: var(--muted); font-size: .8rem; line-height: 1.4; }
+  .candidate-list { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .45rem; }
+  .candidate-list span { padding: .18rem .45rem; border-radius: 999px; background: #e5eddd; color: var(--deep); font-size: .68rem; font-weight: 800; }
+  .tutorial-note { padding: .65rem .8rem; border-left: .3rem solid var(--lime); background: #e7ecdf; color: var(--ink)!important; font-size: .82rem; }
+  .howto .primary { width: 100%; margin-top: .8rem; }
+  .shake { animation: shake .3s linear; }
+  .pop { animation: pop .42s ease-out; }
+  @keyframes shake { 25%{transform:translate(-53%,-50%)}75%{transform:translate(-47%,-50%)} }
+  @keyframes pop { 0%{transform:translate(-50%,-50%) scale(.9)}65%{transform:translate(-50%,-50%) scale(1.06)} }
+  @keyframes confetti-fall { to { transform: translate(var(--drift),110vh) rotate(var(--spin)); opacity: .9; } }
+  @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+  @media (max-width:900px){
+    .orbit:has(.guess-probes:not([hidden])){margin-bottom:6.2rem}
+    .guess-probes{left:50%;top:auto;bottom:-5.5rem;width:min(19rem,90%);transform:translateX(-50%);grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:600px){
+    .shell{padding-inline:.7rem}.card{padding-inline:.7rem;border-radius:1.25rem}.orbit{height:27rem}
+    .signal{width:7.5rem;min-height:4.7rem}.anchor{font-size:.85rem}.band{font-size:.6rem}
+    .center{width:10.2rem;min-height:9rem}.guess-probe{padding:.4rem}.brand p{display:none}
+  }
+  @media (max-width:390px){.signal{width:6.8rem}.center{width:9.3rem}.answer{font-size:.92rem}}
+</style>
+</head>
+<body>
+<div class="sky" aria-hidden="true"></div>
+<main class="shell">
+  <header class="masthead">
+    <div class="brand"><div class="globe-mark" aria-hidden="true"></div><div><h1>World Orbit</h1><p>Geographic triangulation</p></div></div>
+    <button class="icon-button" id="helpButton" aria-label="How to play">?</button>
+  </header>
+  <section class="card">
+    <div id="playView">
+      <div class="status"><p class="eyebrow" id="roundLabel">Signal 1 of 5</p><div class="set-picker"><button id="prevSet" aria-label="Previous set">←</button><span class="set-name" id="setName">Playtest 01</span><button id="nextSet" aria-label="Next set">→</button></div></div>
+      <div class="mode-picker" role="radiogroup" aria-label="Difficulty mode">
+        <button type="button" data-mode="easy" role="radio">Easy · 4</button>
+        <button type="button" data-mode="medium" role="radio">Medium · 2</button>
+        <button type="button" data-mode="hard" role="radio">Hard · 1</button>
+      </div>
+      <div class="progress" id="progress" aria-label="Round progress"></div>
+      <div class="prompt"><h2>Which country is at the centre?</h2><p id="signalMeter"></p><p class="method-note">Distances are between country centre points—not their nearest borders.</p></div>
+      <div class="orbit"><div class="orbit-ring" aria-hidden="true"></div><div id="signals"></div>
+        <form class="center" id="answerForm">
+          <label class="center-label" for="answer">Hidden country</label>
+          <input class="answer" id="answer" list="countryList" autocomplete="off" spellcheck="false" placeholder="TYPE A COUNTRY">
+          <datalist id="countryList"></datalist>
+          <button class="submit" id="sendProbe" type="button">Send probe</button>
+        </form>
+        <div class="guess-probes" id="guessProbes" role="status" aria-label="Recent guesses" hidden></div>
+      </div>
+      <div class="feedback" id="feedback">Intersect the visible distance bands.</div>
+      <div class="actions" id="actions"></div>
+    </div>
+    <div class="results" id="resultsView">
+      <p class="eyebrow">Expedition complete</p><div class="result-globe" aria-hidden="true">5</div>
+      <h2>Five countries found.</h2><p id="resultSummary"></p>
+      <div class="scores"><div class="score"><strong id="signalScore">0</strong><span>Avg. signals</span></div><div class="score"><strong id="missScore">0</strong><span>Misses</span></div><div class="score"><strong id="timeScore">0:00</strong><span>Time</span></div></div>
+      <div class="result-actions"><button class="primary" id="shareButton">Copy result</button><button class="secondary" id="statsButton">View histogram</button><button class="secondary" id="anotherButton">Another set</button></div>
+    </div>
+  </section>
+  <p class="source">Distances use representative country centre points, not borders · 1,000 km clue bands · Data: mledoze/countries</p>
+</main>
+<dialog id="howTo"><div class="howto"><h2>Let’s solve one together.</h2>
+  <p>Each signal describes a ring around its named country. Distances are measured between representative points near the countries’ geographic centres—not between their nearest borders. This means two neighbouring countries can still be hundreds of kilometres apart. The answer must sit inside every ring at once.</p>
+  <div class="tutorial-steps" id="tutorialSteps"></div>
+  <p class="tutorial-note"><b>Revealing a signal is expected strategy, not failure.</b> In Medium mode, begin with two and reveal another whenever several countries still fit. After your second probe, navigation also tells you which direction to travel.</p>
+  <button class="primary" id="closeHowTo">Got it — start playing</button>
+</div></dialog>
+<dialog id="resultModal"><div class="howto result-dialog">
+  <p class="eyebrow">Expedition report</p><h2>Your signal histogram</h2><p>How many countries you solved using 1, 2, 3, or 4 signals.</p>
+  <div class="histogram" id="histogram" aria-label="Signals used histogram"></div>
+  <div class="scores"><div class="score"><strong id="modalAverage">0</strong><span>Avg. signals</span></div><div class="score"><strong id="modalMisses">0</strong><span>Misses</span></div><div class="score"><strong id="modalTime">0:00</strong><span>Time</span></div></div>
+  <button class="primary" id="closeStats">Continue</button>
+</div></dialog>
+<div class="confetti" id="confetti" aria-hidden="true"></div>
+<script>
+const DATA = __WORLD_ORBIT_DATA__;
+const COUNTRIES = new Map(DATA.countries.map(country => [country.name.toLocaleLowerCase(), country]));
+const COUNTRY_BY_NAME = new Map(DATA.countries.map(country => [country.name, country]));
+const POSITIONS = {1:["top"],2:["left","right"],3:["top","right","left"],4:["top","right","bottom","left"]};
+const MODE_SIGNALS = {easy:4,medium:2,hard:1};
+const KEY = "world-orbit:playtest:v2";
+let setIndex=0, roundIndex=0, mode="medium", visibleCount=2, misses=0, solved=false, currentGuess=null, guessHistory=[], probeCount=0, startedAt=Date.now(), results=[];
+const $ = selector => document.querySelector(selector);
+const answerForm=$("#answerForm"), answerInput=$("#answer"), feedback=$("#feedback"), actions=$("#actions");
+function puzzle(){return DATA.sets[setIndex].rounds[roundIndex]}
+function elapsed(){return Math.max(1,Math.round((Date.now()-startedAt)/1000))}
+function formatTime(s){return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`}
+function formatKm(n){return n.toLocaleString("en-US")}
+function distance(a,b){
+  const rad=x=>x*Math.PI/180, lat1=rad(a.lat),lon1=rad(a.lon),lat2=rad(b.lat),lon2=rad(b.lon);
+  const x=Math.sin((lat2-lat1)/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin((lon2-lon1)/2)**2;
+  return 6371*2*Math.atan2(Math.sqrt(Math.max(0,Math.min(1,x))),Math.sqrt(Math.max(0,1-Math.min(1,x))));
+}
+function directionFrom(from,to){const rad=x=>x*Math.PI/180,lat1=rad(from.lat),lat2=rad(to.lat),delta=rad(to.lon-from.lon),y=Math.sin(delta)*Math.cos(lat2),x=Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(delta),degrees=(Math.atan2(y,x)*180/Math.PI+360)%360;return ["north","northeast","east","southeast","south","southwest","west","northwest"][Math.round(degrees/45)%8]}
+function matches(country,clue){const km=distance(country,COUNTRY_BY_NAME.get(clue.anchor));return km>=clue.minKm&&km<=clue.maxKm+1}
+function save(){localStorage.setItem(KEY,JSON.stringify({setIndex,roundIndex,mode,results,startedAt}))}
+function setFeedback(text,kind=""){feedback.className=`feedback ${kind}`;feedback.innerHTML=text}
+function renderModes(){document.querySelectorAll("[data-mode]").forEach(b=>{const active=b.dataset.mode===mode;b.classList.toggle("active",active);b.setAttribute("aria-checked",active?"true":"false")})}
+function renderProgress(){const h=$("#progress");h.innerHTML="";for(let i=0;i<5;i++){if(i)h.insertAdjacentHTML("beforeend",'<span class="line"></span>');const d=document.createElement("span");d.className=`dot ${i<roundIndex?"done":i===roundIndex?"current":""}`;h.append(d)}}
+function renderSignals(checked=null){const shown=puzzle().clues.slice(0,visibleCount),h=$("#signals");h.innerHTML="";shown.forEach((clue,i)=>{const n=document.createElement("div"),state=checked?(matches(checked,clue)?"good":"bad"):"";n.className=`signal ${POSITIONS[shown.length][i]} ${clue.signal.toLowerCase()} ${state}`;n.innerHTML=`<span class="signal-kind">${clue.signal} signal · from</span><span class="anchor">${clue.anchor}</span><span class="band">${formatKm(clue.minKm)}–${formatKm(clue.maxKm)} km</span>`;h.append(n)})}
+function recordGuess(country){probeCount++;currentGuess=country;guessHistory=[country,...guessHistory.filter(guess=>guess.name!==country.name)].slice(0,2)}
+function travelHint(country){return probeCount>=2?` · go ${directionFrom(country,COUNTRY_BY_NAME.get(puzzle().answer))}`:""}
+function renderGuesses(correct=false){const log=$("#guessProbes");if(!guessHistory.length){log.hidden=true;log.innerHTML="";return}const target=COUNTRY_BY_NAME.get(puzzle().answer),shown=puzzle().clues.slice(0,visibleCount);log.hidden=false;log.innerHTML=guessHistory.map((country,index)=>{const matched=shown.filter(clue=>matches(country,clue)).length,km=Math.round(distance(country,target)/100)*100,isCorrect=correct&&index===0,direction=!index&&km?travelHint(country):"";return `<div class="guess-probe ${index?"previous":""} ${isCorrect?"correct":""}"><span class="guess-label">${isCorrect?"Target acquired":index?"Previous probe":"Latest probe"}</span><span class="guess-name">${country.name}</span><span class="guess-match">${km?`About ${formatKm(km)} km centre-to-centre${direction}`:"At the target"} · ${matched}/${visibleCount} signals</span></div>`}).join("")}
+function updateMeter(){const left=puzzle().clues[visibleCount-1].candidates,advice=left===1?"one country remains":"reveal another if stuck";$("#signalMeter").textContent=`${visibleCount} of 4 signals · ${left} possible ${left===1?"country":"countries"} · ${advice}`}
+function updateActions(){if(solved)return;if(visibleCount<4){const b=document.createElement("button");b.className="secondary";b.textContent="Reveal next signal";b.onclick=()=>revealNext(false);actions.replaceChildren(b)}else actions.innerHTML=""}
+function revealNext(fromGuess){if(visibleCount>=4)return;visibleCount++;renderSignals(currentGuess);renderGuesses();updateMeter();updateActions();if(!fromGuess)setFeedback(`Signal ${visibleCount} received. ${puzzle().clues[visibleCount-1].candidates} countries remain.`)}
+function renderRound(){misses=0;solved=false;currentGuess=null;guessHistory=[];probeCount=0;visibleCount=MODE_SIGNALS[mode];$("#roundLabel").textContent=`Country ${roundIndex+1} of 5`;$("#setName").textContent=`Playtest ${String(setIndex+1).padStart(2,"0")}`;$("#prevSet").disabled=setIndex===0;$("#nextSet").disabled=setIndex===DATA.sets.length-1;renderModes();renderProgress();renderSignals();renderGuesses();updateMeter();answerInput.value="";answerInput.disabled=false;answerForm.querySelector("button").hidden=false;setFeedback(mode==="easy"?"All four satellites are transmitting.":"Guess when confident, or request another signal.");updateActions();setTimeout(()=>answerInput.focus(),50);save()}
+function applyMiss(country,message){misses++;recordGuess(country);const added=visibleCount<4;if(added)visibleCount++;renderSignals(country);renderGuesses();updateMeter();updateActions();const direction=probeCount>=2?` Go ${directionFrom(country,COUNTRY_BY_NAME.get(puzzle().answer))}.`:"";setFeedback(`${message}${direction}${added?` <span class="badge">Signal ${visibleCount} received</span>`:""}`,"error");answerForm.classList.remove("shake");void answerForm.offsetWidth;answerForm.classList.add("shake");answerInput.select()}
+function sendProbe(event){event?.preventDefault();if(solved)return;const country=COUNTRIES.get(answerInput.value.trim().toLocaleLowerCase());if(!country){setFeedback("Choose a country from the list.","error");answerInput.select();return}if(country.name===puzzle().answer){solve();return}const shown=puzzle().clues.slice(0,visibleCount);if(visibleCount<4&&shown.every(clue=>matches(country,clue))){recordGuess(country);revealNext(true);renderSignals(country);renderGuesses();const direction=probeCount>=2?` Go ${directionFrom(country,COUNTRY_BY_NAME.get(puzzle().answer))}.`:"";setFeedback(`${country.name} fits every visible signal, so it is not a miss. Another satellite joined.${direction}`);answerInput.select();return}applyMiss(country,`${country.name} breaks at least one distance band.`)}
+function solve(){solved=true;const answer=COUNTRY_BY_NAME.get(puzzle().answer);recordGuess(answer);answerInput.value=answer.name;answerInput.disabled=true;answerForm.querySelector("button").hidden=true;answerForm.classList.add("pop");renderSignals(answer);renderGuesses(true);setFeedback(misses?`Target acquired with ${misses} miss${misses===1?"":"es"}.`:"Target acquired — clean approach!","success");results.push({signals:visibleCount,misses,mode});save();const b=document.createElement("button");b.className="primary";b.textContent=roundIndex===4?"See expedition":"Next country";b.onclick=nextRound;actions.replaceChildren(b)}
+function nextRound(){answerForm.classList.remove("pop");if(roundIndex===4){showResults();return}roundIndex++;renderRound()}
+function renderHistogram(){const seconds=elapsed(),bins=[1,2,3,4].map(signals=>results.filter(result=>result.signals===signals).length),max=Math.max(1,...bins),avg=results.reduce((sum,result)=>sum+result.signals,0)/results.length,totalMisses=results.reduce((sum,result)=>sum+result.misses,0);$("#histogram").innerHTML=bins.map((count,index)=>`<div class="histogram-bin"><span class="histogram-count">${count} ${count===1?"country":"countries"}</span><span class="histogram-bar" style="height:${Math.max(4,count/max*100)}%"></span><span class="histogram-label">${index+1} signal${index?"s":""}</span></div>`).join("");$("#modalAverage").textContent=avg.toFixed(1);$("#modalMisses").textContent=totalMisses;$("#modalTime").textContent=formatTime(seconds)}
+function celebrate(){if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const layer=$("#confetti"),colors=["#b9e75d","#ef765d","#f6c85f","#91ccdc","#fffef8"];layer.innerHTML="";for(let i=0;i<70;i++){const piece=document.createElement("i");piece.className="confetti-piece";piece.style.left=`${Math.random()*100}%`;piece.style.background=colors[i%colors.length];piece.style.animationDelay=`${Math.random()*.55}s`;piece.style.setProperty("--drift",`${Math.round(Math.random()*180-90)}px`);piece.style.setProperty("--spin",`${Math.round(Math.random()*720+360)}deg`);layer.append(piece)}setTimeout(()=>layer.innerHTML="",3600)}
+function openStats(){renderHistogram();if(!$("#resultModal").open)$("#resultModal").showModal()}
+function showResults(){const seconds=elapsed(),avg=results.reduce((s,r)=>s+r.signals,0)/results.length,totalMisses=results.reduce((s,r)=>s+r.misses,0);$("#playView").hidden=true;$("#resultsView").classList.add("show");$("#signalScore").textContent=avg.toFixed(1);$("#missScore").textContent=totalMisses;$("#timeScore").textContent=formatTime(seconds);$("#resultSummary").textContent=`${mode[0].toUpperCase()+mode.slice(1)} mode · ${avg.toFixed(1)} signals used per country.`;openStats();celebrate()}
+function shareText(){const line=results.map(r=>r.signals).join(" · "),m=results.reduce((s,r)=>s+r.misses,0);return `WORLD ORBIT · PLAYTEST ${String(setIndex+1).padStart(2,"0")} · ${mode.toUpperCase()}\n🌍 ${line} signals\n${m} miss${m===1?"":"es"}`}
+async function copyResult(){const t=shareText();try{await navigator.clipboard.writeText(t)}catch{window.prompt("Copy your result:",t)}$("#shareButton").textContent="Copied!";setTimeout(()=>$("#shareButton").textContent="Copy result",1500)}
+function changeSet(index){if(index<0||index>=DATA.sets.length)return;if($("#resultModal").open)$("#resultModal").close();setIndex=index;roundIndex=0;results=[];startedAt=Date.now();$("#playView").hidden=false;$("#resultsView").classList.remove("show");renderRound()}
+function selectMode(next){if(!MODE_SIGNALS[next]||next===mode)return;mode=next;roundIndex=0;results=[];startedAt=Date.now();$("#playView").hidden=false;$("#resultsView").classList.remove("show");renderRound()}
+function tutorialCandidates(count){return DATA.countries.filter(country=>DATA.tutorial.clues.slice(0,count).every(clue=>country.name!==clue.anchor&&matches(country,clue))).map(country=>country.name)}
+function renderTutorial(){
+  const clues=DATA.tutorial.clues,c2=tutorialCandidates(2),c3=tutorialCandidates(3),band=clue=>`${formatKm(clue.minKm)}–${formatKm(clue.maxKm)} km`;
+  const pills=names=>`<div class="candidate-list">${names.map(name=>`<span>${name}</span>`).join("")}</div>`;
+  $("#tutorialSteps").innerHTML=`
+    <section class="tutorial-step"><span class="step-number">1</span><div><h3>Draw the first ring</h3><p><b>${clues[0].anchor}</b> reports <b>${band(clues[0])}</b>. That still leaves ${clues[0].candidates} countries, so do not guess yet.</p></div></section>
+    <section class="tutorial-step"><span class="step-number">2</span><div><h3>Intersect a second ring</h3><p><b>${clues[1].anchor}</b> reports <b>${band(clues[1])}</b>. Only these fit both signals:</p>${pills(c2)}</div></section>
+    <section class="tutorial-step"><span class="step-number">3</span><div><h3>Narrow instead of gambling</h3><p>Reveal <b>${clues[2].anchor}: ${band(clues[2])}</b>. The shortlist shrinks again:</p>${pills(c3)}</div></section>
+    <section class="tutorial-step"><span class="step-number">4</span><div><h3>Confirm the centre</h3><p>The final signal from <b>${clues[3].anchor}</b> leaves exactly one match: <b>${DATA.tutorial.answer}</b>.</p></div></section>`;
+}
+DATA.countries.forEach(country=>{const o=document.createElement("option");o.value=country.name;$("#countryList").append(o)});
+$("#sendProbe").addEventListener("click",sendProbe);answerInput.addEventListener("keydown",event=>{if(event.key==="Enter")sendProbe(event)});document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>selectMode(b.dataset.mode));$("#prevSet").onclick=()=>changeSet(setIndex-1);$("#nextSet").onclick=()=>changeSet(setIndex+1);$("#anotherButton").onclick=()=>changeSet((setIndex+1)%DATA.sets.length);$("#shareButton").onclick=copyResult;$("#statsButton").onclick=openStats;$("#closeStats").onclick=()=>$("#resultModal").close();$("#helpButton").onclick=()=>$("#howTo").showModal();$("#closeHowTo").onclick=()=>$("#howTo").close();
+renderTutorial();renderRound();if(!localStorage.getItem(`${KEY}:welcomed`)){$("#howTo").showModal();localStorage.setItem(`${KEY}:welcomed`,"1")}
+</script>
+</body>
+</html>

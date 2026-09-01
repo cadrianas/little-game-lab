@@ -1,0 +1,9 @@
+# Dictionary entries that make a published ladder feel like a name,
+# abbreviation, archaic form, or spelling exception. These remain available
+# in the broader player-input dictionary unless also listed in blocklist.txt.
+aids
+kill
+labs
+mars
+nude
+tabs

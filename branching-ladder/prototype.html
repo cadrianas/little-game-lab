@@ -1,0 +1,1574 @@
+<meta charset="utf-8">
+<title>Branching Ladder</title>
+<script>
+  if (new URLSearchParams(location.search).has("verify")) {
+    window.__BRANCHING_ERRORS__ = [];
+    addEventListener("error", (event) => {
+      window.__BRANCHING_ERRORS__.push(event.message || "unknown page error");
+    });
+    addEventListener("unhandledrejection", (event) => {
+      window.__BRANCHING_ERRORS__.push(String(event.reason || "unhandled rejection"));
+    });
+  } else {
+    // Keep automated browser checks independent of external font servers.
+    for (const href of ["https://fonts.googleapis.com", "https://fonts.gstatic.com"]) {
+      const preconnect = document.createElement("link");
+      preconnect.rel = "preconnect";
+      preconnect.href = href;
+      if (href.includes("gstatic")) preconnect.crossOrigin = "anonymous";
+      document.head.appendChild(preconnect);
+    }
+    const fonts = document.createElement("link");
+    fonts.rel = "stylesheet";
+    fonts.href = "https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap";
+    document.head.appendChild(fonts);
+  }
+</script>
+
+<style>
+  :root {
+    --paper: #edeee9;
+    --card: #f7f8f4;
+    --ink: #16191c;
+    --muted: #697077;
+    --rule: #d1d4cc;
+    --rule-soft: #e1e3db;
+    --accent: #1b6a55;
+    --accent-soft: #cadcd4;
+    --warn: #96382a;
+
+    --step-0: .8125rem;
+    --step-1: .9375rem;
+    --step-2: 1.125rem;
+    --step-3: 1.5rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #121517;
+      --card: #191d20;
+      --ink: #e4e6e1;
+      --muted: #868d95;
+      --rule: #2a2f33;
+      --rule-soft: #22272a;
+      --accent: #52ab8c;
+      --accent-soft: #234137;
+      --warn: #cc6d55;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #121517;
+    --card: #191d20;
+    --ink: #e4e6e1;
+    --muted: #868d95;
+    --rule: #2a2f33;
+    --rule-soft: #22272a;
+    --accent: #52ab8c;
+    --accent-soft: #234137;
+    --warn: #cc6d55;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size: var(--step-1);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 33rem;
+    margin: 0 auto;
+    padding: 1.75rem 1.125rem 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  h1 {
+    font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    font-weight: 800;
+    font-size: var(--step-3);
+    letter-spacing: -.02em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .masthead { display: flex; flex-direction: column; gap: .3rem; }
+  .tagline { color: var(--muted); font-size: var(--step-0); margin: 0; }
+
+  .label {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .6875rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+
+  button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button:hover:not(:disabled) { background: var(--rule-soft); }
+  button:disabled { opacity: .4; cursor: default; }
+
+  /* ---- day bar ---------------------------------------------------- */
+
+  .daybar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    border-block: 1px solid var(--rule);
+    padding: .5rem 0;
+  }
+
+  .daybar .who { display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; }
+  .puzzle-date { color: var(--muted); font-size: var(--step-0); }
+  .stepper { display: flex; gap: .375rem; }
+
+  .stepper button {
+    width: 1.75rem;
+    height: 1.75rem;
+    display: grid;
+    place-items: center;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    line-height: 1;
+  }
+
+  .archivebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin-top: -.75rem;
+  }
+
+  .archive-open {
+    padding: .4rem .65rem;
+    font-size: var(--step-0);
+    font-weight: 600;
+  }
+
+  .archive-filter {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+
+  .archive-filter select {
+    padding: .4rem .55rem;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    font: var(--step-0) "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  .archive-filter select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .history-stats {
+    display: flex;
+    gap: .75rem;
+    color: var(--muted);
+    font-size: var(--step-0);
+  }
+
+  .history-stats b {
+    color: var(--ink);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  /* ---- archive ---------------------------------------------------- */
+
+  dialog {
+    width: min(34rem, calc(100% - 2rem));
+    max-height: calc(100dvh - 2rem);
+    padding: 0;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+  }
+
+  dialog::backdrop { background: #080b0dcc; }
+
+  .archive-shell { padding: 1rem; }
+
+  .archive-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .archive-head h2 {
+    margin: 0;
+    font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    font-size: var(--step-3);
+  }
+
+  .archive-head button { padding: .35rem .6rem; font-size: var(--step-0); }
+  .archive-intro { margin: .4rem 0 1rem; color: var(--muted); font-size: var(--step-0); }
+
+  .archive-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .5rem;
+    margin-bottom: 1rem;
+  }
+
+  .archive-stat {
+    border-top: 1px solid var(--rule);
+    padding-top: .45rem;
+  }
+
+  .archive-stat span,
+  .archive-stat b { display: block; }
+  .archive-stat b { margin-top: .15rem; font-family: "IBM Plex Mono", ui-monospace, monospace; }
+
+  .archive-tools {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: .75rem;
+  }
+
+  .archive-list { min-height: 5rem; }
+  .archive-empty { color: var(--muted); font-size: var(--step-0); }
+  .archive-month + .archive-month { margin-top: 1rem; }
+  .archive-month h3 { margin: 0 0 .5rem; font-size: var(--step-0); color: var(--muted); }
+
+  .archive-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .45rem;
+  }
+
+  .archive-item {
+    padding: .55rem .6rem;
+    text-align: left;
+    font-size: var(--step-0);
+  }
+
+  .archive-item strong,
+  .archive-item span { display: block; }
+  .archive-item strong { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+  .archive-item span { margin-top: .15rem; color: var(--muted); }
+  .archive-item.complete { border-color: var(--accent); }
+  .archive-item.complete strong { color: var(--accent); }
+  .archive-item[aria-current="date"] { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  /* ---- brief ------------------------------------------------------ */
+
+  .brief {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: .875rem;
+    display: flex;
+    flex-direction: column;
+    gap: .625rem;
+  }
+
+  .brief-row { display: flex; align-items: center; gap: .625rem; flex-wrap: wrap; }
+
+  .from {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 700;
+    font-size: var(--step-2);
+    letter-spacing: .12em;
+  }
+
+  .chips { display: flex; gap: .375rem; flex-wrap: wrap; }
+
+  .chip {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 600;
+    font-size: var(--step-0);
+    letter-spacing: .1em;
+    padding: .25rem .5rem;
+    border: 1px dashed var(--rule);
+    border-radius: 2px;
+    color: var(--muted);
+  }
+
+  .chip.reached {
+    border-style: solid;
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .mode-rule {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    padding-top: .625rem;
+    border-top: 1px solid var(--rule-soft);
+    color: var(--muted);
+    font-size: var(--step-0);
+  }
+
+  .mode-rule .label { color: var(--accent); }
+
+  /* ---- input ------------------------------------------------------ */
+
+  .compose { display: flex; gap: .5rem; }
+
+  input[type="text"] {
+    flex: 1;
+    min-width: 0;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: var(--step-2);
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    padding: .5rem .625rem;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+  }
+
+  input[type="text"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .compose button { padding: .5rem .875rem; font-weight: 600; }
+
+  .note { font-size: var(--step-0); min-height: 1.25rem; }
+  .note.bad { color: var(--warn); }
+  .note.good { color: var(--accent); }
+
+  /* ---- tree ------------------------------------------------------- */
+
+  .tree { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: var(--step-1); }
+  .tree ul { list-style: none; margin: 0; padding: 0 0 0 1.1rem; }
+  .tree > ul { padding-left: 0; }
+
+  .tree li { position: relative; padding: .14rem 0 .14rem .95rem; }
+  .tree > ul > li { padding-left: 0; }
+
+  .tree li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: calc(50% - .05rem);
+    width: .65rem;
+    border-left: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .tree li::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: calc(50% - .05rem);
+    bottom: 0;
+    border-left: 1px solid var(--rule);
+  }
+
+  .tree li:last-child::after { display: none; }
+  .tree > ul > li::before, .tree > ul > li::after { display: none; }
+
+  .w { letter-spacing: .14em; }
+  .w b { color: var(--accent); font-weight: 700; }
+
+  .w.start { font-weight: 700; }
+
+  .w.trunk {
+    background: linear-gradient(to top, var(--accent-soft) 0 .28rem, transparent .28rem);
+    font-weight: 600;
+  }
+
+  .w.fork {
+    background: var(--accent-soft);
+    color: var(--accent);
+    outline: 1px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 1px;
+  }
+
+  .fork-badge {
+    margin-left: .6rem;
+    color: var(--accent);
+    font-size: .625rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .w.target {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 700;
+    padding: .05rem .3rem;
+    border-radius: 2px;
+  }
+
+  .w.target b { color: inherit; }
+
+  .leaf-control {
+    border: 0;
+    padding: .05rem .25rem;
+    margin: -.05rem -.25rem;
+    display: inline-flex;
+    align-items: baseline;
+    gap: .4rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    background: transparent;
+  }
+
+  .leaf-control:hover { background: var(--rule-soft); }
+
+  .prune-mark {
+    color: var(--warn);
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    opacity: .45;
+  }
+
+  .leaf-control:hover .prune-mark,
+  .leaf-control:focus-visible .prune-mark { opacity: 1; }
+
+  .tree-summary {
+    min-height: 1.25rem;
+    margin-top: .4rem;
+    color: var(--muted);
+    font-size: var(--step-0);
+  }
+
+  .tree-summary.forked { color: var(--accent); }
+
+  @keyframes completion-path {
+    0% { opacity: .35; transform: translateY(2px); }
+    55% { color: var(--accent); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  .tree.celebrating .w {
+    display: inline-block;
+    animation: completion-path .5s ease-out both;
+    animation-delay: var(--completion-delay, 0ms);
+  }
+
+  /* ---- completion ------------------------------------------------- */
+
+  .completion,
+  .comparison {
+    background: var(--card);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    padding: .875rem;
+  }
+
+  .completion[hidden],
+  .comparison[hidden] { display: none; }
+
+  .completion-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+  }
+
+  .completion h2,
+  .comparison h2 {
+    margin: 0;
+    font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    font-size: var(--step-2);
+  }
+
+  .completion-verdict {
+    color: var(--accent);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: var(--step-0);
+    font-weight: 700;
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: .5rem;
+    margin: .75rem 0;
+  }
+
+  .result-stat {
+    min-width: 0;
+    border-top: 1px solid var(--rule-soft);
+    padding-top: .45rem;
+  }
+
+  .result-stat span { display: block; }
+  .result-stat b {
+    display: block;
+    margin-top: .15rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: var(--step-1);
+  }
+
+  .completion-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .completion-actions button { padding: .45rem .7rem; font-size: var(--step-0); }
+  .completion-actions .primary { background: var(--accent); border-color: var(--accent); color: var(--card); }
+
+  .comparison { border-color: var(--rule); }
+  .comparison-copy { margin: .25rem 0 .75rem; color: var(--muted); font-size: var(--step-0); }
+  .comparison .tree { padding-top: .25rem; }
+
+  /* ---- hints ------------------------------------------------------ */
+
+  .hint-panel {
+    background: var(--card);
+    border-left: 3px solid var(--accent);
+    padding: .75rem .875rem;
+  }
+
+  .hint-panel[hidden] { display: none; }
+  .hint-panel .label { color: var(--accent); }
+
+  .hint-list {
+    margin: .45rem 0 0;
+    padding-left: 1.35rem;
+    font-size: var(--step-0);
+  }
+
+  .hint-list li + li { margin-top: .3rem; }
+
+  /* ---- score ------------------------------------------------------ */
+
+  .score {
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--card);
+    padding: .875rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+
+  .score .row { display: flex; justify-content: space-between; gap: 1rem; font-size: var(--step-0); }
+  .score .row b { font-family: "IBM Plex Mono", ui-monospace, monospace; font-weight: 600; }
+  .score .hit { color: var(--accent); }
+
+  .actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .actions button { padding: .45rem .7rem; font-size: var(--step-0); }
+
+  .foot { color: var(--muted); font-size: var(--step-0); border-top: 1px solid var(--rule); padding-top: .75rem; }
+  .foot p { margin: 0 0 .5rem; }
+  .foot p:last-child { margin-bottom: 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  @media (max-width: 30rem) {
+    .result-grid { grid-template-columns: repeat(3, 1fr); }
+    .archive-stats { grid-template-columns: repeat(2, 1fr); }
+    .archive-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <h1>Branching Ladder</h1>
+    <p class="tagline">Grow one tree from the start word to all three targets, in any order. Each new word must be a real word, one letter different from something already on your tree. Fewest rungs wins &mdash; so find the trunk they share.</p>
+  </header>
+
+  <div class="daybar">
+    <div class="who">
+      <span class="label">Day</span>
+      <span class="mono" id="dayNo">1</span>
+      <time class="puzzle-date" id="puzzleDate"></time>
+    </div>
+    <div class="stepper">
+      <button id="prev" type="button" aria-label="Previous day">&larr;</button>
+      <button id="next" type="button" aria-label="Next day">&rarr;</button>
+    </div>
+  </div>
+
+  <div class="archivebar">
+    <button class="archive-open" id="openArchive" type="button">Archive</button>
+    <div class="history-stats" aria-label="Standard Mode completion history">
+      <span><b id="completedTotal">0</b> completed</span>
+      <span><b id="streak">0</b> day streak</span>
+    </div>
+  </div>
+
+  <dialog id="archiveDialog" aria-labelledby="archiveTitle">
+    <div class="archive-shell">
+      <header class="archive-head">
+        <h2 id="archiveTitle">Puzzle archive</h2>
+        <button id="closeArchive" type="button" aria-label="Close archive">Close</button>
+      </header>
+      <p class="archive-intro">Play any released Branching Ladder. Future puzzles stay hidden until their date.</p>
+      <div class="archive-stats" aria-label="Standard Mode statistics">
+        <div class="archive-stat"><span class="label">Played</span><b id="archivePlayed">0</b></div>
+        <div class="archive-stat"><span class="label">Completed</span><b id="archiveCompleted">0</b></div>
+        <div class="archive-stat"><span class="label">Current streak</span><b id="archiveStreak">0</b></div>
+        <div class="archive-stat"><span class="label">Best streak</span><b id="archiveBestStreak">0</b></div>
+      </div>
+      <div class="archive-tools">
+        <span class="label">Newest first</span>
+        <label class="archive-filter" for="archiveFilter">
+          <span class="label">Show</span>
+          <select id="archiveFilter">
+            <option value="all">All</option>
+            <option value="unfinished">Unfinished</option>
+            <option value="completed">Completed</option>
+          </select>
+        </label>
+      </div>
+      <div class="archive-list" id="archiveList"></div>
+    </div>
+  </dialog>
+
+  <div class="brief">
+    <div class="brief-row">
+      <span class="label">From</span>
+      <span class="from" id="startWord">TREE</span>
+    </div>
+    <div class="brief-row">
+      <span class="label">Targets</span>
+      <span class="chips" id="chips" aria-label="Targets; reach in any order"></span>
+    </div>
+    <div class="mode-rule" id="orderRule">
+      <span class="label">Standard mode</span>
+      <span>Reach the targets in any order.</span>
+    </div>
+  </div>
+
+  <div>
+    <form class="compose" id="form">
+      <input type="text" id="entry" maxlength="4" autocomplete="off" autocapitalize="off"
+             autocorrect="off" spellcheck="false" aria-label="Next word" placeholder="next word">
+      <button type="submit" id="addBtn">Add</button>
+    </form>
+    <div class="note" id="note" role="status" aria-live="polite">&nbsp;</div>
+  </div>
+
+  <div>
+    <div class="tree" id="tree"></div>
+    <div class="tree-summary" id="treeSummary" role="status" aria-live="polite"></div>
+  </div>
+
+  <section class="completion" id="completion" aria-labelledby="completionTitle" aria-live="polite" hidden>
+    <div class="completion-head">
+      <h2 id="completionTitle">Tree complete</h2>
+      <span class="completion-verdict" id="completionVerdict"></span>
+    </div>
+    <div class="result-grid">
+      <div class="result-stat"><span class="label">Rungs</span><b id="resultRungs"></b></div>
+      <div class="result-stat"><span class="label">Par</span><b id="resultPar"></b></div>
+      <div class="result-stat"><span class="label">Hints</span><b id="resultHints"></b></div>
+      <div class="result-stat"><span class="label">Trunk</span><b id="resultTrunk"></b></div>
+      <div class="result-stat"><span class="label">Saved</span><b id="resultSaved"></b></div>
+    </div>
+    <div class="completion-actions">
+      <button id="improve" type="button" class="primary">Keep improving</button>
+      <button id="compare" type="button">Compare with par</button>
+      <button id="completionShare" type="button">Copy result</button>
+    </div>
+  </section>
+
+  <section class="comparison" id="comparison" aria-labelledby="comparisonTitle" hidden>
+    <h2 id="comparisonTitle">Par tree</h2>
+    <p class="comparison-copy">Your tree remains above. This is one optimal solution at <span id="comparisonPar"></span> rungs.</p>
+    <div class="tree" id="parTree" aria-label="Official par tree"></div>
+  </section>
+
+  <section class="hint-panel" id="hintPanel" aria-label="Progressive hints" aria-live="polite" hidden>
+    <div class="label">Hints <span id="hintProgress"></span></div>
+    <ol class="hint-list" id="hintList"></ol>
+  </section>
+
+  <section class="score">
+    <div class="row"><span>Rungs used</span><b id="rungs">0</b></div>
+    <div class="row"><span>Shared trunk</span><b id="sharedTrunk">&mdash;</b></div>
+    <div class="row"><span>Hints used</span><b id="hintsUsed">0</b></div>
+    <div class="row"><span>Par</span><b id="par">&mdash;</b></div>
+    <div class="row"><span>Without sharing</span><b id="separate">&mdash;</b></div>
+    <div class="actions">
+      <button id="undo" type="button">Undo</button>
+      <button id="reset" type="button">Start over</button>
+      <button id="hintBtn" type="button" aria-controls="hintPanel">Hint</button>
+      <button id="reveal" type="button">Compare with par</button>
+      <button id="share" type="button">Copy result</button>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>The highlighted letter is the one that changed from the word above it.</p>
+    <p>The green path is the shared trunk; the outlined word is its first fork.</p>
+    <p>Select any leaf word marked × to prune it without disturbing other branches.</p>
+    <p id="hint">Solving the three ladders one at a time works, but costs more rungs than sharing a trunk does.</p>
+  </footer>
+</div>
+
+<script>
+  const DATA = {"words":["aahs","aals","abas","abba","abbe","abed","abet","able","ably","abos","abri","abut","abye","abys","aced","aces","ache","achy","acid","acme","acne","acre","acts","acyl","adds","adit","ados","adze","aeon","aero","aery","afar","agar","agas","aged","agee","ager","ages","agha","agin","agio","agly","agma","agog","agon","ague","ahem","ahoy","aide","aids","ails","aims","ains","airn","airs","airt","airy","aits","ajar","ajee","akee","akin","alae","alar","alas","albs","alec","alee","alef","ales","alfa","alga","alif","alit","alky","alls","ally","alme","alms","aloe","alow","alps","also","alto","alts","alum","amah","amas","ambo","amen","amia","amid","amie","amin","amir","amis","ammo","amok","amps","amus","amyl","anas","ands","anes","anew","anga","anil","anis","ankh","anoa","anon","ansa","anta","ante","anti","ants","anus","aped","aper","apes","apex","apod","apse","aqua","arak","arbs","arch","arco","arcs","area","ares","arfs","aria","arid","aril","arks","arms","army","arts","arty","arum","arvo","aryl","asci","asea","ashy","asks","asps","atap","ates","atma","atom","atop","auks","auld","aunt","aura","auto","aver","aves","avid","avos","avow","away","awed","awee","awes","awls","awns","awny","awol","awry","axal","axed","axel","axes","axil","axis","axle","axon","ayah","ayes","ayin","azan","azon","baal","baas","babe","babu","baby","back","bade","bads","baff","bags","baht","bail","bait","bake","bald","bale","balk","ball","balm","bals","bams","band","bane","bang","bani","bank","bans","baps","barb","bard","bare","barf","bark","barm","barn","bars","base","bash","bask","bass","bast","bate","bath","bats","batt","baud","bawd","bawl","bays","bead","beak","beam","bean","bear","beat","beau","beds","bedu","beef","been","beep","beer","bees","beet","begs","bell","bels","belt","bema","bend","bene","bens","bent","berm","best","beta","bets","bevy","beys","bhut","bias","bibb","bibs","bice","bide","bids","bier","biff","bigs","bike","bile","bilk","bill","bima","bind","bine","bins","bint","bios","bird","birk","birl","birr","bise","bisk","bite","bits","bitt","bize","blab","blae","blah","blam","blat","blaw","bleb","bled","blet","blew","blin","blip","blob","bloc","blot","blow","blub","blue","blur","boar","boas","boat","bobs","bock","bode","bods","body","boff","bogs","bogy","boil","bola","bold","bole","boll","bolo","bolt","bomb","bond","bone","bong","bonk","bony","book","boom","boon","boor","boos","boot","bops","bora","bore","born","bort","bosh","bosk","boss","bota","both","bots","bott","bout","bowl","bows","boxy","boyo","boys","bozo","brad","brae","brag","bran","bras","brat","braw","bray","bred","bree","bren","brew","brie","brig","brim","brin","brio","bris","brit","broo","bros","brow","brrr","brut","bubo","bubs","buck","buds","buff","bugs","buhl","buhr","bulb","bulk","bull","bumf","bump","bums","bund","bung","bunk","bunn","buns","bunt","buoy","bura","burd","burg","burl","burn","burp","burr","burs","bury","bush","busk","buss","bust","busy","bute","buts","buys","buzz","byes","byre","byrl","byte","cabs","caca","cade","cadi","cads","cafe","caff","cage","cagy","caid","cain","cake","caky","calf","calk","call","calm","calo","calx","came","camp","cams","cane","cans","cant","cape","caph","capo","caps","carb","card","care","cark","carn","carp","cars","cart","case","cash","cask","cast","cate","cats","caul","cave","cavy","caws","cays","ceca","cede","cedi","cees","ceil","cell","cels","celt","cent","cepe","ceps","cere","cero","cess","cete","cham","chao","chap","char","chat","chaw","chay","chef","chew","chez","chia","chic","chid","chin","chip","chis","chit","chon","chop","chow","chub","chug","chum","ciao","cine","cion","cire","cist","cite","city","clad","clag","clam","clan","clap","claw","clay","clef","clew","clip","clod","clog","clon","clop","clot","cloy","club","clue","coal","coat","coax","cobb","cobs","coco","coda","code","cods","coed","coff","coft","cogs","coho","coif","coil","coin","coir","coke","cola","cold","cols","colt","coly","coma","comb","come","cone","coni","conk","conn","cons","cony","coof","cook","cool","coop","coos","coot","cope","cops","copy","cord","core","corf","cork","corm","corn","cory","cosh","coss","cost","cosy","cote","cots","coup","cove","cowl","cows","cowy","coxa","coys","cozy","crab","crag","cram","craw","crew","crib","cris","croc","crop","crow","crud","crus","crux","cube","cubs","cuds","cued","cues","cuff","cuif","cuke","cull","culm","cult","cups","curb","curd","cure","curf","curl","curn","curr","curs","curt","cusk","cusp","cuss","cute","cuts","cwms","cyan","cyma","cyme","cyst","czar","dabs","dace","dada","dado","dads","daff","daft","dags","dahl","dahs","dais","daks","dale","dals","dame","damp","dams","dang","dank","daps","darb","dare","dark","darn","dart","dash","data","date","dato","daub","daut","davy","dawk","dawn","daws","dawt","days","daze","dead","deaf","deal","dean","dear","debs","debt","deck","deco","deed","deem","deep","deer","dees","deet","defi","deft","defy","deil","deke","dele","delf","deli","dels","deme","demo","demy","dene","dens","dent","deny","dere","derm","desk","deva","devs","dews","dewy","dexy","deys","dhak","dhal","dhow","dial","dibs","dice","dido","didy","died","diel","dies","diet","digs","dill","dime","dims","dine","ding","dink","dins","dint","diol","dips","dipt","dire","dirk","dirl","dirt","disc","dish","disk","diss","dita","dite","dits","ditz","diva","dive","djin","doat","doby","dock","dodo","doer","does","doff","doge","dogs","dogy","doit","dojo","dole","doll","dols","dolt","dome","doms","dona","done","dons","doom","door","dopa","dope","dopy","dore","dork","dorm","dorp","dorr","dors","dory","dose","doss","dost","dote","doth","dots","doty","doum","dour","doux","dove","down","dows","doxy","doze","dozy","drab","drag","dram","drat","draw","dray","dree","dreg","drek","drew","drib","drip","drop","drub","drug","drum","drys","duad","dual","dubs","duce","duci","duck","duct","dude","duds","duel","dues","duet","duff","dugs","duit","duke","dull","duly","duma","dumb","dump","dune","dung","dunk","duns","dunt","duos","dupe","dups","dura","dure","durn","duro","durr","dusk","dust","duty","dyad","dyed","dyer","dyes","dyne","each","earl","earn","ears","ease","east","easy","eath","eats","eaux","eave","ebbs","ebon","eche","echo","ecru","ecus","eddo","eddy","edge","edgy","edhs","edit","eels","eely","eery","effs","efts","egad","egal","eger","eggs","eggy","egis","egos","eide","eked","ekes","elan","elds","elhi","elks","ells","elms","elmy","else","emes","emeu","emfs","emic","emir","emit","emus","emyd","ends","engs","enol","enow","envy","eons","epee","epha","epic","epos","eras","ergo","ergs","erne","erns","eros","errs","erst","eses","espy","etas","etch","eths","etic","etna","etui","euro","even","ever","eves","evil","ewer","ewes","exam","exes","exit","exon","expo","eyas","eyed","eyen","eyer","eyes","eyne","eyra","eyre","eyry","face","fact","fade","fado","fads","fail","fain","fair","fake","fall","falx","fame","fane","fang","fano","fans","fard","fare","farl","farm","faro","fash","fast","fate","fats","faun","faux","fava","fave","fawn","fays","faze","feal","fear","feat","feds","feed","feel","fees","feet","fehs","fell","felt","feme","fems","fend","fens","feod","fere","fern","fess","feta","fete","fets","feud","feus","fiar","fiat","fibs","fice","fico","fido","fids","fief","fife","figs","fila","file","fill","film","filo","fils","find","fine","fink","fino","fins","fire","firm","firn","firs","fisc","fish","fist","fits","five","fixt","fizz","flab","flag","flak","flam","flan","flap","flat","flaw","flax","flay","flea","fled","flee","flew","flex","fley","flic","flip","flit","floc","floe","flog","flop","flow","flub","flue","flus","flux","foal","foam","fobs","foci","foes","fogs","fogy","fohn","foil","foin","fold","folk","fond","fons","font","food","fool","foot","fops","fora","forb","ford","fore","fork","form","fort","foss","foul","four","fowl","foxy","foys","fozy","frae","frag","frap","frat","fray","free","fret","frig","frit","friz","froe","frog","from","frow","frug","fubs","fuci","fuds","fuel","fugs","fugu","full","fume","fumy","fund","funk","funs","furl","furs","fury","fuse","fuss","futz","fuze","fuzz","fyce","fyke","gabs","gaby","gadi","gads","gaed","gaen","gaes","gaff","gaga","gage","gags","gain","gait","gala","gale","gall","gals","gama","gamb","game","gamp","gams","gamy","gane","gang","gaol","gape","gaps","gapy","garb","gars","gash","gasp","gast","gate","gats","gaud","gaum","gaun","gaur","gave","gawk","gawp","gaze","gear","geck","geds","geed","geek","gees","geez","geld","gels","gelt","gems","gene","gens","gent","genu","germ","gest","geta","gets","geum","ghat","ghee","ghis","gibe","gibs","gids","gied","gien","gies","gift","giga","gigs","gild","gill","gilt","gimp","gink","gins","gips","gird","girl","girn","giro","girt","gist","gits","give","glad","gled","glee","gleg","glen","gley","glia","glib","glim","glob","glom","glop","glow","glue","glug","glum","glut","gnar","gnat","gnaw","gnus","goad","goal","goas","goat","gobo","gobs","goby","gods","goer","goes","gogo","gold","golf","gone","gong","good","goof","goon","goop","goos","gore","gorp","gory","gosh","gout","gowd","gowk","gown","goys","grab","gram","grat","gray","gree","grew","grey","grid","grig","grim","grin","grip","grit","grog","grot","grow","grub","grue","grum","guan","guar","guck","gude","guff","guid","gulf","gull","gulp","guls","gums","gunk","guns","guru","gush","gust","guts","guvs","guys","gybe","gyms","gyps","gyre","gyri","gyro","gyve","haaf","haar","habu","hack","hade","hadj","haed","haem","haen","haes","haet","haft","hags","haha","hahs","haik","hail","hair","haji","hajj","hake","hale","half","hall","halm","halo","halt","hame","hams","hand","hang","hank","hant","haps","hard","hare","hark","harl","harm","harp","hart","hash","hasp","hast","hate","hats","haul","haut","have","hawk","haws","hays","haze","hazy","head","heal","heap","hear","heat","hebe","heck","heed","heel","heft","hehs","heil","heir","held","helm","helo","help","heme","hemp","hems","hens","hent","herb","herd","here","herl","herm","hern","hero","hers","hest","heth","hets","hewn","hews","hick","hide","hied","hies","high","hike","hila","hili","hill","hilt","hind","hins","hint","hips","hire","hisn","hiss","hits","hive","hoax","hobo","hobs","hock","hods","hoed","hoer","hoes","hogg","hogs","hoke","hold","hole","holk","holm","holp","hols","holt","holy","home","homy","hone","honk","hons","hood","hoof","hook","hoop","hoot","hope","hops","hora","horn","hose","host","hots","hour","hove","howe","howf","howk","howl","hows","hoya","hoys","hubs","huck","hued","hues","huff","huge","hugs","huic","hula","hulk","hull","hump","hums","hung","hunh","hunk","huns","hunt","hurl","hurt","hush","husk","huts","hwan","hyla","hymn","hype","hypo","hyps","hyte","iamb","ibex","ibis","iced","ices","ichs","icky","icon","idea","idem","ides","idle","idly","idol","idyl","iffy","iglu","ikat","ikon","ilea","ilex","ilia","ilka","ilks","ills","illy","imam","imid","immy","impi","imps","inby","inch","info","inia","inks","inky","inly","inns","inro","inti","into","ions","iota","ired","ires","irid","iris","irks","iron","isba","isle","isms","itch","item","iwis","ixia","izar","jabs","jack","jade","jagg","jags","jail","jamb","jams","jape","jarl","jars","jato","jauk","jaup","java","jaws","jays","jazz","jean","jeed","jeep","jeer","jees","jeez","jefe","jehu","jell","jeon","jerk","jess","jest","jete","jets","jeux","jiao","jibb","jibe","jibs","jiff","jigs","jilt","jimp","jink","jinn","jins","jinx","jive","jobs","jock","joes","joey","jogs","john","join","joke","joky","jole","jolt","josh","joss","jota","jots","jouk","jowl","jows","joys","juba","jube","judo","juga","jugs","juju","juke","jump","junk","jupe","jura","jury","just","jute","juts","kaas","kabs","kadi","kaes","kafs","kagu","kaif","kail","kain","kaka","kaki","kale","kame","kami","kana","kaon","kapa","kaph","karn","kart","kata","kats","kava","kayo","kays","kbar","keas","keck","keef","keek","keel","keen","keep","keet","kefs","kegs","keir","kelp","kemp","keno","kens","kepi","keps","kept","kerb","kerf","kern","keto","keys","khaf","khan","khat","khet","khis","kibe","kick","kids","kief","kier","kifs","kill","kiln","kilo","kilt","kina","kind","kine","king","kink","kino","kins","kips","kirn","kirs","kiss","kist","kite","kith","kits","kiva","kiwi","knap","knar","knee","knew","knit","knop","knot","know","knur","koan","koas","kobo","kobs","koel","kohl","kola","kolo","konk","kook","koph","kops","kore","kors","koss","koto","kudo","kudu","kues","kuru","kvas","kyak","kyar","kyat","kyte","labs","lace","lack","lacs","lacy","lade","lads","lady","lags","laic","laid","lain","lair","lake","lakh","laky","lall","lama","lamb","lame","lamp","lams","land","lane","lank","laps","lard","lari","lark","lars","lase","lash","lass","last","late","lath","lati","lats","laud","lava","lave","lavs","lawn","laws","lays","laze","lazy","lead","leaf","leak","leal","lean","leap","lear","leas","lech","leek","leer","lees","leet","left","legs","lehr","leis","leke","leks","leku","lend","leno","lens","lent","lept","less","lest","lets","leud","leva","levo","levy","lewd","leys","liar","libs","lice","lich","lick","lido","lids","lied","lief","lien","lier","lies","lieu","life","lift","like","lilt","lily","lima","limb","lime","limn","limo","limp","limy","line","ling","link","linn","lino","lins","lint","liny","lion","lips","lira","lire","liri","lisp","list","lits","litu","live","load","loaf","loam","loan","lobe","lobo","lobs","loca","loch","loci","lock","loco","lode","loft","loge","logo","logs","logy","loin","loll","lone","long","loof","look","loom","loon","loop","loos","loot","lope","lops","lord","lore","lorn","lory","lose","loss","lost","lota","loth","loti","lots","loud","loup","lour","lout","love","lowe","lown","lows","luau","lube","luce","luck","lude","lues","luff","luge","lugs","lull","lulu","lump","lums","lune","lung","lunk","lunt","luny","lure","lurk","lush","lust","lute","lutz","luvs","luxe","lwei","lyes","lynx","lyre","lyse","maar","mabe","mace","mach","macs","made","mads","maes","mage","magi","mags","maid","mail","maim","main","mair","make","mako","male","mall","malm","malt","mama","mana","mane","mano","mans","many","maps","mare","mark","marl","mars","mart","mash","mask","mass","mast","mate","math","mats","maud","maul","maun","maut","mawn","maws","maxi","mayo","mays","maze","mazy","mead","meal","mean","meat","meed","meek","meet","meld","mell","mels","melt","memo","mems","mend","meno","menu","meou","meow","mere","merk","merl","mesa","mesh","mess","meta","mete","meth","mewl","mews","meze","mhos","mibs","mica","mice","midi","mids","mien","miff","migg","migs","mild","mile","milk","mill","milo","mils","milt","mime","mina","mind","mine","mini","mink","mint","minx","mire","miri","mirk","mirs","miry","mise","miso","miss","mist","mite","mitt","mity","mixt","moan","moas","moat","mobs","mock","mocs","mode","modi","mods","mogs","moil","mojo","moke","mola","mold","mole","moll","mols","molt","moly","mome","momi","moms","monk","mono","mons","mony","mood","mool","moon","moor","moos","moot","mope","mops","mopy","mora","more","morn","mors","mort","mosk","moss","most","mote","moth","mots","mott","moue","move","mown","mows","moxa","mozo","much","muck","muds","mugg","mugs","mule","mull","mumm","mump","mums","mumu","muni","muns","muon","mura","mure","murk","murr","muse","mush","musk","muss","must","mute","muts","mutt","myna","myth","naan","nabe","nabs","nada","nags","naif","nail","name","nana","nans","naoi","naos","nape","naps","narc","nard","nark","nary","nave","navy","nays","neap","near","neat","nebs","neck","need","neem","neep","neif","nema","nene","neon","nerd","nest","nets","nett","neuk","neum","neve","nevi","news","newt","next","nibs","nice","nick","nide","nidi","nigh","nill","nils","nims","nine","nipa","nips","nisi","nite","nits","nixe","nixy","nobs","nock","node","nodi","nods","noel","noes","nogg","nogs","noil","noir","nolo","noma","nome","noms","nona","none","nook","noon","nope","nori","norm","nose","nosh","nosy","nota","note","noun","nous","nova","nows","nowt","nubs","nude","nuke","null","numb","nuns","nurd","nurl","nuts","oafs","oaks","oars","oast","oath","oats","obes","obey","obia","obis","obit","oboe","obol","ocas","odds","odea","odes","odic","odor","odyl","ofay","offs","ogam","ogee","ogle","ogre","ohed","ohia","ohms","oils","oily","oink","okas","okay","okeh","okes","okra","olds","oldy","olea","oleo","oles","olio","olla","omen","omer","omit","once","ones","only","onto","onus","onyx","oohs","oops","oots","ooze","oozy","opah","opal","oped","open","opes","opts","opus","orad","oral","orbs","orby","orca","orcs","ordo","ores","orle","orra","orts","oryx","orzo","osar","oses","ossa","otic","ouch","ouds","ouph","ours","oust","outs","ouzo","oval","oven","over","ovum","owed","owes","owls","owns","owse","oxen","oxes","oxid","oxim","oyer","oyes","oyez","paca","pace","pack","pacs","pact","padi","pads","page","paid","paik","pail","pain","pair","pale","pall","palm","palp","pals","paly","pams","pane","pang","pans","pant","papa","paps","pard","pare","park","parr","pars","part","pase","pash","pass","past","pate","path","pats","paty","pave","pawl","pawn","paws","pays","peag","peak","peal","pean","pear","peas","peat","pech","peck","pecs","peds","peed","peek","peel","peen","peep","peer","pees","pegs","pehs","pein","peke","pele","pelf","pelt","pend","pens","pent","peon","pepo","peps","peri","perk","perm","pert","peso","pest","pets","pews","pfft","pfui","phat","phew","phis","phiz","phon","phot","phut","pial","pian","pias","pica","pice","pick","pied","pier","pies","pigs","pika","pike","piki","pile","pili","pill","pily","pima","pimp","pina","pine","ping","pink","pins","pint","piny","pion","pipe","pips","pipy","pirn","pish","piso","pita","pith","pits","pity","pixy","plan","plat","play","plea","pleb","pled","plew","plie","plod","plop","plot","plow","ploy","plug","plum","plus","pock","poco","pods","poem","poet","pogy","pois","poke","poky","pole","poll","polo","pols","poly","pome","pomp","poms","pond","pone","pong","pons","pony","pood","poof","pooh","pool","poor","pope","pops","pore","pork","port","pose","posh","post","posy","pots","pouf","pour","pout","pows","pram","prao","prat","prau","pray","pree","prep","prex","prey","prez","prig","prim","proa","prod","prom","prop","pros","prow","psis","psst","pubs","puce","puck","puds","puff","pugh","pugs","puja","puke","pula","pule","puli","pull","pulp","puls","puma","pump","puna","pung","punk","puns","punt","puny","pupa","pups","pure","puri","purl","purr","purs","push","puts","putt","putz","pyas","pyes","pyic","pyin","pyre","qaid","qats","qoph","quad","quag","quai","quay","quey","quid","quin","quip","quit","quiz","quod","race","rack","racy","rads","raff","raft","raga","rage","ragi","rags","raia","raid","rail","rain","raja","rake","raki","rale","rami","ramp","rams","rand","rang","rani","rank","rant","raps","rapt","rare","rase","rash","rasp","rate","rath","rato","rats","rave","raws","raya","rays","raze","razz","read","real","ream","reap","rear","rebs","reck","recs","redd","rede","redo","reds","reed","reef","reek","reel","rees","refs","reft","reif","rein","reis","rely","rems","rend","rent","repo","repp","reps","resh","rest","rete","rets","revs","rhea","rhos","rhus","rial","rias","ribs","rice","rich","ride","rids","riel","rife","riff","rifs","rift","rigs","rile","rill","rime","rims","rimy","rind","ring","rink","rins","riot","ripe","rips","rise","risk","rite","ritz","rive","road","roam","roan","roar","robe","robs","rock","rocs","rode","rods","roes","roil","role","rolf","roll","romp","rood","roof","rook","room","root","rope","ropy","rose","rosy","rota","rote","roti","rotl","roto","rots","roue","roup","rout","roux","rove","rows","rube","rubs","ruby","ruck","rudd","rude","rued","ruer","rues","ruff","ruga","rugs","ruin","rule","ruly","rump","rums","rune","rung","runs","runt","ruse","rush","rusk","rust","ruts","ryas","ryes","ryke","rynd","ryot","sabe","sabs","sack","sacs","sade","sadi","safe","saga","sage","sago","sags","sagy","said","sail","sain","sake","saki","sale","sall","salp","sals","salt","same","samp","sand","sane","sang","sank","sans","saps","sard","sari","sark","sash","sass","sate","sati","saul","save","sawn","saws","says","scab","scad","scag","scam","scan","scar","scop","scot","scow","scry","scud","scup","scut","seal","seam","sear","seas","seat","secs","sect","seed","seek","seel","seem","seen","seep","seer","sees","sego","segs","seif","seis","self","sell","sels","seme","semi","send","sene","sent","sera","sere","serf","sers","seta","sets","sett","sewn","sews","sext","shad","shah","sham","shat","shay","shea","shed","shes","shew","shim","shin","ship","shiv","shmo","shod","shoe","shog","shoo","shop","shot","show","shri","shul","shun","shut","sial","sibb","sibs","sice","sick","sics","side","sift","sigh","sign","sike","sild","silk","sill","silo","silt","sima","simp","sine","sing","sinh","sink","sins","sipe","sips","sire","sirs","site","sith","sits","size","sizy","skag","skas","skat","skee","skeg","skep","skew","skid","skim","skin","skip","skis","skit","skua","slab","slam","slap","slat","slaw","slay","sled","slew","slid","slim","slip","slit","slob","sloe","slog","slop","slot","slow","slub","slue","slug","slum","slur","smew","smit","smog","smug","smut","snag","snap","snaw","sned","snib","snip","snit","snob","snog","snot","snow","snub","snug","snye","soak","soap","soar","sobs","sock","soda","sods","sofa","soft","soil","soja","soke","sola","sold","sole","soli","solo","sols","soma","some","sone","song","sons","sook","soon","soot","soph","sops","sora","sorb","sord","sore","sori","sorn","sort","soth","sots","souk","soul","soup","sour","sous","sown","sows","soya","soys","spae","span","spar","spas","spat","spay","spaz","sped","spew","spik","spin","spit","spiv","spot","spry","spud","spue","spun","spur","sris","stab","stag","star","staw","stay","stem","step","stet","stew","stey","stir","stoa","stob","stop","stow","stub","stud","stum","stun","stye","suba","subs","such","sudd","suds","sued","suer","sues","suet","sugh","suit","sulk","sulu","sumo","sump","sums","sung","sunk","sunn","suns","supe","sups","suqs","sura","surd","sure","surf","suss","swab","swag","swam","swan","swap","swat","sway","swig","swim","swob","swop","swot","swum","sybo","syce","syke","syli","sync","syne","syph","tabs","tabu","tace","tach","tack","taco","tact","tads","tael","tags","tahr","tail","tain","taka","take","tala","talc","tale","tali","talk","tall","tame","tamp","tams","tang","tank","tans","taos","tapa","tape","taps","tare","tarn","taro","tarp","tars","tart","task","tass","tats","taus","taut","tavs","taws","taxa","taxi","teak","teal","team","tear","teas","teds","teed","teel","teem","teen","tees","teff","tegs","tela","tele","tell","tels","temp","tend","tens","tent","tepa","term","tern","test","teth","tets","tews","text","thae","than","that","thaw","thee","them","then","thew","they","thin","thio","thir","this","thro","thud","thug","thus","tick","tics","tide","tidy","tied","tier","ties","tiff","tike","tiki","tile","till","tils","tilt","time","tine","ting","tins","tint","tiny","tipi","tips","tire","tirl","tiro","titi","tivy","toad","toby","tods","tody","toea","toed","toes","toff","toft","tofu","toga","togs","toil","toit","toke","tola","told","tole","toll","tolu","tomb","tome","toms","tone","tong","tons","took","tool","toom","toon","toot","tope","toph","topi","tops","tora","torc","tore","tori","torn","toro","torr","tors","tort","tory","tosh","toss","tost","tote","tots","tour","tout","town","tows","towy","toyo","toys","trad","tram","trap","tray","tree","tref","trek","tret","trey","trig","trim","trio","trip","trod","trop","trot","trow","true","trug","tsar","tsks","tuba","tube","tubs","tuck","tufa","tuff","tuft","tugs","tuis","tule","tump","tuna","tune","tung","tuns","tups","turf","turk","turn","tush","tusk","tuts","tutu","twae","twas","twee","twig","twin","twit","twos","tyee","tyer","tyes","tyke","type","typo","typp","typy","tyre","tyro","tzar","udos","ughs","ugly","ukes","ulan","ulna","ulus","ulva","umbo","umps","unai","unau","unbe","unci","unco","unde","undo","undy","unit","unto","upas","upby","updo","upon","urbs","urds","urea","urge","uric","urns","ursa","urus","used","user","uses","utas","uvea","vacs","vagi","vail","vain","vair","vale","vamp","vane","vang","vans","vara","vars","vary","vasa","vase","vast","vats","vatu","vaus","vavs","vaws","veal","veep","veer","vees","veil","vein","vela","veld","vena","vend","vent","verb","vert","very","vest","veto","vets","vext","vial","vibe","vice","vide","vied","vier","vies","view","viga","vigs","vile","vill","vims","vina","vine","vino","viny","viol","virl","visa","vise","vita","viva","vive","voes","void","vole","volt","vote","vows","vrow","vugg","vugh","vugs","wabs","wack","wade","wadi","wads","wady","waes","waff","waft","wage","wags","waif","wail","wain","wair","wait","wake","wale","walk","wall","waly","wame","wand","wane","wans","want","wany","waps","ward","ware","wark","warm","warn","warp","wars","wart","wary","wash","wasp","wast","wats","watt","wauk","waul","waur","wave","wavy","wawl","waws","waxy","ways","weak","weal","wean","wear","webs","weds","weed","week","weel","ween","weep","weer","wees","weet","weft","weir","weka","weld","well","welt","wend","wens","went","wept","were","wert","west","wets","wham","whap","what","whee","when","whet","whew","whey","whid","whig","whim","whin","whip","whir","whit","whiz","whoa","whom","whop","whys","wich","wick","wide","wife","wigs","wild","wile","will","wilt","wily","wimp","wind","wine","wing","wink","wino","wins","winy","wipe","wire","wiry","wise","wish","wisp","wiss","wist","wite","with","wits","wive","woad","woes","wogs","woke","woks","wold","wolf","womb","wonk","wons","wont","wood","woof","wool","woos","wops","word","wore","work","worm","worn","wort","wost","wots","wove","wows","wrap","wren","writ","wuss","wych","wyes","wyle","wynd","wynn","wyns","wyte","xyst","yack","yaff","yagi","yaks","yald","yams","yang","yank","yaps","yard","yare","yarn","yaud","yaup","yawl","yawn","yawp","yaws","yays","yeah","yean","year","yeas","yech","yegg","yeld","yelk","yell","yelp","yens","yerk","yeti","yett","yeuk","yews","yids","yill","yins","yipe","yips","yird","yirr","ylem","yobs","yock","yodh","yods","yoga","yogh","yogi","yoke","yoks","yolk","yond","yoni","yore","your","yowe","yowl","yows","yuan","yuca","yuch","yuck","yuga","yuks","yule","yups","yurt","ywis","zags","zany","zaps","zarf","zeal","zebu","zeds","zees","zein","zeks","zerk","zero","zest","zeta","zigs","zill","zinc","zing","zins","zips","ziti","zits","zoea","zoic","zone","zonk","zoom","zoon","zoos","zori","zyme"],"days":[{"id":"bl-ce61ff082bb4","date":"2026-09-01","start":"door","targets":["boat","cost","chat"],"par":8,"separate":18,"trunk":5,"solution":[["door","poor"],["poor","pool"],["pool","cool"],["cool","coal"],["coal","coat"],["coat","chat"],["coat","boat"],["coat","cost"]]},{"id":"bl-9a8b7be53287","date":"2026-09-02","start":"they","targets":["year","wear","rear"],"par":8,"separate":18,"trunk":5,"solution":[["they","then"],["then","teen"],["teen","been"],["been","beer"],["beer","bear"],["bear","wear"],["bear","rear"],["bear","year"]]},{"id":"bl-d8a692a59ea4","date":"2026-09-03","start":"bids","targets":["save","wave","late"],"par":8,"separate":17,"trunk":4,"solution":[["bids","bits"],["bits","hits"],["hits","hats"],["hats","hate"],["hate","late"],["hate","have"],["have","save"],["have","wave"]]},{"id":"bl-aaf405ea1591","date":"2026-09-04","start":"them","targets":["peer","wear","dear"],"par":8,"separate":17,"trunk":4,"solution":[["them","then"],["then","teen"],["teen","been"],["been","beer"],["beer","bear"],["beer","peer"],["bear","dear"],["bear","wear"]]},{"id":"bl-34b95f229d2a","date":"2026-09-05","start":"zoom","targets":["heat","coat","meat"],"par":8,"separate":17,"trunk":4,"solution":[["zoom","room"],["room","root"],["root","boot"],["boot","boat"],["boat","coat"],["boat","beat"],["beat","heat"],["beat","meat"]]},{"id":"bl-7f9af8188aed","date":"2026-09-06","start":"spin","targets":["snow","spot","slot"],"par":9,"separate":18,"trunk":4,"solution":[["spin","skin"],["skin","skip"],["skip","ship"],["ship","shop"],["shop","show"],["shop","shot"],["shot","spot"],["shot","slot"],["show","snow"]]},{"id":"bl-9337acb7c31d","date":"2026-09-07","start":"beds","targets":["caps","rate","gate"],"par":9,"separate":18,"trunk":4,"solution":[["beds","bids"],["bids","bits"],["bits","hits"],["hits","hats"],["hats","cats"],["hats","hate"],["hate","rate"],["hate","gate"],["cats","caps"]]},{"id":"bl-97a58cd15193","date":"2026-09-08","start":"hero","targets":["sing","ring","mice"],"par":9,"separate":18,"trunk":4,"solution":[["hero","here"],["here","hire"],["hire","wire"],["wire","wine"],["wine","mine"],["wine","wing"],["wing","ring"],["wing","sing"],["mine","mice"]]},{"id":"bl-0606d3a0ce9d","date":"2026-09-09","start":"here","targets":["hall","sale","tall"],"par":9,"separate":18,"trunk":5,"solution":[["here","hire"],["hire","fire"],["fire","file"],["file","mile"],["mile","male"],["male","mall"],["male","sale"],["mall","hall"],["mall","tall"]]},{"id":"bl-0513311e9f97","date":"2026-09-10","start":"tour","targets":["look","told","tell"],"par":9,"separate":18,"trunk":4,"solution":[["tour","pour"],["pour","poor"],["poor","pool"],["pool","tool"],["tool","toll"],["tool","took"],["took","look"],["toll","tell"],["toll","told"]]},{"id":"bl-d2e186e792e9","date":"2026-09-11","start":"laid","targets":["work","ford","ways"],"par":9,"separate":18,"trunk":4,"solution":[["laid","land"],["land","hand"],["hand","hard"],["hard","ward"],["ward","wars"],["ward","word"],["word","work"],["word","ford"],["wars","ways"]]},{"id":"bl-6df20c32744e","date":"2026-09-12","start":"bugs","targets":["cost","nose","list"],"par":9,"separate":18,"trunk":4,"solution":[["bugs","bags"],["bags","bass"],["bass","boss"],["boss","loss"],["loss","lose"],["loss","lost"],["lost","list"],["lost","cost"],["lose","nose"]]},{"id":"bl-97246c4638fd","date":"2026-09-13","start":"turn","targets":["ward","sold","cars"],"par":9,"separate":18,"trunk":4,"solution":[["turn","burn"],["burn","born"],["born","corn"],["corn","cord"],["cord","cold"],["cord","card"],["card","cars"],["card","ward"],["cold","sold"]]},{"id":"bl-684cb3872ba2","date":"2026-09-14","start":"lies","targets":["song","tune","zone"],"par":9,"separate":18,"trunk":4,"solution":[["lies","ties"],["ties","tips"],["tips","tops"],["tops","tons"],["tons","tone"],["tons","sons"],["sons","song"],["tone","zone"],["tone","tune"]]},{"id":"bl-bf52d2c82c1a","date":"2026-09-15","start":"lens","targets":["boat","chat","cart"],"par":9,"separate":18,"trunk":4,"solution":[["lens","less"],["less","loss"],["loss","lost"],["lost","cost"],["cost","coat"],["cost","cast"],["cast","cart"],["coat","chat"],["coat","boat"]]},{"id":"bl-b09c057e9a0b","date":"2026-09-16","start":"ties","targets":["bond","tune","none"],"par":8,"separate":16,"trunk":4,"solution":[["ties","tips"],["tips","tops"],["tops","tons"],["tons","tone"],["tone","bone"],["tone","tune"],["bone","bond"],["bone","none"]]},{"id":"bl-505668412132","date":"2026-09-17","start":"hour","targets":["fill","doll","pull"],"par":8,"separate":16,"trunk":4,"solution":[["hour","pour"],["pour","poor"],["poor","pool"],["pool","poll"],["poll","pull"],["poll","pill"],["poll","doll"],["pill","fill"]]},{"id":"bl-84e0a2b5ede4","date":"2026-09-18","start":"fits","targets":["same","fame","wars"],"par":9,"separate":17,"trunk":4,"solution":[["fits","hits"],["hits","hats"],["hats","cats"],["cats","cars"],["cars","care"],["cars","wars"],["care","came"],["came","fame"],["came","same"]]},{"id":"bl-f602379a5228","date":"2026-09-19","start":"size","targets":["rock","mile","jack"],"par":9,"separate":17,"trunk":3,"solution":[["size","side"],["side","ride"],["ride","rice"],["rice","race"],["rice","mice"],["mice","mile"],["race","rack"],["rack","rock"],["rack","jack"]]},{"id":"bl-fdd2c19a0f5e","date":"2026-09-20","start":"best","targets":["hand","seem","tend"],"par":9,"separate":17,"trunk":4,"solution":[["best","beat"],["beat","seat"],["seat","sent"],["sent","send"],["send","tend"],["send","seed"],["send","sand"],["sand","hand"],["seed","seem"]]},{"id":"bl-44382f09886b","date":"2026-09-21","start":"beer","targets":["coal","host","what"],"par":9,"separate":17,"trunk":4,"solution":[["beer","bear"],["bear","beat"],["beat","boat"],["boat","coat"],["coat","chat"],["coat","coal"],["coat","cost"],["cost","host"],["chat","what"]]},{"id":"bl-3b7dd7407191","date":"2026-09-22","start":"meal","targets":["poll","holy","hood"],"par":9,"separate":17,"trunk":4,"solution":[["meal","seal"],["seal","sell"],["sell","tell"],["tell","toll"],["toll","told"],["toll","poll"],["told","hold"],["hold","holy"],["hold","hood"]]},{"id":"bl-05422c66e799","date":"2026-09-23","start":"root","targets":["well","ball","send"],"par":10,"separate":18,"trunk":3,"solution":[["root","boot"],["boot","boat"],["boat","beat"],["beat","seat"],["beat","belt"],["belt","bell"],["bell","ball"],["bell","well"],["seat","sent"],["sent","send"]]},{"id":"bl-7ba0033cbf95","date":"2026-09-24","start":"miss","targets":["late","puts","have"],"par":10,"separate":18,"trunk":4,"solution":[["miss","mass"],["mass","maps"],["maps","caps"],["caps","cats"],["cats","hats"],["cats","cuts"],["cuts","puts"],["hats","hate"],["hate","have"],["hate","late"]]},{"id":"bl-5f7d87886876","date":"2026-09-25","start":"gulf","targets":["hall","fill","male"],"par":10,"separate":18,"trunk":6,"solution":[["gulf","golf"],["golf","gold"],["gold","told"],["told","toll"],["toll","tall"],["tall","fall"],["fall","hall"],["fall","mall"],["fall","fill"],["mall","male"]]},{"id":"bl-db0c4f2851de","date":"2026-09-26","start":"fall","targets":["race","date","card"],"par":10,"separate":18,"trunk":5,"solution":[["fall","mall"],["mall","male"],["male","make"],["make","cake"],["cake","care"],["care","card"],["care","rare"],["rare","rate"],["rare","race"],["rate","date"]]},{"id":"bl-b4a581c2caab","date":"2026-09-27","start":"sell","targets":["ford","hope","lord"],"par":10,"separate":18,"trunk":4,"solution":[["sell","tell"],["tell","toll"],["toll","told"],["told","cold"],["cold","hold"],["cold","cord"],["cord","lord"],["cord","ford"],["hold","hole"],["hole","hope"]]},{"id":"bl-2df7e7e38932","date":"2026-09-28","start":"pour","targets":["well","hold","mall"],"par":10,"separate":18,"trunk":4,"solution":[["pour","poor"],["poor","pool"],["pool","poll"],["poll","toll"],["toll","tell"],["toll","told"],["toll","tall"],["tall","mall"],["told","hold"],["tell","well"]]},{"id":"bl-af965dc21f15","date":"2026-09-29","start":"stop","targets":["tend","sand","then"],"par":10,"separate":18,"trunk":4,"solution":[["stop","step"],["step","stem"],["stem","seem"],["seem","seed"],["seed","send"],["seed","seen"],["seen","teen"],["teen","then"],["send","tend"],["send","sand"]]},{"id":"bl-e1539e64de24","date":"2026-09-30","start":"desk","targets":["rate","site","rack"],"par":10,"separate":18,"trunk":3,"solution":[["desk","disk"],["disk","risk"],["risk","rise"],["rise","rice"],["rise","ride"],["ride","side"],["side","site"],["rice","race"],["race","rate"],["race","rack"]]},{"id":"bl-77716e9bdd50","date":"2026-10-01","start":"rain","targets":["mice","same","five"],"par":10,"separate":18,"trunk":4,"solution":[["rain","main"],["main","mail"],["mail","mall"],["mall","male"],["male","mile"],["male","sale"],["sale","same"],["mile","file"],["mile","mice"],["file","five"]]},{"id":"bl-56b352c86c7b","date":"2026-10-02","start":"long","targets":["link","fire","mint"],"par":10,"separate":18,"trunk":5,"solution":[["long","song"],["song","sing"],["sing","wing"],["wing","wine"],["wine","fine"],["fine","mine"],["fine","line"],["fine","fire"],["line","link"],["mine","mint"]]},{"id":"bl-f6943708cb0a","date":"2026-10-03","start":"zero","targets":["film","rise","farm"],"par":10,"separate":18,"trunk":4,"solution":[["zero","hero"],["hero","here"],["here","hire"],["hire","fire"],["fire","firm"],["fire","wire"],["wire","wise"],["wise","rise"],["firm","film"],["firm","farm"]]},{"id":"bl-8ad7b15db797","date":"2026-10-04","start":"disk","targets":["cape","past","fame"],"par":10,"separate":18,"trunk":5,"solution":[["disk","dish"],["dish","wish"],["wish","wash"],["wash","cash"],["cash","case"],["case","cast"],["case","came"],["came","fame"],["came","cape"],["cast","past"]]},{"id":"bl-200ca4de0b41","date":"2026-10-05","start":"kiss","targets":["ease","cash","bags"],"par":8,"separate":15,"trunk":3,"solution":[["kiss","miss"],["miss","mass"],["mass","bass"],["bass","bags"],["bass","base"],["base","case"],["base","ease"],["case","cash"]]},{"id":"bl-b148b9ee5c58","date":"2026-10-06","start":"knew","targets":["shut","plot","spot"],"par":8,"separate":15,"trunk":4,"solution":[["knew","know"],["know","snow"],["snow","show"],["show","shot"],["shot","shut"],["shot","spot"],["shot","slot"],["slot","plot"]]},{"id":"bl-2e9126920180","date":"2026-10-07","start":"roof","targets":["team","belt","coat"],"par":8,"separate":15,"trunk":3,"solution":[["roof","root"],["root","boot"],["boot","boat"],["boat","coat"],["boat","beat"],["beat","beam"],["beat","belt"],["beam","team"]]},{"id":"bl-1b68d0a3a537","date":"2026-10-08","start":"save","targets":["find","pine","link"],"par":8,"separate":15,"trunk":4,"solution":[["save","gave"],["gave","give"],["give","five"],["five","fine"],["fine","find"],["fine","pine"],["fine","line"],["line","link"]]},{"id":"bl-8ca9c7d1a932","date":"2026-10-09","start":"your","targets":["toll","book","pull"],"par":9,"separate":16,"trunk":3,"solution":[["your","pour"],["pour","poor"],["poor","pool"],["pool","poll"],["pool","cool"],["cool","cook"],["cook","book"],["poll","pull"],["poll","toll"]]},{"id":"bl-872bf39ffd12","date":"2026-10-10","start":"wire","targets":["sale","come","rule"],"par":9,"separate":16,"trunk":4,"solution":[["wire","wise"],["wise","rise"],["rise","rose"],["rose","role"],["role","rule"],["role","sole"],["sole","sale"],["sole","some"],["some","come"]]},{"id":"bl-2e6784e9de02","date":"2026-10-11","start":"that","targets":["boot","cake","cafe"],"par":9,"separate":16,"trunk":2,"solution":[["that","chat"],["chat","coat"],["coat","boat"],["coat","cost"],["cost","cast"],["cast","case"],["case","cafe"],["case","cake"],["boat","boot"]]},{"id":"bl-c3e94d4458c4","date":"2026-10-12","start":"fish","targets":["ring","file","fund"],"par":9,"separate":16,"trunk":3,"solution":[["fish","wish"],["wish","wise"],["wise","wine"],["wine","wing"],["wine","fine"],["fine","find"],["fine","file"],["find","fund"],["wing","ring"]]},{"id":"bl-b0d9b6518f83","date":"2026-10-13","start":"burn","targets":["rare","move","game"],"par":9,"separate":16,"trunk":3,"solution":[["burn","born"],["born","corn"],["corn","core"],["core","care"],["core","more"],["more","move"],["care","rare"],["care","came"],["came","game"]]},{"id":"bl-dcac167c9fa9","date":"2026-10-14","start":"sons","targets":["note","link","five"],"par":9,"separate":16,"trunk":3,"solution":[["sons","tons"],["tons","tone"],["tone","none"],["none","nine"],["none","note"],["nine","fine"],["fine","line"],["fine","five"],["line","link"]]},{"id":"bl-9c07eec35019","date":"2026-10-15","start":"baby","targets":["rare","list","cost"],"par":9,"separate":16,"trunk":3,"solution":[["baby","babe"],["babe","base"],["base","case"],["case","cast"],["case","care"],["care","rare"],["cast","last"],["cast","cost"],["last","list"]]},{"id":"bl-32a807e759da","date":"2026-10-16","start":"coat","targets":["pull","tail","tell"],"par":9,"separate":16,"trunk":4,"solution":[["coat","coal"],["coal","cool"],["cool","pool"],["pool","poll"],["poll","pull"],["poll","toll"],["toll","tell"],["toll","tall"],["tall","tail"]]},{"id":"bl-99650fc35e6c","date":"2026-10-17","start":"year","targets":["feel","mall","tell"],"par":9,"separate":16,"trunk":4,"solution":[["year","bear"],["bear","beat"],["beat","belt"],["belt","bell"],["bell","ball"],["bell","fell"],["bell","tell"],["fell","feel"],["ball","mall"]]},{"id":"bl-139e83e1cd55","date":"2026-10-18","start":"want","targets":["hard","tend","laid"],"par":9,"separate":16,"trunk":3,"solution":[["want","went"],["went","sent"],["sent","send"],["send","tend"],["send","sand"],["sand","hand"],["hand","hard"],["hand","land"],["land","laid"]]},{"id":"bl-cfe26f34ebcc","date":"2026-10-19","start":"good","targets":["name","yard","rare"],"par":9,"separate":16,"trunk":4,"solution":[["good","gold"],["gold","cold"],["cold","cord"],["cord","card"],["card","care"],["card","yard"],["care","rare"],["care","came"],["came","name"]]},{"id":"bl-4e091d0baca4","date":"2026-10-20","start":"sets","targets":["lost","bars","toys"],"par":9,"separate":16,"trunk":3,"solution":[["sets","lets"],["lets","less"],["less","loss"],["loss","boss"],["loss","lost"],["boss","boys"],["boss","bass"],["bass","bars"],["boys","toys"]]},{"id":"bl-6befd6e30cc1","date":"2026-10-21","start":"goal","targets":["pour","roll","hill"],"par":9,"separate":16,"trunk":3,"solution":[["goal","coal"],["coal","cool"],["cool","pool"],["pool","poor"],["pool","poll"],["poll","roll"],["poll","pill"],["pill","hill"],["poor","pour"]]},{"id":"bl-7fbc62f746ed","date":"2026-10-22","start":"were","targets":["fish","face","rare"],"par":9,"separate":16,"trunk":2,"solution":[["were","wire"],["wire","wise"],["wise","wish"],["wise","rise"],["rise","rice"],["rice","race"],["race","rare"],["race","face"],["wish","fish"]]},{"id":"bl-4f0c715a24e0","date":"2026-10-23","start":"deal","targets":["hall","fail","milk"],"par":9,"separate":16,"trunk":3,"solution":[["deal","seal"],["seal","sell"],["sell","fell"],["fell","fall"],["fell","fill"],["fill","mill"],["mill","milk"],["fall","hall"],["fall","fail"]]},{"id":"bl-702498ee8a38","date":"2026-10-24","start":"poor","targets":["hold","male","talk"],"par":9,"separate":16,"trunk":3,"solution":[["poor","pool"],["pool","poll"],["poll","toll"],["toll","told"],["toll","tall"],["tall","talk"],["tall","mall"],["mall","male"],["told","hold"]]},{"id":"bl-2eae1ccde436","date":"2026-10-25","start":"pets","targets":["boys","host","base"],"par":9,"separate":16,"trunk":3,"solution":[["pets","lets"],["lets","less"],["less","loss"],["loss","boss"],["loss","lost"],["lost","host"],["boss","boys"],["boss","bass"],["bass","base"]]},{"id":"bl-c3e597e3ba21","date":"2026-10-26","start":"base","targets":["sold","wood","hard"],"par":9,"separate":16,"trunk":3,"solution":[["base","case"],["case","care"],["care","card"],["card","hard"],["card","cord"],["cord","cold"],["cord","word"],["word","wood"],["cold","sold"]]},{"id":"bl-283adb8c3ea9","date":"2026-10-27","start":"bits","targets":["wars","part","puts"],"par":9,"separate":16,"trunk":3,"solution":[["bits","hits"],["hits","hats"],["hats","cats"],["cats","cars"],["cats","cuts"],["cuts","puts"],["cars","wars"],["cars","cart"],["cart","part"]]},{"id":"bl-480eb4fbeed1","date":"2026-10-28","start":"bond","targets":["pull","fall","mail"],"par":9,"separate":16,"trunk":3,"solution":[["bond","bold"],["bold","told"],["told","toll"],["toll","poll"],["toll","tall"],["tall","fall"],["tall","mall"],["mall","mail"],["poll","pull"]]},{"id":"bl-700d9c22269c","date":"2026-10-29","start":"than","targets":["rear","fear","seem"],"par":9,"separate":16,"trunk":3,"solution":[["than","then"],["then","teen"],["teen","been"],["been","beer"],["been","seen"],["seen","seem"],["beer","bear"],["bear","rear"],["bear","fear"]]},{"id":"bl-b392f4c674ed","date":"2026-10-30","start":"page","targets":["mice","wire","size"],"par":9,"separate":16,"trunk":3,"solution":[["page","pace"],["pace","race"],["race","rice"],["rice","ride"],["rice","mice"],["ride","wide"],["ride","side"],["side","size"],["wide","wire"]]},{"id":"bl-0967cbf0d603","date":"2026-10-31","start":"term","targets":["boot","cost","mean"],"par":9,"separate":16,"trunk":3,"solution":[["term","team"],["team","beam"],["beam","beat"],["beat","meat"],["beat","boat"],["boat","coat"],["boat","boot"],["coat","cost"],["meat","mean"]]},{"id":"bl-b82e25ee114c","date":"2026-11-01","start":"says","targets":["maps","park","cape"],"par":9,"separate":16,"trunk":3,"solution":[["says","ways"],["ways","wars"],["wars","cars"],["cars","caps"],["cars","cart"],["cart","part"],["part","park"],["caps","maps"],["caps","cape"]]},{"id":"bl-8439750835bc","date":"2026-11-02","start":"next","targets":["sell","fell","rent"],"par":9,"separate":16,"trunk":3,"solution":[["next","text"],["text","test"],["test","best"],["best","rest"],["best","belt"],["belt","bell"],["bell","fell"],["bell","sell"],["rest","rent"]]},{"id":"bl-7b52c12f847e","date":"2026-11-03","start":"full","targets":["wing","sand","late"],"par":10,"separate":17,"trunk":3,"solution":[["full","fill"],["fill","file"],["file","fine"],["fine","line"],["fine","wine"],["wine","wing"],["line","lane"],["lane","land"],["lane","late"],["land","sand"]]},{"id":"bl-dd021203e594","date":"2026-11-04","start":"gain","targets":["bell","mode","cake"],"par":10,"separate":17,"trunk":3,"solution":[["gain","main"],["main","mail"],["mail","mall"],["mall","ball"],["mall","male"],["male","make"],["male","made"],["made","mode"],["make","cake"],["ball","bell"]]},{"id":"bl-1394c4d29f3b","date":"2026-11-05","start":"four","targets":["till","took","coat"],"par":10,"separate":17,"trunk":4,"solution":[["four","pour"],["pour","poor"],["poor","pool"],["pool","cool"],["cool","coal"],["cool","tool"],["tool","toll"],["tool","took"],["toll","till"],["coal","coat"]]},{"id":"bl-898748e97d9b","date":"2026-11-06","start":"pain","targets":["fuel","made","felt"],"par":10,"separate":17,"trunk":3,"solution":[["pain","main"],["main","mail"],["mail","mall"],["mall","male"],["mall","fall"],["fall","full"],["fall","fell"],["fell","felt"],["full","fuel"],["male","made"]]},{"id":"bl-08ae73b2c35e","date":"2026-11-07","start":"wish","targets":["home","camp","bags"],"par":10,"separate":17,"trunk":3,"solution":[["wish","wash"],["wash","cash"],["cash","case"],["case","base"],["case","came"],["came","come"],["came","camp"],["come","home"],["base","bass"],["bass","bags"]]},{"id":"bl-bc93dc93b10a","date":"2026-11-08","start":"gets","targets":["lift","boys","base"],"par":10,"separate":17,"trunk":3,"solution":[["gets","lets"],["lets","less"],["less","loss"],["loss","boss"],["loss","lost"],["lost","list"],["list","lift"],["boss","boys"],["boss","bass"],["bass","base"]]},{"id":"bl-0cc86425a29b","date":"2026-11-09","start":"care","targets":["will","main","file"],"par":10,"separate":17,"trunk":3,"solution":[["care","cake"],["cake","make"],["make","male"],["male","mall"],["male","mile"],["mile","file"],["mall","mail"],["mall","mill"],["mill","will"],["mail","main"]]},{"id":"bl-a688fa6e2419","date":"2026-11-10","start":"tube","targets":["rose","link","mini"],"par":10,"separate":17,"trunk":3,"solution":[["tube","tune"],["tune","tone"],["tone","none"],["none","nine"],["none","nose"],["nose","rose"],["nine","line"],["line","mine"],["line","link"],["mine","mini"]]},{"id":"bl-60c7de0d7a8c","date":"2026-11-11","start":"wait","targets":["meat","bear","seem"],"par":10,"separate":17,"trunk":3,"solution":[["wait","want"],["want","went"],["went","sent"],["sent","send"],["sent","seat"],["seat","beat"],["beat","meat"],["beat","bear"],["send","seed"],["seed","seem"]]},{"id":"bl-9d51bc73596e","date":"2026-11-12","start":"lamp","targets":["ford","word","vast"],"par":10,"separate":17,"trunk":2,"solution":[["lamp","camp"],["camp","came"],["came","case"],["came","care"],["care","card"],["card","cord"],["cord","word"],["cord","ford"],["case","cast"],["cast","vast"]]},{"id":"bl-8bcb7e43961f","date":"2026-11-13","start":"gold","targets":["wars","gate","camp"],"par":10,"separate":17,"trunk":4,"solution":[["gold","cold"],["cold","cord"],["cord","card"],["card","care"],["care","cars"],["care","came"],["came","game"],["came","camp"],["game","gate"],["cars","wars"]]},{"id":"bl-47f709dcf3de","date":"2026-11-14","start":"clip","targets":["spot","plot","stem"],"par":10,"separate":17,"trunk":3,"solution":[["clip","chip"],["chip","ship"],["ship","shop"],["shop","shot"],["shop","stop"],["stop","step"],["step","stem"],["shot","spot"],["shot","slot"],["slot","plot"]]},{"id":"bl-45af7978197f","date":"2026-11-15","start":"hair","targets":["bell","told","tank"],"par":10,"separate":17,"trunk":4,"solution":[["hair","fair"],["fair","fail"],["fail","fall"],["fall","ball"],["ball","bell"],["ball","tall"],["tall","talk"],["tall","toll"],["toll","told"],["talk","tank"]]},{"id":"bl-ad4022ac583e","date":"2026-11-16","start":"bang","targets":["give","link","mill"],"par":10,"separate":17,"trunk":4,"solution":[["bang","band"],["band","land"],["land","lane"],["lane","line"],["line","mine"],["line","link"],["line","live"],["live","give"],["mine","mile"],["mile","mill"]]},{"id":"bl-9055f686eef8","date":"2026-11-17","start":"data","targets":["wire","hide","hand"],"par":10,"separate":17,"trunk":3,"solution":[["data","date"],["date","late"],["late","lane"],["lane","line"],["lane","land"],["land","hand"],["line","wine"],["wine","wide"],["wine","wire"],["wide","hide"]]},{"id":"bl-c447da79ccc2","date":"2026-11-18","start":"disc","targets":["mint","fine","love"],"par":10,"separate":17,"trunk":4,"solution":[["disc","dish"],["dish","wish"],["wish","wise"],["wise","wine"],["wine","mine"],["wine","fine"],["wine","line"],["line","live"],["live","love"],["mine","mint"]]},{"id":"bl-ff0528f22f21","date":"2026-11-19","start":"reed","targets":["tool","film","tail"],"par":10,"separate":17,"trunk":4,"solution":[["reed","feed"],["feed","feel"],["feel","fell"],["fell","fall"],["fall","tall"],["fall","fill"],["fill","film"],["tall","tail"],["tall","toll"],["toll","tool"]]},{"id":"bl-8d79a6f0c03b","date":"2026-11-20","start":"hate","targets":["were","farm","wise"],"par":10,"separate":17,"trunk":5,"solution":[["hate","late"],["late","lane"],["lane","line"],["line","fine"],["fine","fire"],["fire","firm"],["fire","wire"],["wire","wise"],["wire","were"],["firm","farm"]]},{"id":"bl-ad567fb1a233","date":"2026-11-21","start":"lets","targets":["pass","give","life"],"par":10,"separate":17,"trunk":2,"solution":[["lets","less"],["less","loss"],["loss","lose"],["loss","boss"],["boss","bass"],["bass","pass"],["lose","love"],["love","live"],["live","life"],["live","give"]]},{"id":"bl-9eeef97b436b","date":"2026-11-22","start":"puts","targets":["yard","word","port"],"par":10,"separate":17,"trunk":4,"solution":[["puts","cuts"],["cuts","cats"],["cats","cars"],["cars","card"],["card","cart"],["card","cord"],["card","yard"],["cord","word"],["cart","part"],["part","port"]]},{"id":"bl-51d5546fad09","date":"2026-11-23","start":"tank","targets":["data","life","take"],"par":11,"separate":18,"trunk":4,"solution":[["tank","bank"],["bank","band"],["band","land"],["land","lane"],["lane","line"],["lane","lake"],["lane","late"],["late","date"],["date","data"],["lake","take"],["line","life"]]},{"id":"bl-607707cb3a06","date":"2026-11-24","start":"send","targets":["wing","mice","will"],"par":11,"separate":18,"trunk":4,"solution":[["send","sand"],["sand","land"],["land","lane"],["lane","line"],["line","mine"],["line","wine"],["wine","wing"],["wine","wind"],["wind","wild"],["wild","will"],["mine","mice"]]},{"id":"bl-efe99390cc9c","date":"2026-11-25","start":"wear","targets":["sand","thin","them"],"par":11,"separate":18,"trunk":3,"solution":[["wear","bear"],["bear","beer"],["beer","been"],["been","teen"],["been","seen"],["seen","seed"],["seed","send"],["send","sand"],["teen","then"],["then","them"],["then","thin"]]},{"id":"bl-2d605748d655","date":"2026-11-26","start":"dead","targets":["pill","tail","firm"],"par":11,"separate":18,"trunk":3,"solution":[["dead","deal"],["deal","seal"],["seal","sell"],["sell","tell"],["sell","fell"],["fell","fill"],["fill","pill"],["fill","film"],["film","firm"],["tell","tall"],["tall","tail"]]},{"id":"bl-e363eaba0d68","date":"2026-11-27","start":"with","targets":["safe","game","mill"],"par":11,"separate":18,"trunk":5,"solution":[["with","wish"],["wish","wise"],["wise","wine"],["wine","mine"],["mine","mile"],["mile","male"],["mile","mill"],["male","sale"],["sale","same"],["same","game"],["same","safe"]]},{"id":"bl-9a7835335e2f","date":"2026-11-28","start":"hall","targets":["word","caps","fort"],"par":11,"separate":18,"trunk":5,"solution":[["hall","tall"],["tall","toll"],["toll","told"],["told","cold"],["cold","cord"],["cord","word"],["cord","ford"],["cord","card"],["card","cars"],["cars","caps"],["ford","fort"]]},{"id":"bl-13b426476817","date":"2026-11-29","start":"rule","targets":["fine","case","cape"],"par":11,"separate":18,"trunk":3,"solution":[["rule","role"],["role","sole"],["sole","sale"],["sale","male"],["sale","safe"],["safe","cafe"],["cafe","case"],["cafe","cape"],["male","mile"],["mile","file"],["file","fine"]]},{"id":"bl-07aeebb8b10d","date":"2026-11-30","start":"wolf","targets":["wall","bank","pull"],"par":11,"separate":18,"trunk":4,"solution":[["wolf","golf"],["golf","gold"],["gold","told"],["told","toll"],["toll","poll"],["toll","tall"],["tall","talk"],["tall","wall"],["talk","tank"],["tank","bank"],["poll","pull"]]},{"id":"bl-f455043dde96","date":"2026-12-01","start":"weak","targets":["self","foot","root"],"par":11,"separate":18,"trunk":3,"solution":[["weak","wear"],["wear","bear"],["bear","beat"],["beat","boat"],["beat","belt"],["belt","bell"],["bell","sell"],["sell","self"],["boat","boot"],["boot","root"],["boot","foot"]]},{"id":"bl-8307991f77f9","date":"2026-12-02","start":"toys","targets":["kiss","task","cake"],"par":11,"separate":18,"trunk":3,"solution":[["toys","boys"],["boys","boss"],["boss","bass"],["bass","base"],["bass","mass"],["mass","mask"],["mass","miss"],["miss","kiss"],["mask","task"],["base","case"],["case","cake"]]},{"id":"bl-c82bfa2bc79e","date":"2026-12-03","start":"mill","targets":["list","caps","base"],"par":11,"separate":18,"trunk":5,"solution":[["mill","mall"],["mall","male"],["male","make"],["make","cake"],["cake","case"],["case","cast"],["case","cape"],["case","base"],["cape","caps"],["cast","last"],["last","list"]]},{"id":"bl-4ca8d7a07071","date":"2026-12-04","start":"deck","targets":["dose","face","hide"],"par":11,"separate":18,"trunk":4,"solution":[["deck","desk"],["desk","disk"],["disk","risk"],["risk","rise"],["rise","rice"],["rise","rose"],["rise","ride"],["ride","hide"],["rose","dose"],["rice","race"],["race","face"]]},{"id":"bl-001d07f23af0","date":"2026-12-05","start":"find","targets":["zone","node","vote"],"par":7,"separate":13,"trunk":3,"solution":[["find","fine"],["fine","nine"],["nine","none"],["none","zone"],["none","note"],["none","node"],["note","vote"]]},{"id":"bl-f9ff23a3498f","date":"2026-12-06","start":"look","targets":["hope","cold","help"],"par":8,"separate":14,"trunk":3,"solution":[["look","hook"],["hook","hood"],["hood","hold"],["hold","cold"],["hold","held"],["hold","hole"],["hole","hope"],["held","help"]]},{"id":"bl-4923a4a46581","date":"2026-12-07","start":"thus","targets":["beef","them","when"],"par":8,"separate":14,"trunk":3,"solution":[["thus","this"],["this","thin"],["thin","then"],["then","them"],["then","teen"],["then","when"],["teen","been"],["been","beef"]]},{"id":"bl-a496a97fd431","date":"2026-12-08","start":"rail","targets":["poll","cold","took"],"par":8,"separate":14,"trunk":3,"solution":[["rail","tail"],["tail","tall"],["tall","toll"],["toll","told"],["toll","tool"],["toll","poll"],["tool","took"],["told","cold"]]},{"id":"bl-8fe586aa1ce3","date":"2026-12-09","start":"seal","targets":["half","pair","tail"],"par":9,"separate":15,"trunk":3,"solution":[["seal","sell"],["sell","fell"],["fell","fall"],["fall","hall"],["fall","fail"],["fail","tail"],["fail","fair"],["fair","pair"],["hall","half"]]},{"id":"bl-a065550a9b87","date":"2026-12-10","start":"fire","targets":["risk","pack","rare"],"par":9,"separate":15,"trunk":3,"solution":[["fire","wire"],["wire","wise"],["wise","rise"],["rise","rice"],["rise","risk"],["rice","race"],["race","pace"],["race","rare"],["pace","pack"]]},{"id":"bl-7dc62f5eac6d","date":"2026-12-11","start":"dark","targets":["card","more","fame"],"par":9,"separate":15,"trunk":4,"solution":[["dark","park"],["park","part"],["part","cart"],["cart","care"],["care","card"],["care","came"],["care","core"],["core","more"],["came","fame"]]},{"id":"bl-92f68314b924","date":"2026-12-12","start":"fact","targets":["vice","wise","none"],"par":9,"separate":15,"trunk":3,"solution":[["fact","face"],["face","race"],["race","rice"],["rice","nice"],["rice","vice"],["rice","rise"],["rise","wise"],["nice","nine"],["nine","none"]]},{"id":"bl-0efbc975819e","date":"2026-12-13","start":"golf","targets":["tool","self","wall"],"par":9,"separate":15,"trunk":3,"solution":[["golf","gold"],["gold","told"],["told","toll"],["toll","tell"],["toll","tool"],["toll","tall"],["tall","wall"],["tell","sell"],["sell","self"]]},{"id":"bl-6d3daf70be51","date":"2026-12-14","start":"luck","targets":["cart","pass","page"],"par":9,"separate":15,"trunk":2,"solution":[["luck","lack"],["lack","pack"],["pack","pace"],["pack","park"],["park","part"],["part","cart"],["part","past"],["past","pass"],["pace","page"]]},{"id":"bl-8cb3f58fed44","date":"2026-12-15","start":"wide","targets":["null","pill","form"],"par":9,"separate":15,"trunk":2,"solution":[["wide","wire"],["wire","fire"],["fire","firm"],["fire","file"],["file","fill"],["fill","full"],["fill","pill"],["full","null"],["firm","form"]]},{"id":"bl-38d4a434496b","date":"2026-12-16","start":"cute","targets":["wars","park","bags"],"par":9,"separate":15,"trunk":3,"solution":[["cute","cuts"],["cuts","cats"],["cats","cars"],["cars","cart"],["cars","bars"],["bars","wars"],["bars","bags"],["cart","part"],["part","park"]]},{"id":"bl-0be21de69584","date":"2026-12-17","start":"hire","targets":["code","nose","fund"],"par":9,"separate":15,"trunk":2,"solution":[["hire","fire"],["fire","fine"],["fine","find"],["fine","nine"],["nine","none"],["none","node"],["node","code"],["node","nose"],["find","fund"]]},{"id":"bl-e80e072f7420","date":"2026-12-18","start":"hats","targets":["fast","yard","list"],"par":9,"separate":15,"trunk":3,"solution":[["hats","cats"],["cats","cars"],["cars","card"],["card","cart"],["card","yard"],["cart","cast"],["cast","fast"],["cast","last"],["last","list"]]},{"id":"bl-b8bdf3cf9529","date":"2026-12-19","start":"gene","targets":["life","film","pine"],"par":9,"separate":15,"trunk":4,"solution":[["gene","gone"],["gone","none"],["none","nine"],["nine","fine"],["fine","pine"],["fine","line"],["fine","file"],["file","film"],["line","life"]]},{"id":"bl-7c785d5ebe9b","date":"2026-12-20","start":"gift","targets":["fire","lane","pick"],"par":9,"separate":15,"trunk":3,"solution":[["gift","lift"],["lift","life"],["life","line"],["line","fine"],["line","lane"],["fine","pine"],["fine","fire"],["pine","pink"],["pink","pick"]]},{"id":"bl-1ca7ab9de22b","date":"2026-12-21","start":"must","targets":["lift","miss","bars"],"par":10,"separate":16,"trunk":2,"solution":[["must","most"],["most","lost"],["lost","list"],["lost","loss"],["loss","boss"],["boss","bass"],["bass","bars"],["bass","mass"],["mass","miss"],["list","lift"]]},{"id":"bl-9ad6806ddf3a","date":"2026-12-22","start":"bear","targets":["took","pool","will"],"par":10,"separate":16,"trunk":3,"solution":[["bear","beat"],["beat","belt"],["belt","bell"],["bell","tell"],["bell","bill"],["bill","will"],["tell","toll"],["toll","tool"],["tool","pool"],["tool","took"]]},{"id":"bl-a0df5687aa1f","date":"2026-12-23","start":"work","targets":["roof","post","soft"],"par":10,"separate":16,"trunk":3,"solution":[["work","word"],["word","ford"],["ford","fort"],["fort","port"],["fort","foot"],["fort","sort"],["sort","soft"],["foot","root"],["root","roof"],["port","post"]]},{"id":"bl-231d76ad470a","date":"2026-12-24","start":"week","targets":["lane","laid","heat"],"par":10,"separate":16,"trunk":3,"solution":[["week","seek"],["seek","seed"],["seed","send"],["send","sent"],["send","sand"],["sand","land"],["land","lane"],["land","laid"],["sent","seat"],["seat","heat"]]},{"id":"bl-1c4eb52a0490","date":"2026-12-25","start":"room","targets":["loop","meal","best"],"par":10,"separate":16,"trunk":2,"solution":[["room","root"],["root","boot"],["boot","book"],["boot","boat"],["boat","beat"],["beat","meat"],["beat","best"],["meat","meal"],["book","look"],["look","loop"]]},{"id":"bl-cda7b0b396f7","date":"2026-12-26","start":"last","targets":["firm","pick","font"],"par":10,"separate":16,"trunk":2,"solution":[["last","past"],["past","part"],["part","port"],["part","park"],["park","pack"],["pack","pick"],["port","fort"],["fort","form"],["fort","font"],["form","firm"]]},{"id":"bl-6c5fdece6b92","date":"2026-12-27","start":"left","targets":["rose","done","case"],"par":10,"separate":16,"trunk":3,"solution":[["left","lift"],["lift","list"],["list","lost"],["lost","lose"],["lost","cost"],["cost","cast"],["cast","case"],["lose","rose"],["lose","dose"],["dose","done"]]},{"id":"bl-488f7c68a7df","date":"2026-12-28","start":"cash","targets":["pipe","wins","bike"],"par":10,"separate":16,"trunk":4,"solution":[["cash","case"],["case","cake"],["cake","lake"],["lake","like"],["like","bike"],["like","line"],["line","pine"],["line","wine"],["wine","wins"],["pine","pipe"]]},{"id":"bl-04becf21c1c9","date":"2026-12-29","start":"word","targets":["bank","line","make"],"par":10,"separate":16,"trunk":4,"solution":[["word","ward"],["ward","hard"],["hard","hand"],["hand","band"],["band","bank"],["band","land"],["land","lane"],["lane","line"],["lane","lake"],["lake","make"]]},{"id":"bl-85c829725f7f","date":"2026-12-30","start":"text","targets":["mean","feel","beer"],"par":10,"separate":16,"trunk":3,"solution":[["text","test"],["test","best"],["best","beat"],["beat","meat"],["beat","bear"],["bear","beer"],["meat","mean"],["meat","meet"],["meet","feet"],["feet","feel"]]},{"id":"bl-07bbcda80428","date":"2026-12-31","start":"type","targets":["fact","post","come"],"par":10,"separate":16,"trunk":3,"solution":[["type","tape"],["tape","cape"],["cape","came"],["came","come"],["came","case"],["case","cast"],["cast","fast"],["cast","cost"],["cost","post"],["fast","fact"]]},{"id":"bl-946f15408c36","date":"2027-01-01","start":"mark","targets":["wage","cape","corn"],"par":10,"separate":16,"trunk":4,"solution":[["mark","park"],["park","part"],["part","cart"],["cart","care"],["care","cake"],["care","core"],["core","corn"],["cake","cape"],["cake","wake"],["wake","wage"]]},{"id":"bl-89e432350c0b","date":"2027-01-02","start":"kits","targets":["wave","bars","sale"],"par":10,"separate":16,"trunk":2,"solution":[["kits","hits"],["hits","hats"],["hats","cats"],["hats","hate"],["hate","have"],["have","save"],["have","wave"],["save","sale"],["cats","cars"],["cars","bars"]]},{"id":"bl-c01e08b72dd5","date":"2027-01-03","start":"task","targets":["sell","golf","sole"],"par":10,"separate":16,"trunk":3,"solution":[["task","talk"],["talk","tall"],["tall","toll"],["toll","tell"],["toll","told"],["told","gold"],["gold","sold"],["gold","golf"],["sold","sole"],["tell","sell"]]},{"id":"bl-ccf764299891","date":"2027-01-04","start":"sent","targets":["dean","holy","cord"],"par":10,"separate":16,"trunk":3,"solution":[["sent","seat"],["seat","heat"],["heat","head"],["head","held"],["head","dead"],["dead","dean"],["held","hold"],["hold","cold"],["hold","holy"],["cold","cord"]]},{"id":"bl-88c1260838fb","date":"2027-01-05","start":"silk","targets":["bold","node","wine"],"par":10,"separate":16,"trunk":4,"solution":[["silk","milk"],["milk","mile"],["mile","mine"],["mine","nine"],["nine","none"],["nine","wine"],["none","bone"],["none","node"],["bone","bond"],["bond","bold"]]},{"id":"bl-faa0653b95de","date":"2027-01-06","start":"peer","targets":["test","meal","chat"],"par":10,"separate":16,"trunk":3,"solution":[["peer","beer"],["beer","bear"],["bear","beat"],["beat","meat"],["beat","best"],["beat","boat"],["boat","coat"],["coat","chat"],["best","test"],["meat","meal"]]},{"id":"bl-46f30d0ec2ae","date":"2027-01-07","start":"wake","targets":["five","nick","fund"],"par":10,"separate":16,"trunk":4,"solution":[["wake","lake"],["lake","lane"],["lane","line"],["line","fine"],["fine","find"],["fine","nine"],["fine","five"],["nine","nice"],["nice","nick"],["find","fund"]]},{"id":"bl-557741614c45","date":"2027-01-08","start":"ways","targets":["wash","race","babe"],"par":10,"separate":16,"trunk":3,"solution":[["ways","wars"],["wars","cars"],["cars","care"],["care","case"],["care","rare"],["rare","race"],["case","cash"],["case","base"],["base","babe"],["cash","wash"]]},{"id":"bl-45987243e100","date":"2027-01-09","start":"fair","targets":["real","best","tell"],"par":10,"separate":16,"trunk":4,"solution":[["fair","fail"],["fail","fall"],["fall","ball"],["ball","bell"],["bell","tell"],["bell","sell"],["bell","belt"],["belt","best"],["sell","seal"],["seal","real"]]},{"id":"bl-0d35c85e7e48","date":"2027-01-10","start":"neck","targets":["wife","file","with"],"par":10,"separate":16,"trunk":4,"solution":[["neck","nick"],["nick","nice"],["nice","nine"],["nine","fine"],["fine","file"],["fine","wine"],["wine","wise"],["wine","wife"],["wise","wish"],["wish","with"]]},{"id":"bl-73ce059e0ec8","date":"2027-01-11","start":"rich","targets":["kind","mall","take"],"par":10,"separate":16,"trunk":3,"solution":[["rich","rice"],["rice","mice"],["mice","mine"],["mine","mile"],["mine","mind"],["mind","kind"],["mile","male"],["male","mall"],["male","make"],["make","take"]]},{"id":"bl-a53e8e8c556e","date":"2027-01-12","start":"days","targets":["hats","port","came"],"par":10,"separate":16,"trunk":3,"solution":[["days","ways"],["ways","wars"],["wars","cars"],["cars","care"],["cars","cats"],["cats","hats"],["care","came"],["care","cart"],["cart","part"],["part","port"]]},{"id":"bl-dc059da3dccd","date":"2027-01-13","start":"soon","targets":["font","root","sole"],"par":10,"separate":16,"trunk":3,"solution":[["soon","moon"],["moon","mood"],["mood","food"],["food","good"],["food","foot"],["foot","root"],["foot","font"],["good","gold"],["gold","sold"],["sold","sole"]]},{"id":"bl-34de1629fad7","date":"2027-01-14","start":"made","targets":["felt","form","hire"],"par":10,"separate":16,"trunk":3,"solution":[["made","male"],["male","mile"],["mile","file"],["file","fill"],["file","fire"],["fire","hire"],["fire","firm"],["firm","form"],["fill","fell"],["fell","felt"]]},{"id":"bl-ae72d9580ab1","date":"2027-01-15","start":"dual","targets":["tool","weak","told"],"par":10,"separate":16,"trunk":1,"solution":[["dual","deal"],["deal","dear"],["deal","seal"],["seal","sell"],["sell","tell"],["tell","toll"],["toll","told"],["toll","tool"],["dear","wear"],["wear","weak"]]},{"id":"bl-c211c0eb30d6","date":"2027-01-16","start":"mint","targets":["move","code","half"],"par":10,"separate":16,"trunk":3,"solution":[["mint","mine"],["mine","mile"],["mile","male"],["male","mall"],["male","made"],["made","mode"],["mode","move"],["mode","code"],["mall","hall"],["hall","half"]]},{"id":"bl-5ee0c452748f","date":"2027-01-17","start":"dust","targets":["part","vast","node"],"par":10,"separate":16,"trunk":2,"solution":[["dust","must"],["must","most"],["most","lost"],["most","post"],["post","past"],["past","vast"],["past","part"],["lost","lose"],["lose","nose"],["nose","node"]]},{"id":"bl-29035f6e96c6","date":"2027-01-18","start":"holy","targets":["face","wake","salt"],"par":10,"separate":16,"trunk":3,"solution":[["holy","hole"],["hole","sole"],["sole","sale"],["sale","same"],["sale","salt"],["same","came"],["came","fame"],["came","cake"],["cake","wake"],["fame","face"]]},{"id":"bl-b09544de2849","date":"2027-01-19","start":"loan","targets":["rare","cafe","rear"],"par":10,"separate":16,"trunk":1,"solution":[["loan","load"],["load","lord"],["load","lead"],["lead","read"],["read","rear"],["lord","cord"],["cord","card"],["card","care"],["care","cafe"],["care","rare"]]},{"id":"bl-54df72f9c9c6","date":"2027-01-20","start":"cent","targets":["help","dean","dial"],"par":10,"separate":16,"trunk":2,"solution":[["cent","sent"],["sent","seat"],["seat","seal"],["seat","heat"],["heat","head"],["head","held"],["held","help"],["seal","deal"],["deal","dial"],["deal","dean"]]},{"id":"bl-1c6eee351ee3","date":"2027-01-21","start":"spot","targets":["seem","item","know"],"par":10,"separate":16,"trunk":2,"solution":[["spot","shot"],["shot","shop"],["shop","show"],["shop","stop"],["stop","step"],["step","stem"],["stem","item"],["stem","seem"],["show","snow"],["snow","know"]]},{"id":"bl-898435d991ff","date":"2027-01-22","start":"pair","targets":["cake","pill","film"],"par":10,"separate":16,"trunk":3,"solution":[["pair","fair"],["fair","fail"],["fail","fall"],["fall","mall"],["fall","fill"],["fill","pill"],["fill","film"],["mall","male"],["male","make"],["make","cake"]]},{"id":"bl-90a2e6ba3d65","date":"2027-01-23","start":"cuts","targets":["make","rice","safe"],"par":10,"separate":16,"trunk":3,"solution":[["cuts","cats"],["cats","cars"],["cars","care"],["care","cafe"],["care","rare"],["rare","race"],["race","rice"],["cafe","safe"],["cafe","cake"],["cake","make"]]},{"id":"bl-411bab4e31a9","date":"2027-01-24","start":"mine","targets":["card","here","word"],"par":10,"separate":16,"trunk":2,"solution":[["mine","fine"],["fine","fire"],["fire","hire"],["fire","firm"],["firm","form"],["form","ford"],["ford","cord"],["cord","word"],["cord","card"],["hire","here"]]},{"id":"bl-c9e8fb036183","date":"2027-01-25","start":"wage","targets":["link","move","none"],"par":10,"separate":16,"trunk":4,"solution":[["wage","wave"],["wave","gave"],["gave","give"],["give","live"],["live","love"],["live","line"],["line","link"],["line","nine"],["nine","none"],["love","move"]]},{"id":"bl-9d2bddd95b87","date":"2027-01-26","start":"doll","targets":["food","cost","form"],"par":11,"separate":17,"trunk":4,"solution":[["doll","toll"],["toll","told"],["told","cold"],["cold","cord"],["cord","card"],["cord","ford"],["ford","food"],["ford","form"],["card","cart"],["cart","cast"],["cast","cost"]]},{"id":"bl-a17a6604a3a0","date":"2027-01-27","start":"cord","targets":["jack","late","wide"],"par":11,"separate":17,"trunk":3,"solution":[["cord","card"],["card","care"],["care","rare"],["rare","rate"],["rare","race"],["race","rack"],["race","rice"],["rice","ride"],["ride","wide"],["rack","jack"],["rate","late"]]},{"id":"bl-14a9b2090242","date":"2027-01-28","start":"five","targets":["pace","fast","risk"],"par":11,"separate":17,"trunk":4,"solution":[["five","file"],["file","mile"],["mile","mice"],["mice","rice"],["rice","rise"],["rice","race"],["race","face"],["face","fact"],["face","pace"],["fact","fast"],["rise","risk"]]},{"id":"bl-9590b064f6d2","date":"2027-01-29","start":"heat","targets":["took","rose","come"],"par":11,"separate":17,"trunk":3,"solution":[["heat","head"],["head","held"],["held","hold"],["hold","hole"],["hold","hood"],["hood","hook"],["hook","took"],["hole","role"],["hole","home"],["home","come"],["role","rose"]]},{"id":"bl-3afca3e3ae63","date":"2027-01-30","start":"rent","targets":["term","self","call"],"par":11,"separate":17,"trunk":2,"solution":[["rent","sent"],["sent","seat"],["seat","beat"],["seat","seal"],["seal","sell"],["sell","self"],["sell","cell"],["cell","call"],["beat","beam"],["beam","team"],["team","term"]]},{"id":"bl-3ab0cc60e862","date":"2027-01-31","start":"mean","targets":["tall","cool","file"],"par":11,"separate":17,"trunk":5,"solution":[["mean","meal"],["meal","seal"],["seal","sell"],["sell","tell"],["tell","toll"],["toll","tool"],["toll","till"],["toll","tall"],["till","fill"],["fill","file"],["tool","cool"]]},{"id":"bl-030501a4624f","date":"2027-02-01","start":"boys","targets":["lake","pine","role"],"par":11,"separate":17,"trunk":3,"solution":[["boys","boss"],["boss","loss"],["loss","lose"],["lose","love"],["lose","rose"],["rose","role"],["love","live"],["live","like"],["live","line"],["line","pine"],["like","lake"]]},{"id":"bl-67ed4a2e044f","date":"2027-02-02","start":"salt","targets":["food","yard","more"],"par":11,"separate":17,"trunk":4,"solution":[["salt","sale"],["sale","safe"],["safe","cafe"],["cafe","care"],["care","card"],["care","core"],["core","more"],["card","cord"],["card","yard"],["cord","ford"],["ford","food"]]},{"id":"bl-ae4bece0294c","date":"2027-02-03","start":"vote","targets":["sale","mint","lift"],"par":11,"separate":17,"trunk":4,"solution":[["vote","note"],["note","none"],["none","nine"],["nine","line"],["line","mine"],["line","life"],["life","lift"],["mine","mile"],["mine","mint"],["mile","male"],["male","sale"]]},{"id":"bl-cea0b148b4a8","date":"2027-02-04","start":"lost","targets":["wins","with","holy"],"par":11,"separate":17,"trunk":2,"solution":[["lost","lose"],["lose","rose"],["rose","role"],["rose","rise"],["rise","wise"],["wise","wish"],["wise","wine"],["wine","wins"],["wish","with"],["role","hole"],["hole","holy"]]},{"id":"bl-f572737e4339","date":"2027-02-05","start":"went","targets":["cell","leaf","hold"],"par":11,"separate":17,"trunk":2,"solution":[["went","sent"],["sent","seat"],["seat","seal"],["seat","heat"],["heat","head"],["head","lead"],["head","held"],["held","hold"],["lead","leaf"],["seal","sell"],["sell","cell"]]},{"id":"bl-4ca6d7ebb88a","date":"2027-02-06","start":"paid","targets":["fell","wing","mind"],"par":11,"separate":17,"trunk":4,"solution":[["paid","pair"],["pair","fair"],["fair","fail"],["fail","fall"],["fall","fell"],["fall","fill"],["fill","will"],["will","wild"],["wild","wind"],["wind","wing"],["wind","mind"]]},{"id":"bl-4a8903cd655a","date":"2027-02-07","start":"gate","targets":["bone","done","babe"],"par":11,"separate":17,"trunk":2,"solution":[["gate","game"],["game","came"],["came","come"],["came","case"],["case","base"],["base","babe"],["come","code"],["code","node"],["node","none"],["none","done"],["none","bone"]]},{"id":"bl-6db6de3934c5","date":"2027-02-08","start":"lock","targets":["gang","ball","fell"],"par":11,"separate":17,"trunk":3,"solution":[["lock","lack"],["lack","back"],["back","bank"],["bank","bang"],["bank","tank"],["tank","talk"],["talk","tall"],["tall","fall"],["tall","ball"],["fall","fell"],["bang","gang"]]},{"id":"bl-72cce0f484c0","date":"2027-02-09","start":"song","targets":["like","wash","pick"],"par":11,"separate":17,"trunk":3,"solution":[["song","sing"],["sing","wing"],["wing","wine"],["wine","wise"],["wine","line"],["line","link"],["line","like"],["link","pink"],["pink","pick"],["wise","wish"],["wish","wash"]]},{"id":"bl-2dfbb88f6c7f","date":"2027-02-10","start":"when","targets":["wear","peer","feel"],"par":11,"separate":17,"trunk":3,"solution":[["when","then"],["then","teen"],["teen","been"],["been","beer"],["been","seen"],["seen","seed"],["seed","feed"],["feed","feel"],["beer","bear"],["beer","peer"],["bear","wear"]]},{"id":"bl-65724bcc6824","date":"2027-02-11","start":"main","targets":["lane","hole","case"],"par":11,"separate":17,"trunk":3,"solution":[["main","mail"],["mail","mall"],["mall","male"],["male","make"],["male","sale"],["sale","sole"],["sole","hole"],["make","cake"],["cake","case"],["cake","lake"],["lake","lane"]]},{"id":"bl-07195d7f1dda","date":"2027-02-12","start":"tons","targets":["sole","mind","home"],"par":11,"separate":17,"trunk":2,"solution":[["tons","tone"],["tone","none"],["none","nine"],["none","node"],["node","code"],["code","come"],["come","home"],["come","some"],["some","sole"],["nine","mine"],["mine","mind"]]},{"id":"bl-5ec3a692379b","date":"2027-02-13","start":"maps","targets":["firm","food","cost"],"par":11,"separate":17,"trunk":2,"solution":[["maps","caps"],["caps","cars"],["cars","card"],["cars","cart"],["cart","cast"],["cast","cost"],["card","cord"],["cord","ford"],["ford","food"],["ford","form"],["form","firm"]]},{"id":"bl-c665da6237aa","date":"2027-02-14","start":"rank","targets":["rain","tool","film"],"par":11,"separate":17,"trunk":3,"solution":[["rank","tank"],["tank","talk"],["talk","tall"],["tall","fall"],["tall","toll"],["toll","tool"],["fall","fail"],["fall","fill"],["fill","film"],["fail","rail"],["rail","rain"]]},{"id":"bl-f789ea4cb73b","date":"2027-02-15","start":"fund","targets":["gone","call","tune"],"par":11,"separate":17,"trunk":2,"solution":[["fund","find"],["find","fine"],["fine","file"],["fine","nine"],["nine","none"],["none","gone"],["none","tone"],["tone","tune"],["file","fill"],["fill","fall"],["fall","call"]]},{"id":"bl-451431154830","date":"2027-02-16","start":"dose","targets":["jack","tank","male"],"par":11,"separate":17,"trunk":3,"solution":[["dose","rose"],["rose","rise"],["rise","rice"],["rice","mice"],["rice","race"],["race","rack"],["rack","rank"],["rack","jack"],["rank","tank"],["mice","mile"],["mile","male"]]},{"id":"bl-2fe150bfc477","date":"2027-02-17","start":"just","targets":["park","dose","form"],"par":11,"separate":17,"trunk":3,"solution":[["just","must"],["must","most"],["most","lost"],["lost","post"],["lost","lose"],["lose","dose"],["post","port"],["port","fort"],["port","part"],["part","park"],["fort","form"]]},{"id":"bl-8f622557d446","date":"2027-02-18","start":"bone","targets":["date","bike","save"],"par":11,"separate":17,"trunk":4,"solution":[["bone","none"],["none","nine"],["nine","line"],["line","like"],["like","bike"],["like","lake"],["lake","late"],["lake","wake"],["wake","wave"],["wave","save"],["late","date"]]},{"id":"bl-26104a41bea3","date":"2027-02-19","start":"west","targets":["hill","male","roll"],"par":11,"separate":17,"trunk":4,"solution":[["west","best"],["best","belt"],["belt","bell"],["bell","ball"],["ball","bill"],["ball","mall"],["ball","tall"],["tall","toll"],["toll","roll"],["mall","male"],["bill","hill"]]},{"id":"bl-42a2b871d0c9","date":"2027-02-20","start":"dean","targets":["tail","hood","hill"],"par":11,"separate":17,"trunk":4,"solution":[["dean","dead"],["dead","head"],["head","held"],["held","hold"],["hold","told"],["hold","hood"],["told","toll"],["toll","till"],["toll","tall"],["tall","tail"],["till","hill"]]},{"id":"bl-9583d62ac5a6","date":"2027-02-21","start":"yeah","targets":["seen","told","gold"],"par":11,"separate":17,"trunk":2,"solution":[["yeah","year"],["year","bear"],["bear","hear"],["bear","beer"],["beer","been"],["been","seen"],["hear","head"],["head","held"],["held","hold"],["hold","told"],["hold","gold"]]},{"id":"bl-78340f53fa24","date":"2027-02-22","start":"warm","targets":["some","gold","lamp"],"par":11,"separate":17,"trunk":2,"solution":[["warm","ward"],["ward","card"],["card","care"],["card","cord"],["cord","cold"],["cold","gold"],["care","came"],["came","come"],["came","camp"],["camp","lamp"],["come","some"]]},{"id":"bl-e8cacc31f6fc","date":"2027-02-23","start":"will","targets":["land","name","life"],"par":11,"separate":17,"trunk":4,"solution":[["will","fill"],["fill","file"],["file","fine"],["fine","line"],["line","lane"],["line","life"],["lane","land"],["lane","lake"],["lake","cake"],["cake","came"],["came","name"]]},{"id":"bl-a236aa8a04a0","date":"2027-02-24","start":"mass","targets":["rate","work","hard"],"par":11,"separate":17,"trunk":2,"solution":[["mass","bass"],["bass","bars"],["bars","wars"],["bars","cars"],["cars","care"],["care","rare"],["rare","rate"],["wars","ward"],["ward","hard"],["ward","word"],["word","work"]]},{"id":"bl-6fddf756e325","date":"2027-02-25","start":"felt","targets":["nice","cast","wake"],"par":12,"separate":18,"trunk":4,"solution":[["felt","fell"],["fell","fall"],["fall","mall"],["mall","male"],["male","make"],["male","mile"],["mile","mice"],["mice","nice"],["make","cake"],["cake","case"],["cake","wake"],["case","cast"]]},{"id":"bl-fe9ca14b9efc","date":"2027-02-26","start":"tags","targets":["tons","most","fact"],"par":12,"separate":18,"trunk":2,"solution":[["tags","bags"],["bags","bass"],["bass","pass"],["bass","boss"],["boss","boys"],["boys","toys"],["toys","tons"],["pass","past"],["past","post"],["past","fast"],["fast","fact"],["post","most"]]},{"id":"bl-66d46ebbf107","date":"2027-02-27","start":"hits","targets":["east","vast","nine"],"par":12,"separate":18,"trunk":4,"solution":[["hits","hats"],["hats","hate"],["hate","late"],["late","lake"],["lake","cake"],["lake","lane"],["lane","line"],["line","nine"],["cake","case"],["case","cast"],["cast","vast"],["cast","east"]]},{"id":"bl-66d9d6c337f7","date":"2027-02-28","start":"bill","targets":["jean","send","been"],"par":12,"separate":18,"trunk":3,"solution":[["bill","bell"],["bell","belt"],["belt","beat"],["beat","seat"],["beat","bear"],["bear","dear"],["bear","beer"],["beer","been"],["dear","dean"],["dean","jean"],["seat","sent"],["sent","send"]]},{"id":"bl-a43b4bc16775","date":"2027-03-01","start":"born","targets":["lane","sand","head"],"par":12,"separate":18,"trunk":4,"solution":[["born","corn"],["corn","cord"],["cord","cold"],["cold","bold"],["bold","bond"],["bold","hold"],["hold","held"],["held","head"],["bond","band"],["band","sand"],["band","land"],["land","lane"]]},{"id":"bl-671423a60f45","date":"2027-03-02","start":"sand","targets":["gift","rose","past"],"par":12,"separate":18,"trunk":5,"solution":[["sand","land"],["land","lane"],["lane","line"],["line","life"],["life","lift"],["lift","gift"],["lift","list"],["list","last"],["list","lost"],["lost","lose"],["lose","rose"],["last","past"]]},{"id":"bl-90df11300fcc","date":"2027-03-03","start":"hang","targets":["mile","fall","seal"],"par":12,"separate":18,"trunk":5,"solution":[["hang","bang"],["bang","bank"],["bank","tank"],["tank","talk"],["talk","tall"],["tall","fall"],["tall","tell"],["tall","mall"],["mall","male"],["male","mile"],["tell","sell"],["sell","seal"]]},{"id":"bl-0fcc265e05e1","date":"2027-03-04","start":"team","targets":["seek","help","leaf"],"par":12,"separate":18,"trunk":2,"solution":[["team","beam"],["beam","bear"],["bear","hear"],["bear","beer"],["beer","been"],["been","seen"],["seen","seek"],["hear","head"],["head","lead"],["head","held"],["held","help"],["lead","leaf"]]},{"id":"bl-9653842da418","date":"2027-03-05","start":"beef","targets":["bill","well","land"],"par":12,"separate":18,"trunk":3,"solution":[["beef","beer"],["beer","bear"],["bear","beat"],["beat","seat"],["beat","belt"],["belt","bell"],["bell","bill"],["bell","well"],["seat","sent"],["sent","send"],["send","sand"],["sand","land"]]},{"id":"bl-7e72e517a8c5","date":"2027-03-06","start":"less","targets":["disk","tune","gene"],"par":12,"separate":18,"trunk":3,"solution":[["less","loss"],["loss","lose"],["lose","rose"],["rose","rise"],["rose","dose"],["dose","done"],["done","gone"],["done","tone"],["tone","tune"],["gone","gene"],["rise","risk"],["risk","disk"]]},{"id":"bl-c78deb702470","date":"2027-03-07","start":"leaf","targets":["firm","more","bond"],"par":12,"separate":18,"trunk":4,"solution":[["leaf","lead"],["lead","load"],["load","lord"],["lord","cord"],["cord","cold"],["cord","ford"],["cord","core"],["core","more"],["ford","form"],["form","firm"],["cold","bold"],["bold","bond"]]},{"id":"bl-5e936170ccd3","date":"2027-03-08","start":"then","targets":["post","dead","seat"],"par":12,"separate":18,"trunk":4,"solution":[["then","teen"],["teen","been"],["been","beer"],["beer","bear"],["bear","dear"],["bear","beat"],["beat","seat"],["beat","boat"],["boat","coat"],["coat","cost"],["cost","post"],["dear","dead"]]},{"id":"bl-d65e43383a21","date":"2027-03-09","start":"half","targets":["bond","golf","fame"],"par":12,"separate":18,"trunk":4,"solution":[["half","hall"],["hall","mall"],["mall","male"],["male","sale"],["sale","same"],["sale","sole"],["sole","sold"],["sold","bold"],["bold","gold"],["bold","bond"],["gold","golf"],["same","fame"]]},{"id":"bl-f9177a856bc4","date":"2027-03-10","start":"pull","targets":["hide","band","here"],"par":12,"separate":18,"trunk":4,"solution":[["pull","full"],["full","fill"],["fill","file"],["file","fine"],["fine","line"],["fine","fire"],["fire","hire"],["hire","here"],["hire","hide"],["line","lane"],["lane","land"],["land","band"]]},{"id":"bl-242c37b21f9c","date":"2027-03-11","start":"slip","targets":["stop","flow","slot"],"par":7,"separate":12,"trunk":2,"solution":[["slip","ship"],["ship","shop"],["shop","show"],["shop","stop"],["show","slow"],["slow","slot"],["slow","flow"]]},{"id":"bl-520ded0b050f","date":"2027-03-12","start":"told","targets":["none","hand","done"],"par":7,"separate":12,"trunk":2,"solution":[["told","bold"],["bold","bond"],["bond","band"],["bond","bone"],["bone","none"],["bone","done"],["band","hand"]]},{"id":"bl-5a1810945aac","date":"2027-03-13","start":"tone","targets":["live","wide","wins"],"par":7,"separate":12,"trunk":3,"solution":[["tone","none"],["none","nine"],["nine","line"],["line","live"],["line","wine"],["wine","wide"],["wine","wins"]]},{"id":"bl-185a1d6a73f9","date":"2027-03-14","start":"rear","targets":["sold","feed","holy"],"par":8,"separate":13,"trunk":1,"solution":[["rear","read"],["read","head"],["read","reed"],["reed","feed"],["head","held"],["held","hold"],["hold","holy"],["hold","sold"]]},{"id":"bl-f6c8152f70b4","date":"2027-03-15","start":"teen","targets":["seat","dear","read"],"par":8,"separate":13,"trunk":3,"solution":[["teen","been"],["been","beer"],["beer","bear"],["bear","dear"],["bear","rear"],["bear","beat"],["beat","seat"],["rear","read"]]},{"id":"bl-3d0a842531c9","date":"2027-03-16","start":"chip","targets":["flow","shut","snow"],"par":8,"separate":13,"trunk":2,"solution":[["chip","ship"],["ship","shop"],["shop","show"],["shop","shot"],["shot","shut"],["show","slow"],["show","snow"],["slow","flow"]]},{"id":"bl-7dba4a76e31f","date":"2027-03-17","start":"land","targets":["five","fill","wire"],"par":8,"separate":13,"trunk":4,"solution":[["land","lane"],["lane","line"],["line","fine"],["fine","file"],["file","fill"],["file","five"],["file","fire"],["fire","wire"]]},{"id":"bl-7f7f97a8489f","date":"2027-03-18","start":"lake","targets":["nice","mini","tone"],"par":8,"separate":13,"trunk":2,"solution":[["lake","lane"],["lane","line"],["line","mine"],["line","nine"],["nine","none"],["nine","nice"],["none","tone"],["mine","mini"]]},{"id":"bl-0c8e89055399","date":"2027-03-19","start":"core","targets":["done","zone","vice"],"par":8,"separate":13,"trunk":3,"solution":[["core","code"],["code","node"],["node","none"],["none","done"],["none","zone"],["none","nine"],["nine","nice"],["nice","vice"]]},{"id":"bl-09b1f97c3e30","date":"2027-03-20","start":"ship","targets":["seem","spot","item"],"par":8,"separate":13,"trunk":1,"solution":[["ship","shop"],["shop","shot"],["shop","stop"],["stop","step"],["step","stem"],["stem","item"],["stem","seem"],["shot","spot"]]},{"id":"bl-c3d6b75a39e4","date":"2027-03-21","start":"bike","targets":["hand","wins","hire"],"par":9,"separate":14,"trunk":2,"solution":[["bike","like"],["like","line"],["line","lane"],["line","wine"],["wine","wire"],["wine","wins"],["wire","hire"],["lane","land"],["land","hand"]]},{"id":"bl-5d994b4060d0","date":"2027-03-22","start":"slot","targets":["chip","spin","step"],"par":9,"separate":14,"trunk":2,"solution":[["slot","shot"],["shot","shop"],["shop","ship"],["shop","stop"],["stop","step"],["ship","skip"],["ship","chip"],["skip","skin"],["skin","spin"]]},{"id":"bl-f3ae0ecf4c58","date":"2027-03-23","start":"sold","targets":["mine","note","lose"],"par":9,"separate":14,"trunk":4,"solution":[["sold","bold"],["bold","bond"],["bond","bone"],["bone","none"],["none","nine"],["none","note"],["none","nose"],["nose","lose"],["nine","mine"]]},{"id":"bl-b2e95a3e3ab3","date":"2027-03-24","start":"yard","targets":["host","else","fast"],"par":9,"separate":14,"trunk":3,"solution":[["yard","card"],["card","care"],["care","case"],["case","cast"],["case","ease"],["ease","else"],["cast","fast"],["cast","cost"],["cost","host"]]},{"id":"bl-6ced01bbf6dc","date":"2027-03-25","start":"moon","targets":["book","sort","farm"],"par":9,"separate":14,"trunk":3,"solution":[["moon","mood"],["mood","food"],["food","foot"],["foot","fort"],["foot","boot"],["boot","book"],["fort","form"],["fort","sort"],["form","farm"]]},{"id":"bl-380f4ce1a418","date":"2027-03-26","start":"dial","targets":["well","cold","self"],"par":9,"separate":14,"trunk":3,"solution":[["dial","deal"],["deal","seal"],["seal","sell"],["sell","tell"],["sell","self"],["tell","toll"],["tell","well"],["toll","told"],["told","cold"]]},{"id":"bl-895eb0d9272d","date":"2027-03-27","start":"else","targets":["wage","camp","made"],"par":9,"separate":14,"trunk":3,"solution":[["else","ease"],["ease","case"],["case","cake"],["cake","wake"],["cake","make"],["cake","came"],["came","camp"],["make","made"],["wake","wage"]]},{"id":"bl-c9ea9385fd8f","date":"2027-03-28","start":"seek","targets":["fear","team","lead"],"par":9,"separate":14,"trunk":3,"solution":[["seek","seed"],["seed","reed"],["reed","read"],["read","rear"],["read","lead"],["rear","bear"],["bear","fear"],["bear","beam"],["beam","team"]]},{"id":"bl-ee194c4a6ce1","date":"2027-03-29","start":"skip","targets":["knew","shut","spot"],"par":9,"separate":14,"trunk":3,"solution":[["skip","ship"],["ship","shop"],["shop","show"],["show","shot"],["show","snow"],["snow","know"],["know","knew"],["shot","shut"],["shot","spot"]]},{"id":"bl-1da079797a4b","date":"2027-03-30","start":"hear","targets":["term","well","tell"],"par":9,"separate":14,"trunk":2,"solution":[["hear","bear"],["bear","beam"],["beam","beat"],["beam","team"],["team","term"],["beat","belt"],["belt","bell"],["bell","tell"],["bell","well"]]},{"id":"bl-37314ba245ec","date":"2027-03-31","start":"head","targets":["fall","rent","feel"],"par":9,"separate":14,"trunk":2,"solution":[["head","heat"],["heat","seat"],["seat","seal"],["seat","sent"],["sent","rent"],["seal","sell"],["sell","fell"],["fell","feel"],["fell","fall"]]},{"id":"bl-a513a8721860","date":"2027-04-01","start":"form","targets":["cake","bond","some"],"par":10,"separate":15,"trunk":2,"solution":[["form","ford"],["ford","cord"],["cord","cold"],["cord","core"],["core","come"],["core","care"],["care","cake"],["come","some"],["cold","bold"],["bold","bond"]]},{"id":"bl-16d9d7b1aafe","date":"2027-04-02","start":"loss","targets":["chat","word","font"],"par":10,"separate":15,"trunk":2,"solution":[["loss","lost"],["lost","cost"],["cost","coat"],["cost","post"],["post","port"],["port","fort"],["fort","ford"],["fort","font"],["ford","word"],["coat","chat"]]},{"id":"bl-0db1480bc072","date":"2027-04-03","start":"sing","targets":["risk","wish","fall"],"par":10,"separate":15,"trunk":2,"solution":[["sing","wing"],["wing","wine"],["wine","wise"],["wine","fine"],["fine","file"],["file","fill"],["fill","fall"],["wise","wish"],["wise","rise"],["rise","risk"]]},{"id":"bl-3b88dda7ae82","date":"2027-04-04","start":"nice","targets":["move","make","some"],"par":10,"separate":15,"trunk":4,"solution":[["nice","nine"],["nine","none"],["none","node"],["node","code"],["code","mode"],["code","come"],["come","some"],["mode","made"],["mode","move"],["made","make"]]},{"id":"bl-4a588dc91466","date":"2027-04-05","start":"babe","targets":["lost","game","hope"],"par":10,"separate":15,"trunk":2,"solution":[["babe","base"],["base","case"],["case","cast"],["case","came"],["came","come"],["came","game"],["come","home"],["home","hope"],["cast","cost"],["cost","lost"]]},{"id":"bl-1fba784cf642","date":"2027-04-06","start":"ride","targets":["last","lack","dark"],"par":10,"separate":15,"trunk":4,"solution":[["ride","rice"],["rice","race"],["race","pace"],["pace","pack"],["pack","lack"],["pack","park"],["park","part"],["park","dark"],["part","past"],["past","last"]]},{"id":"bl-dde01e6358d0","date":"2027-04-07","start":"ward","targets":["date","vice","hats"],"par":10,"separate":15,"trunk":3,"solution":[["ward","card"],["card","care"],["care","rare"],["rare","rate"],["rare","race"],["race","rice"],["rice","vice"],["rate","hate"],["rate","date"],["hate","hats"]]},{"id":"bl-2f715b3fb77f","date":"2027-04-08","start":"pack","targets":["boss","soft","fast"],"par":10,"separate":15,"trunk":2,"solution":[["pack","park"],["park","part"],["part","port"],["part","past"],["past","fast"],["past","pass"],["pass","bass"],["bass","boss"],["port","sort"],["sort","soft"]]},{"id":"bl-181ccfbfe23b","date":"2027-04-09","start":"meet","targets":["root","gear","that"],"par":10,"separate":15,"trunk":2,"solution":[["meet","meat"],["meat","beat"],["beat","bear"],["beat","boat"],["boat","coat"],["boat","boot"],["boot","root"],["coat","chat"],["chat","that"],["bear","gear"]]},{"id":"bl-eb557191a14f","date":"2027-04-10","start":"lead","targets":["rent","foot","coat"],"par":10,"separate":15,"trunk":3,"solution":[["lead","head"],["head","heat"],["heat","beat"],["beat","best"],["beat","boat"],["boat","boot"],["boat","coat"],["boot","foot"],["best","rest"],["rest","rent"]]},{"id":"bl-70e17be210b1","date":"2027-04-11","start":"zone","targets":["kick","rich","ring"],"par":10,"separate":15,"trunk":2,"solution":[["zone","none"],["none","nine"],["nine","wine"],["nine","nice"],["nice","rice"],["nice","nick"],["nick","kick"],["rice","rich"],["wine","wing"],["wing","ring"]]},{"id":"bl-b36f77ac2c52","date":"2027-04-12","start":"char","targets":["they","pool","teen"],"par":10,"separate":15,"trunk":1,"solution":[["char","chat"],["chat","coat"],["chat","that"],["that","than"],["than","then"],["then","they"],["then","teen"],["coat","coal"],["coal","cool"],["cool","pool"]]},{"id":"bl-c9f7217a833c","date":"2027-04-13","start":"real","targets":["foot","tool","best"],"par":10,"separate":15,"trunk":3,"solution":[["real","rear"],["rear","bear"],["bear","beat"],["beat","best"],["beat","boat"],["boat","boot"],["boot","book"],["boot","foot"],["book","took"],["took","tool"]]},{"id":"bl-f87345347d01","date":"2027-04-14","start":"hard","targets":["jack","pick","hold"],"par":10,"separate":15,"trunk":2,"solution":[["hard","hand"],["hand","band"],["band","bond"],["band","bank"],["bank","back"],["back","jack"],["back","pack"],["pack","pick"],["bond","bold"],["bold","hold"]]},{"id":"bl-76ca7a267a0a","date":"2027-04-15","start":"king","targets":["full","give","wish"],"par":10,"separate":15,"trunk":2,"solution":[["king","wing"],["wing","wine"],["wine","wise"],["wine","fine"],["fine","file"],["file","fill"],["file","five"],["five","give"],["fill","full"],["wise","wish"]]},{"id":"bl-3bb8d8418f60","date":"2027-04-16","start":"blow","targets":["knew","chip","skin"],"par":10,"separate":15,"trunk":1,"solution":[["blow","slow"],["slow","show"],["slow","snow"],["snow","know"],["know","knew"],["show","shop"],["shop","ship"],["ship","skip"],["ship","chip"],["skip","skin"]]},{"id":"bl-8fa577364986","date":"2027-04-17","start":"slow","targets":["skin","slip","seem"],"par":10,"separate":15,"trunk":2,"solution":[["slow","show"],["show","shop"],["shop","ship"],["shop","stop"],["stop","step"],["step","stem"],["stem","seem"],["ship","slip"],["ship","skip"],["skip","skin"]]},{"id":"bl-558c0fdc6746","date":"2027-04-18","start":"legs","targets":["host","must","wars"],"par":10,"separate":15,"trunk":2,"solution":[["legs","less"],["less","loss"],["loss","boss"],["loss","lost"],["lost","host"],["lost","most"],["most","must"],["boss","bass"],["bass","bars"],["bars","wars"]]},{"id":"bl-90e4c9c768af","date":"2027-04-19","start":"jack","targets":["east","cash","rich"],"par":10,"separate":15,"trunk":2,"solution":[["jack","rack"],["rack","race"],["race","rare"],["race","rice"],["rice","rich"],["rare","care"],["care","cart"],["cart","cast"],["cast","east"],["cast","cash"]]},{"id":"bl-e1ddf126ce05","date":"2027-04-20","start":"jean","targets":["rest","send","wall"],"par":11,"separate":16,"trunk":3,"solution":[["jean","dean"],["dean","deal"],["deal","seal"],["seal","seat"],["seal","sell"],["sell","well"],["well","wall"],["seat","sent"],["sent","rent"],["sent","send"],["rent","rest"]]},{"id":"bl-ac29921b8167","date":"2027-04-21","start":"host","targets":["bags","some","mask"],"par":11,"separate":16,"trunk":3,"solution":[["host","cost"],["cost","cast"],["cast","case"],["case","came"],["case","base"],["base","bass"],["bass","bags"],["bass","mass"],["mass","mask"],["came","come"],["come","some"]]},{"id":"bl-8dd9370bda9d","date":"2027-04-22","start":"back","targets":["fire","punk","make"],"par":11,"separate":16,"trunk":3,"solution":[["back","pack"],["pack","pick"],["pick","pink"],["pink","punk"],["pink","link"],["link","line"],["line","fine"],["line","lane"],["lane","lake"],["lake","make"],["fine","fire"]]},{"id":"bl-dc8836757dec","date":"2027-04-23","start":"hope","targets":["bang","doll","gone"],"par":11,"separate":16,"trunk":3,"solution":[["hope","hole"],["hole","hold"],["hold","bold"],["bold","told"],["bold","bond"],["bond","band"],["bond","bone"],["bone","gone"],["band","bang"],["told","toll"],["toll","doll"]]},{"id":"bl-7f12b28d7c76","date":"2027-04-24","start":"milk","targets":["mask","wage","lack"],"par":11,"separate":16,"trunk":4,"solution":[["milk","silk"],["silk","sick"],["sick","pick"],["pick","pack"],["pack","pace"],["pack","lack"],["pack","park"],["park","mark"],["mark","mask"],["pace","page"],["page","wage"]]},{"id":"bl-5e99a7c70ddc","date":"2027-04-25","start":"null","targets":["sole","heat","rose"],"par":11,"separate":16,"trunk":4,"solution":[["null","pull"],["pull","poll"],["poll","roll"],["roll","role"],["role","hole"],["role","rose"],["hole","sole"],["hole","hold"],["hold","held"],["held","head"],["head","heat"]]},{"id":"bl-c47f0d8d674a","date":"2027-04-26","start":"hole","targets":["move","disc","wide"],"par":11,"separate":16,"trunk":2,"solution":[["hole","role"],["role","rose"],["rose","rise"],["rose","lose"],["lose","love"],["love","move"],["rise","wise"],["wise","wish"],["wise","wide"],["wish","dish"],["dish","disc"]]},{"id":"bl-2edf235cf342","date":"2027-04-27","start":"side","targets":["mind","well","bond"],"par":11,"separate":16,"trunk":2,"solution":[["side","wide"],["wide","wine"],["wine","nine"],["wine","wind"],["wind","wild"],["wind","mind"],["wild","will"],["will","well"],["nine","none"],["none","bone"],["bone","bond"]]},{"id":"bl-66ce2ed7d9fa","date":"2027-04-28","start":"love","targets":["sets","gets","bold"],"par":11,"separate":16,"trunk":1,"solution":[["love","lose"],["lose","loss"],["lose","dose"],["dose","done"],["done","bone"],["bone","bond"],["bond","bold"],["loss","less"],["less","lets"],["lets","gets"],["lets","sets"]]},{"id":"bl-a6deb706b03c","date":"2027-04-29","start":"ring","targets":["hero","rice","male"],"par":11,"separate":16,"trunk":2,"solution":[["ring","wing"],["wing","wine"],["wine","mine"],["wine","wire"],["wire","hire"],["hire","here"],["here","hero"],["mine","mile"],["mine","mice"],["mice","rice"],["mile","male"]]},{"id":"bl-9f95b2038ac8","date":"2027-04-30","start":"some","targets":["file","call","land"],"par":11,"separate":16,"trunk":3,"solution":[["some","same"],["same","sale"],["sale","male"],["male","mall"],["male","make"],["male","mile"],["mile","file"],["make","lake"],["lake","lane"],["lane","land"],["mall","call"]]},{"id":"bl-3addd0339d3c","date":"2027-05-01","start":"seen","targets":["bone","lane","meat"],"par":11,"separate":16,"trunk":2,"solution":[["seen","seed"],["seed","send"],["send","sent"],["send","sand"],["sand","band"],["band","bond"],["band","land"],["land","lane"],["bond","bone"],["sent","seat"],["seat","meat"]]},{"id":"bl-70b1a8fc1baa","date":"2027-05-02","start":"cats","targets":["pack","loss","page"],"par":11,"separate":16,"trunk":1,"solution":[["cats","cars"],["cars","care"],["cars","bars"],["bars","bass"],["bass","boss"],["boss","loss"],["care","rare"],["rare","race"],["race","pace"],["pace","page"],["pace","pack"]]},{"id":"bl-a5367ae61005","date":"2027-05-03","start":"farm","targets":["park","must","cake"],"par":11,"separate":16,"trunk":3,"solution":[["farm","form"],["form","fort"],["fort","port"],["port","part"],["port","post"],["post","most"],["most","must"],["part","park"],["part","cart"],["cart","care"],["care","cake"]]},{"id":"bl-b97ba462708d","date":"2027-05-04","start":"rack","targets":["mind","note","come"],"par":11,"separate":16,"trunk":4,"solution":[["rack","race"],["race","rice"],["rice","nice"],["nice","nine"],["nine","none"],["nine","mine"],["mine","mind"],["none","node"],["node","code"],["node","note"],["code","come"]]},{"id":"bl-97e5f6f58f9b","date":"2027-05-05","start":"this","targets":["coal","char","seem"],"par":11,"separate":16,"trunk":2,"solution":[["this","thin"],["thin","than"],["than","that"],["than","then"],["then","teen"],["teen","seen"],["seen","seem"],["that","chat"],["chat","coat"],["chat","char"],["coat","coal"]]},{"id":"bl-e12a6bdb28fc","date":"2027-05-06","start":"bass","targets":["hits","late","hang"],"par":11,"separate":16,"trunk":2,"solution":[["bass","bars"],["bars","cars"],["cars","card"],["cars","cats"],["cats","hats"],["hats","hits"],["hats","hate"],["hate","late"],["card","hard"],["hard","hand"],["hand","hang"]]},{"id":"bl-d8dbe5012f97","date":"2027-05-07","start":"food","targets":["nine","rise","warm"],"par":11,"separate":16,"trunk":3,"solution":[["food","ford"],["ford","form"],["form","farm"],["farm","warm"],["farm","firm"],["firm","fire"],["fire","fine"],["fire","wire"],["wire","wise"],["wise","rise"],["fine","nine"]]},{"id":"bl-5de2fdf40a2e","date":"2027-05-08","start":"wife","targets":["come","past","rate"],"par":11,"separate":16,"trunk":3,"solution":[["wife","life"],["life","like"],["like","lake"],["lake","late"],["lake","cake"],["cake","case"],["cake","came"],["came","come"],["case","cast"],["cast","past"],["late","rate"]]},{"id":"bl-d49021a9d8b5","date":"2027-05-09","start":"thin","targets":["read","hear","char"],"par":11,"separate":16,"trunk":3,"solution":[["thin","than"],["than","that"],["that","chat"],["chat","coat"],["chat","char"],["coat","boat"],["boat","beat"],["beat","bear"],["bear","rear"],["bear","hear"],["rear","read"]]},{"id":"bl-c0bc70687859","date":"2027-05-10","start":"cold","targets":["toys","said","nose"],"par":11,"separate":16,"trunk":2,"solution":[["cold","bold"],["bold","bond"],["bond","band"],["bond","bone"],["bone","tone"],["bone","none"],["none","nose"],["tone","tons"],["tons","toys"],["band","sand"],["sand","said"]]},{"id":"bl-85f9ac9470b9","date":"2027-05-11","start":"give","targets":["home","wish","past"],"par":11,"separate":16,"trunk":3,"solution":[["give","gave"],["gave","game"],["game","came"],["came","come"],["came","case"],["case","cast"],["case","cash"],["cash","wash"],["wash","wish"],["cast","past"],["come","home"]]},{"id":"bl-901ae6b2f7a8","date":"2027-05-12","start":"pick","targets":["lake","hate","fell"],"par":11,"separate":16,"trunk":3,"solution":[["pick","pink"],["pink","pine"],["pine","fine"],["fine","line"],["fine","file"],["file","fill"],["fill","fell"],["line","lane"],["lane","lake"],["lane","late"],["late","hate"]]},{"id":"bl-e58cd5667f78","date":"2027-05-13","start":"meat","targets":["bang","reed","talk"],"par":11,"separate":16,"trunk":3,"solution":[["meat","seat"],["seat","sent"],["sent","send"],["send","seed"],["send","sand"],["sand","band"],["band","bank"],["band","bang"],["bank","tank"],["tank","talk"],["seed","reed"]]},{"id":"bl-8b290b746979","date":"2027-05-14","start":"sale","targets":["less","move","coat"],"par":11,"separate":16,"trunk":4,"solution":[["sale","sole"],["sole","role"],["role","rose"],["rose","lose"],["lose","love"],["lose","lost"],["lost","loss"],["lost","cost"],["cost","coat"],["loss","less"],["love","move"]]},{"id":"bl-c56e3fc0efc8","date":"2027-05-15","start":"mask","targets":["core","cost","nick"],"par":11,"separate":16,"trunk":2,"solution":[["mask","mark"],["mark","park"],["park","part"],["park","pack"],["pack","pick"],["pick","nick"],["part","cart"],["cart","care"],["cart","cast"],["cast","cost"],["care","core"]]},{"id":"bl-86605273ab55","date":"2027-05-16","start":"show","targets":["seek","spin","item"],"par":11,"separate":16,"trunk":1,"solution":[["show","shop"],["shop","ship"],["shop","stop"],["stop","step"],["step","stem"],["stem","item"],["stem","seem"],["seem","seek"],["ship","skip"],["skip","skin"],["skin","spin"]]},{"id":"bl-1fdd46c3eb8f","date":"2027-05-17","start":"port","targets":["wave","boss","babe"],"par":11,"separate":16,"trunk":4,"solution":[["port","part"],["part","cart"],["cart","care"],["care","case"],["case","cake"],["case","base"],["base","babe"],["base","bass"],["bass","boss"],["cake","wake"],["wake","wave"]]},{"id":"bl-b364a0575cc7","date":"2027-05-18","start":"nick","targets":["move","mini","tops"],"par":11,"separate":16,"trunk":2,"solution":[["nick","nice"],["nice","nine"],["nine","none"],["nine","mine"],["mine","mini"],["none","tone"],["none","node"],["node","mode"],["mode","move"],["tone","tons"],["tons","tops"]]},{"id":"bl-08ec54c3ea95","date":"2027-05-19","start":"foot","targets":["pack","last","just"],"par":11,"separate":16,"trunk":2,"solution":[["foot","fort"],["fort","port"],["port","part"],["port","post"],["post","most"],["most","must"],["must","just"],["part","park"],["part","past"],["past","last"],["park","pack"]]},{"id":"bl-9b2d0759956b","date":"2027-05-20","start":"move","targets":["hold","lead","rate"],"par":11,"separate":16,"trunk":2,"solution":[["move","more"],["more","core"],["core","care"],["core","cord"],["cord","cold"],["cord","lord"],["lord","load"],["load","lead"],["cold","hold"],["care","rare"],["rare","rate"]]},{"id":"bl-8498c5b504a1","date":"2027-05-21","start":"solo","targets":["cast","hill","care"],"par":11,"separate":16,"trunk":2,"solution":[["solo","sole"],["sole","sale"],["sale","male"],["sale","safe"],["safe","cafe"],["cafe","case"],["cafe","care"],["case","cast"],["male","mall"],["mall","hall"],["hall","hill"]]},{"id":"bl-0dfe69187cd9","date":"2027-05-22","start":"risk","targets":["hold","mode","gene"],"par":11,"separate":16,"trunk":2,"solution":[["risk","rise"],["rise","rose"],["rose","role"],["rose","nose"],["nose","none"],["none","gone"],["none","node"],["node","mode"],["gone","gene"],["role","hole"],["hole","hold"]]},{"id":"bl-2cecf2c51e8b","date":"2027-05-23","start":"easy","targets":["wash","land","ford"],"par":11,"separate":16,"trunk":2,"solution":[["easy","ease"],["ease","case"],["case","care"],["case","cash"],["cash","wash"],["care","card"],["card","cord"],["card","hard"],["hard","hand"],["hand","land"],["cord","ford"]]},{"id":"bl-343f32f6e456","date":"2027-05-24","start":"bell","targets":["rich","fund","wing"],"par":12,"separate":17,"trunk":1,"solution":[["bell","bill"],["bill","will"],["bill","mill"],["mill","mile"],["mile","mice"],["mice","rice"],["rice","rich"],["will","wild"],["wild","wind"],["wind","wing"],["wind","find"],["find","fund"]]},{"id":"bl-4e184da4c273","date":"2027-05-25","start":"coal","targets":["love","ward","fame"],"par":12,"separate":17,"trunk":2,"solution":[["coal","coat"],["coat","cost"],["cost","lost"],["cost","cast"],["cast","case"],["case","came"],["came","fame"],["came","care"],["care","card"],["card","ward"],["lost","lose"],["lose","love"]]},{"id":"bl-e46e5ec097d4","date":"2027-05-26","start":"wind","targets":["bold","cake","jack"],"par":12,"separate":17,"trunk":3,"solution":[["wind","wine"],["wine","line"],["line","lane"],["lane","land"],["lane","lake"],["lake","cake"],["land","band"],["band","bond"],["band","bank"],["bank","back"],["back","jack"],["bond","bold"]]},{"id":"bl-783ef23430a6","date":"2027-05-27","start":"firm","targets":["best","feet","safe"],"par":12,"separate":17,"trunk":3,"solution":[["firm","film"],["film","fill"],["fill","fell"],["fell","felt"],["fell","fall"],["fall","mall"],["mall","male"],["male","sale"],["sale","safe"],["felt","feet"],["felt","belt"],["belt","best"]]},{"id":"bl-979db5efa15c","date":"2027-05-28","start":"fame","targets":["holy","full","lose"],"par":12,"separate":17,"trunk":4,"solution":[["fame","came"],["came","come"],["come","home"],["home","hole"],["hole","role"],["hole","holy"],["role","rose"],["role","roll"],["roll","poll"],["poll","pull"],["pull","full"],["rose","lose"]]},{"id":"bl-0ddae43d03c5","date":"2027-05-29","start":"dish","targets":["left","safe","ease"],"par":12,"separate":17,"trunk":4,"solution":[["dish","wish"],["wish","wash"],["wash","cash"],["cash","case"],["case","cast"],["case","cafe"],["case","ease"],["cafe","safe"],["cast","last"],["last","list"],["list","lift"],["lift","left"]]},{"id":"bl-923b85a4d845","date":"2027-05-30","start":"lord","targets":["yeah","fell","meat"],"par":12,"separate":17,"trunk":5,"solution":[["lord","load"],["load","lead"],["lead","dead"],["dead","dear"],["dear","bear"],["bear","year"],["bear","beat"],["beat","meat"],["beat","belt"],["belt","bell"],["bell","fell"],["year","yeah"]]},{"id":"bl-95acd4a02b03","date":"2027-05-31","start":"book","targets":["talk","rail","loss"],"par":12,"separate":17,"trunk":3,"solution":[["book","took"],["took","tool"],["tool","toll"],["toll","roll"],["toll","tall"],["tall","talk"],["tall","tail"],["tail","rail"],["roll","role"],["role","rose"],["rose","lose"],["lose","loss"]]},{"id":"bl-4af4f91eab62","date":"2027-06-01","start":"cars","targets":["milk","film","lock"],"par":12,"separate":17,"trunk":3,"solution":[["cars","care"],["care","rare"],["rare","race"],["race","rack"],["race","rice"],["rice","mice"],["mice","mile"],["mile","milk"],["mile","file"],["file","film"],["rack","lack"],["lack","lock"]]},{"id":"bl-02ac180be2ea","date":"2027-06-02","start":"talk","targets":["case","pink","mode"],"par":12,"separate":17,"trunk":3,"solution":[["talk","tall"],["tall","mall"],["mall","male"],["male","make"],["male","mile"],["mile","mine"],["mine","pine"],["pine","pink"],["make","cake"],["make","made"],["made","mode"],["cake","case"]]},{"id":"bl-daf4257324ac","date":"2027-06-03","start":"wing","targets":["vote","tool","doll"],"par":12,"separate":17,"trunk":3,"solution":[["wing","wine"],["wine","nine"],["nine","none"],["none","note"],["none","bone"],["bone","bond"],["bond","bold"],["bold","told"],["told","toll"],["toll","doll"],["toll","tool"],["note","vote"]]},{"id":"bl-caf8f2c96d7e","date":"2027-06-04","start":"self","targets":["tend","text","gear"],"par":12,"separate":17,"trunk":3,"solution":[["self","sell"],["sell","seal"],["seal","seat"],["seat","beat"],["seat","sent"],["sent","send"],["send","tend"],["beat","best"],["beat","bear"],["bear","gear"],["best","test"],["test","text"]]},{"id":"bl-a3a16a30b16b","date":"2027-06-05","start":"camp","targets":["fine","bike","must"],"par":12,"separate":17,"trunk":2,"solution":[["camp","came"],["came","cake"],["cake","case"],["cake","lake"],["lake","like"],["like","bike"],["like","line"],["line","fine"],["case","cast"],["cast","cost"],["cost","most"],["most","must"]]},{"id":"bl-6085b176e8c3","date":"2027-06-06","start":"hide","targets":["love","cake","feel"],"par":12,"separate":17,"trunk":3,"solution":[["hide","hire"],["hire","fire"],["fire","five"],["five","live"],["five","file"],["file","fill"],["fill","fell"],["fell","feel"],["live","love"],["live","like"],["like","lake"],["lake","cake"]]},{"id":"bl-cc3e5b6f5c66","date":"2027-06-07","start":"boat","targets":["doll","fail","dial"],"par":12,"separate":17,"trunk":3,"solution":[["boat","beat"],["beat","seat"],["seat","seal"],["seal","sell"],["seal","deal"],["deal","dial"],["sell","tell"],["sell","fell"],["fell","fall"],["fall","fail"],["tell","toll"],["toll","doll"]]},{"id":"bl-376a51d44bd7","date":"2027-06-08","start":"sole","targets":["hire","most","disc"],"par":12,"separate":17,"trunk":2,"solution":[["sole","role"],["role","rose"],["rose","rise"],["rose","lose"],["lose","lost"],["lost","most"],["rise","wise"],["wise","wish"],["wise","wire"],["wire","hire"],["wish","dish"],["dish","disc"]]},{"id":"bl-a79eab0b917d","date":"2027-06-09","start":"what","targets":["tool","cake","sort"],"par":12,"separate":17,"trunk":2,"solution":[["what","chat"],["chat","coat"],["coat","cost"],["coat","coal"],["coal","cool"],["cool","tool"],["cost","post"],["cost","cast"],["cast","case"],["case","cake"],["post","port"],["port","sort"]]},{"id":"bl-5bfbcfa635ef","date":"2027-06-10","start":"wins","targets":["pace","kick","fuel"],"par":12,"separate":17,"trunk":2,"solution":[["wins","wine"],["wine","fine"],["fine","pine"],["fine","file"],["file","fill"],["fill","full"],["full","fuel"],["pine","pink"],["pink","pick"],["pick","pack"],["pick","kick"],["pack","pace"]]},{"id":"bl-dcd391408695","date":"2027-06-11","start":"same","targets":["risk","firm","fell"],"par":12,"separate":17,"trunk":3,"solution":[["same","sale"],["sale","male"],["male","mile"],["mile","file"],["mile","mice"],["mice","rice"],["rice","rise"],["rise","risk"],["file","fill"],["fill","fell"],["fill","film"],["film","firm"]]},{"id":"bl-69b2f73d7a03","date":"2027-06-12","start":"mind","targets":["wave","date","fail"],"par":12,"separate":17,"trunk":3,"solution":[["mind","find"],["find","fine"],["fine","five"],["five","give"],["five","file"],["file","fill"],["fill","fall"],["fall","fail"],["give","gave"],["gave","gate"],["gave","wave"],["gate","date"]]},{"id":"bl-28bf5eafff8f","date":"2027-06-13","start":"mile","targets":["vast","cord","gate"],"par":12,"separate":17,"trunk":3,"solution":[["mile","male"],["male","make"],["make","cake"],["cake","case"],["cake","care"],["cake","came"],["came","game"],["game","gate"],["care","card"],["card","cord"],["case","cast"],["cast","vast"]]},{"id":"bl-d7a055685a46","date":"2027-06-14","start":"stem","targets":["west","well","peer"],"par":12,"separate":17,"trunk":4,"solution":[["stem","seem"],["seem","seen"],["seen","been"],["been","beer"],["beer","bear"],["beer","peer"],["bear","beat"],["beat","best"],["beat","belt"],["belt","bell"],["bell","well"],["best","west"]]},{"id":"bl-feb120795204","date":"2027-06-15","start":"pipe","targets":["bold","felt","bank"],"par":13,"separate":18,"trunk":2,"solution":[["pipe","pine"],["pine","line"],["line","fine"],["line","lane"],["lane","land"],["land","band"],["band","bond"],["band","bank"],["bond","bold"],["fine","file"],["file","fill"],["fill","fell"],["fell","felt"]]},{"id":"bl-ed54ea907976","date":"2027-06-16","start":"help","targets":["seek","sell","coat"],"par":13,"separate":18,"trunk":2,"solution":[["help","held"],["held","head"],["head","read"],["head","heat"],["heat","beat"],["beat","boat"],["beat","belt"],["belt","bell"],["bell","sell"],["boat","coat"],["read","reed"],["reed","seed"],["seed","seek"]]},{"id":"bl-686eef9f4e29","date":"2027-06-17","start":"line","targets":["bits","lamp","home"],"par":13,"separate":18,"trunk":3,"solution":[["line","lane"],["lane","late"],["late","hate"],["hate","gate"],["hate","hats"],["hats","hits"],["hits","bits"],["gate","game"],["game","came"],["came","come"],["came","camp"],["camp","lamp"],["come","home"]]},{"id":"bl-0c302d5bb031","date":"2027-06-18","start":"fort","targets":["made","fear","help"],"par":13,"separate":18,"trunk":2,"solution":[["fort","ford"],["ford","cord"],["cord","cold"],["cord","core"],["core","code"],["code","mode"],["mode","made"],["cold","hold"],["hold","held"],["held","help"],["held","head"],["head","hear"],["hear","fear"]]},{"id":"bl-1bb3f9d4e417","date":"2027-06-19","start":"gone","targets":["lets","seed","legs"],"par":13,"separate":18,"trunk":1,"solution":[["gone","bone"],["bone","bond"],["bone","done"],["done","dose"],["dose","lose"],["lose","loss"],["loss","less"],["less","legs"],["less","lets"],["bond","band"],["band","sand"],["sand","send"],["send","seed"]]},{"id":"bl-4ad646234be4","date":"2027-06-20","start":"lack","targets":["sold","size","mill"],"par":13,"separate":18,"trunk":3,"solution":[["lack","rack"],["rack","race"],["race","rice"],["rice","ride"],["rice","mice"],["mice","mile"],["mile","male"],["mile","mill"],["male","sale"],["sale","sole"],["sole","sold"],["ride","side"],["side","size"]]},{"id":"bl-2634b68e3e32","date":"2027-06-21","start":"sick","targets":["gang","tons","task"],"par":13,"separate":18,"trunk":4,"solution":[["sick","pick"],["pick","pack"],["pack","back"],["back","bank"],["bank","band"],["bank","bang"],["bank","tank"],["tank","task"],["bang","gang"],["band","bond"],["bond","bone"],["bone","tone"],["tone","tons"]]},{"id":"bl-0ca45d81be79","date":"2027-06-22","start":"wise","targets":["hood","cell","mail"],"par":13,"separate":18,"trunk":5,"solution":[["wise","rise"],["rise","rose"],["rose","role"],["role","roll"],["roll","toll"],["toll","told"],["toll","tall"],["tall","call"],["call","mall"],["call","cell"],["mall","mail"],["told","hold"],["hold","hood"]]},{"id":"bl-5233a0218208","date":"2027-06-23","start":"load","targets":["bags","east","hope"],"par":13,"separate":18,"trunk":2,"solution":[["load","lord"],["lord","cord"],["cord","cold"],["cord","card"],["card","cars"],["cars","cart"],["cars","bars"],["bars","bags"],["cart","cast"],["cast","east"],["cold","hold"],["hold","hole"],["hole","hope"]]},{"id":"bl-c4bf214b16ac","date":"2027-06-24","start":"seed","targets":["jack","told","make"],"par":13,"separate":18,"trunk":3,"solution":[["seed","send"],["send","sand"],["sand","band"],["band","bond"],["band","bank"],["band","land"],["land","lane"],["lane","lake"],["lake","make"],["bank","back"],["back","jack"],["bond","bold"],["bold","told"]]},{"id":"bl-c6dd6b5b9cce","date":"2027-06-25","start":"fell","targets":["ring","card","sing"],"par":13,"separate":18,"trunk":4,"solution":[["fell","fill"],["fill","file"],["file","fine"],["fine","line"],["line","lane"],["line","wine"],["wine","wing"],["wing","ring"],["wing","sing"],["lane","lake"],["lake","cake"],["cake","care"],["care","card"]]},{"id":"bl-0291e5a1424a","date":"2027-06-26","start":"kind","targets":["wise","side","lane"],"par":7,"separate":11,"trunk":2,"solution":[["kind","wind"],["wind","wine"],["wine","wise"],["wine","wide"],["wine","line"],["line","lane"],["wide","side"]]},{"id":"bl-594a2db1d058","date":"2027-06-27","start":"flow","targets":["ship","plot","stop"],"par":7,"separate":11,"trunk":1,"solution":[["flow","slow"],["slow","show"],["slow","slot"],["slot","plot"],["show","shop"],["shop","ship"],["shop","stop"]]},{"id":"bl-43bfb3192b2e","date":"2027-06-28","start":"race","targets":["rule","wide","nose"],"par":8,"separate":12,"trunk":2,"solution":[["race","rice"],["rice","rise"],["rise","rose"],["rise","ride"],["ride","wide"],["rose","role"],["rose","nose"],["role","rule"]]},{"id":"bl-9ca3fd8c0d07","date":"2027-06-29","start":"vice","targets":["wine","with","dose"],"par":8,"separate":12,"trunk":2,"solution":[["vice","rice"],["rice","rise"],["rise","wise"],["rise","rose"],["rose","dose"],["wise","wish"],["wise","wine"],["wish","with"]]},{"id":"bl-1b4463404fda","date":"2027-06-30","start":"shut","targets":["slip","skip","blow"],"par":8,"separate":12,"trunk":2,"solution":[["shut","shot"],["shot","show"],["show","slow"],["show","shop"],["shop","ship"],["ship","slip"],["ship","skip"],["slow","blow"]]},{"id":"bl-e7bd8ebe93be","date":"2027-07-01","start":"mail","targets":["poll","told","lake"],"par":8,"separate":12,"trunk":1,"solution":[["mail","mall"],["mall","male"],["mall","tall"],["tall","toll"],["toll","told"],["toll","poll"],["male","make"],["make","lake"]]},{"id":"bl-24daa5016f2c","date":"2027-07-02","start":"pine","targets":["game","fill","gate"],"par":8,"separate":12,"trunk":2,"solution":[["pine","fine"],["fine","file"],["file","fill"],["file","five"],["five","give"],["give","gave"],["gave","gate"],["gave","game"]]},{"id":"bl-ce3bea533569","date":"2027-07-03","start":"soft","targets":["boot","font","fire"],"par":8,"separate":12,"trunk":2,"solution":[["soft","sort"],["sort","fort"],["fort","form"],["fort","foot"],["foot","font"],["foot","boot"],["form","firm"],["firm","fire"]]},{"id":"bl-ed90eac3ec45","date":"2027-07-04","start":"park","targets":["rare","foot","ford"],"par":8,"separate":12,"trunk":1,"solution":[["park","part"],["part","port"],["part","cart"],["cart","care"],["care","rare"],["port","fort"],["fort","ford"],["fort","foot"]]},{"id":"bl-3331d4d4adfa","date":"2027-07-05","start":"file","targets":["cafe","role","hall"],"par":9,"separate":13,"trunk":2,"solution":[["file","mile"],["mile","male"],["male","mall"],["male","sale"],["sale","safe"],["sale","sole"],["sole","role"],["safe","cafe"],["mall","hall"]]},{"id":"bl-c60fc6882575","date":"2027-07-06","start":"tell","targets":["pull","some","save"],"par":9,"separate":13,"trunk":2,"solution":[["tell","toll"],["toll","poll"],["poll","pull"],["poll","roll"],["roll","role"],["role","sole"],["sole","sale"],["sole","some"],["sale","save"]]},{"id":"bl-f6db35749529","date":"2027-07-07","start":"rose","targets":["gift","like","dish"],"par":9,"separate":13,"trunk":2,"solution":[["rose","rise"],["rise","wise"],["wise","wife"],["wise","wish"],["wish","dish"],["wife","life"],["life","lift"],["life","like"],["lift","gift"]]},{"id":"bl-b71dce057ba3","date":"2027-07-08","start":"peak","targets":["seek","belt","beef"],"par":9,"separate":13,"trunk":1,"solution":[["peak","weak"],["weak","wear"],["weak","week"],["week","seek"],["wear","bear"],["bear","beer"],["bear","beat"],["beat","belt"],["beer","beef"]]},{"id":"bl-5e785d60ad19","date":"2027-07-09","start":"boot","targets":["that","what","real"],"par":9,"separate":13,"trunk":1,"solution":[["boot","boat"],["boat","coat"],["boat","beat"],["beat","bear"],["bear","rear"],["rear","real"],["coat","chat"],["chat","that"],["chat","what"]]},{"id":"bl-8be069789bfe","date":"2027-07-10","start":"skin","targets":["clip","slow","shut"],"par":9,"separate":13,"trunk":2,"solution":[["skin","skip"],["skip","ship"],["ship","shop"],["ship","chip"],["chip","clip"],["shop","show"],["shop","shot"],["shot","shut"],["show","slow"]]},{"id":"bl-aa426f7edabd","date":"2027-07-11","start":"lots","targets":["coat","cake","mass"],"par":10,"separate":14,"trunk":3,"solution":[["lots","loss"],["loss","lost"],["lost","cost"],["cost","coat"],["cost","cast"],["cast","case"],["case","cake"],["case","base"],["base","bass"],["bass","mass"]]},{"id":"bl-8b1211942cfd","date":"2027-07-12","start":"punk","targets":["none","wish","milk"],"par":10,"separate":14,"trunk":3,"solution":[["punk","pink"],["pink","pine"],["pine","mine"],["mine","mile"],["mine","nine"],["mine","wine"],["wine","wise"],["wise","wish"],["nine","none"],["mile","milk"]]},{"id":"bl-9ae617159b93","date":"2027-07-13","start":"poll","targets":["take","mice","some"],"par":10,"separate":14,"trunk":3,"solution":[["poll","pill"],["pill","mill"],["mill","mile"],["mile","male"],["mile","mice"],["male","make"],["male","sale"],["sale","same"],["same","some"],["make","take"]]},{"id":"bl-e1a5c7e36459","date":"2027-07-14","start":"link","targets":["role","gift","node"],"par":10,"separate":14,"trunk":1,"solution":[["link","line"],["line","life"],["line","nine"],["nine","none"],["none","node"],["none","nose"],["nose","rose"],["rose","role"],["life","lift"],["lift","gift"]]},{"id":"bl-438504bf77be","date":"2027-07-15","start":"ease","targets":["mile","sole","most"],"par":10,"separate":14,"trunk":1,"solution":[["ease","case"],["case","cast"],["case","cafe"],["cafe","safe"],["safe","sale"],["sale","male"],["sale","sole"],["male","mile"],["cast","cost"],["cost","most"]]},{"id":"bl-5446b42f9bfd","date":"2027-07-16","start":"bank","targets":["told","fine","date"],"par":10,"separate":14,"trunk":1,"solution":[["bank","band"],["band","bond"],["band","land"],["land","lane"],["lane","line"],["lane","late"],["late","date"],["line","fine"],["bond","bold"],["bold","told"]]},{"id":"bl-16f8c77690e7","date":"2027-07-17","start":"road","targets":["seat","sell","item"],"par":10,"separate":14,"trunk":1,"solution":[["road","read"],["read","real"],["read","reed"],["reed","seed"],["seed","seem"],["seem","stem"],["stem","item"],["real","seal"],["seal","seat"],["seal","sell"]]},{"id":"bl-4cc5914d0c2b","date":"2027-07-18","start":"been","targets":["team","heat","fall"],"par":10,"separate":14,"trunk":3,"solution":[["been","beer"],["beer","bear"],["bear","beat"],["beat","heat"],["beat","beam"],["beat","belt"],["belt","bell"],["bell","ball"],["ball","fall"],["beam","team"]]},{"id":"bl-a90b8fb79a14","date":"2027-07-19","start":"pace","targets":["with","rose","lake"],"par":10,"separate":14,"trunk":1,"solution":[["pace","race"],["race","rate"],["race","rice"],["rice","rise"],["rise","wise"],["rise","rose"],["wise","wish"],["wish","with"],["rate","late"],["late","lake"]]},{"id":"bl-1ce8f191fc8e","date":"2027-07-20","start":"mini","targets":["side","face","lose"],"par":10,"separate":14,"trunk":3,"solution":[["mini","mine"],["mine","mice"],["mice","rice"],["rice","rise"],["rice","race"],["rice","ride"],["ride","side"],["race","face"],["rise","rose"],["rose","lose"]]},{"id":"bl-8c4802598911","date":"2027-07-21","start":"seat","targets":["room","hook","ball"],"par":10,"separate":14,"trunk":1,"solution":[["seat","beat"],["beat","boat"],["beat","belt"],["belt","bell"],["bell","ball"],["boat","boot"],["boot","book"],["boot","root"],["root","room"],["book","hook"]]},{"id":"bl-f6266193ac24","date":"2027-07-22","start":"bags","targets":["came","firm","take"],"par":10,"separate":14,"trunk":1,"solution":[["bags","bars"],["bars","wars"],["bars","cars"],["cars","care"],["care","cake"],["care","came"],["cake","take"],["wars","warm"],["warm","farm"],["farm","firm"]]},{"id":"bl-d9d3bedba4bd","date":"2027-07-23","start":"cook","targets":["roof","firm","beat"],"par":10,"separate":14,"trunk":2,"solution":[["cook","book"],["book","boot"],["boot","boat"],["boot","root"],["boot","foot"],["foot","fort"],["fort","form"],["form","firm"],["root","roof"],["boat","beat"]]},{"id":"bl-419c18d3890b","date":"2027-07-24","start":"east","targets":["wave","name","more"],"par":10,"separate":14,"trunk":3,"solution":[["east","cast"],["cast","case"],["case","cake"],["cake","care"],["cake","wake"],["cake","came"],["came","name"],["wake","wave"],["care","core"],["core","more"]]},{"id":"bl-90f484639604","date":"2027-07-25","start":"gang","targets":["race","said","reed"],"par":11,"separate":15,"trunk":2,"solution":[["gang","bang"],["bang","bank"],["bank","back"],["bank","band"],["band","sand"],["sand","said"],["sand","send"],["send","seed"],["seed","reed"],["back","rack"],["rack","race"]]},{"id":"bl-2080c29d7215","date":"2027-07-26","start":"hook","targets":["rule","beam","lead"],"par":11,"separate":15,"trunk":2,"solution":[["hook","hood"],["hood","hold"],["hold","held"],["hold","hole"],["hole","role"],["role","rule"],["held","head"],["head","lead"],["head","hear"],["hear","bear"],["bear","beam"]]},{"id":"bl-0cda4a41a70e","date":"2027-07-27","start":"hood","targets":["dual","heat","wall"],"par":11,"separate":15,"trunk":3,"solution":[["hood","hold"],["hold","held"],["held","head"],["head","dead"],["head","heat"],["dead","deal"],["deal","dual"],["deal","seal"],["seal","sell"],["sell","well"],["well","wall"]]},{"id":"bl-3774849f0b69","date":"2027-07-28","start":"come","targets":["rice","fort","moon"],"par":11,"separate":15,"trunk":1,"solution":[["come","core"],["core","care"],["core","cord"],["cord","ford"],["ford","fort"],["ford","food"],["food","mood"],["mood","moon"],["care","rare"],["rare","race"],["race","rice"]]},{"id":"bl-44e2d24fdc2c","date":"2027-07-29","start":"pink","targets":["firm","take","said"],"par":11,"separate":15,"trunk":2,"solution":[["pink","pine"],["pine","fine"],["fine","line"],["fine","fire"],["fire","firm"],["line","lane"],["lane","land"],["lane","lake"],["lake","take"],["land","laid"],["laid","said"]]},{"id":"bl-f2d30d6267ab","date":"2027-07-30","start":"loop","targets":["head","tall","foot"],"par":11,"separate":15,"trunk":3,"solution":[["loop","look"],["look","hook"],["hook","hood"],["hood","food"],["hood","hold"],["hold","held"],["hold","told"],["told","toll"],["toll","tall"],["held","head"],["food","foot"]]},{"id":"bl-31c8326e943d","date":"2027-07-31","start":"lose","targets":["wave","sing","hide"],"par":11,"separate":15,"trunk":2,"solution":[["lose","love"],["love","live"],["live","give"],["live","line"],["line","wine"],["wine","wing"],["wine","wide"],["wide","hide"],["wing","sing"],["give","gave"],["gave","wave"]]},{"id":"bl-eee3bc043521","date":"2027-08-01","start":"site","targets":["fine","care","wild"],"par":11,"separate":15,"trunk":3,"solution":[["site","side"],["side","wide"],["wide","wine"],["wine","wind"],["wine","line"],["line","fine"],["line","lane"],["lane","lake"],["lake","cake"],["cake","care"],["wind","wild"]]},{"id":"bl-3f34ac5a01f1","date":"2027-08-02","start":"card","targets":["nine","made","hope"],"par":11,"separate":15,"trunk":3,"solution":[["card","care"],["care","came"],["came","come"],["come","home"],["come","code"],["code","node"],["code","mode"],["mode","made"],["node","none"],["none","nine"],["home","hope"]]},{"id":"bl-f4ef886bc445","date":"2027-08-03","start":"date","targets":["tank","hand","move"],"par":11,"separate":15,"trunk":2,"solution":[["date","late"],["late","lane"],["lane","line"],["lane","land"],["land","band"],["band","bank"],["band","hand"],["bank","tank"],["line","live"],["live","love"],["love","move"]]},{"id":"bl-cb38777141cd","date":"2027-08-04","start":"beam","targets":["milk","cent","self"],"par":11,"separate":15,"trunk":1,"solution":[["beam","beat"],["beat","seat"],["beat","belt"],["belt","bell"],["bell","bill"],["bell","sell"],["sell","self"],["bill","mill"],["mill","milk"],["seat","sent"],["sent","cent"]]},{"id":"bl-7e0d19551082","date":"2027-08-05","start":"wild","targets":["sold","vice","nick"],"par":11,"separate":15,"trunk":3,"solution":[["wild","wind"],["wind","wine"],["wine","nine"],["nine","none"],["nine","nice"],["nice","nick"],["nice","vice"],["none","bone"],["bone","bond"],["bond","bold"],["bold","sold"]]},{"id":"bl-f2bb6396bec5","date":"2027-08-06","start":"fail","targets":["back","land","firm"],"par":11,"separate":15,"trunk":1,"solution":[["fail","fall"],["fall","tall"],["fall","fill"],["fill","film"],["film","firm"],["tall","talk"],["talk","tank"],["tank","bank"],["bank","back"],["bank","band"],["band","land"]]},{"id":"bl-35a247e01fc3","date":"2027-08-07","start":"tune","targets":["lose","fire","toll"],"par":11,"separate":15,"trunk":2,"solution":[["tune","tone"],["tone","none"],["none","nine"],["none","nose"],["nose","lose"],["nine","fine"],["fine","file"],["file","fill"],["file","fire"],["fill","till"],["till","toll"]]},{"id":"bl-c2d6c0ccc84b","date":"2027-08-08","start":"mice","targets":["pool","game","solo"],"par":11,"separate":15,"trunk":1,"solution":[["mice","mile"],["mile","male"],["mile","mill"],["mill","pill"],["pill","poll"],["poll","pool"],["male","sale"],["sale","same"],["sale","sole"],["sole","solo"],["same","game"]]},{"id":"bl-8a458c5f753c","date":"2027-08-09","start":"held","targets":["doll","milk","hard"],"par":11,"separate":15,"trunk":2,"solution":[["held","hold"],["hold","cold"],["cold","cord"],["cold","told"],["told","toll"],["toll","doll"],["toll","till"],["till","mill"],["mill","milk"],["cord","card"],["card","hard"]]},{"id":"bl-e767fd50d6b1","date":"2027-08-10","start":"post","targets":["wise","lake","bone"],"par":11,"separate":15,"trunk":4,"solution":[["post","lost"],["lost","lose"],["lose","nose"],["nose","none"],["none","nine"],["none","bone"],["nine","wine"],["nine","line"],["line","lane"],["lane","lake"],["wine","wise"]]},{"id":"bl-8ae02366ab66","date":"2027-08-11","start":"tips","targets":["done","nine","base"],"par":11,"separate":15,"trunk":2,"solution":[["tips","tops"],["tops","toys"],["toys","tons"],["toys","boys"],["boys","boss"],["boss","bass"],["bass","base"],["tons","tone"],["tone","done"],["tone","none"],["none","nine"]]},{"id":"bl-c6981aecef32","date":"2027-08-12","start":"kick","targets":["same","fire","gone"],"par":12,"separate":16,"trunk":3,"solution":[["kick","nick"],["nick","nice"],["nice","nine"],["nine","none"],["nine","fine"],["fine","fire"],["none","gone"],["none","node"],["node","code"],["code","come"],["come","came"],["came","same"]]},{"id":"bl-7bff0261d16b","date":"2027-08-13","start":"like","targets":["else","fell","fuel"],"par":12,"separate":16,"trunk":2,"solution":[["like","lake"],["lake","cake"],["cake","case"],["cake","make"],["make","male"],["male","mall"],["mall","fall"],["fall","full"],["fall","fell"],["full","fuel"],["case","ease"],["ease","else"]]},{"id":"bl-9a9845326be1","date":"2027-08-14","start":"font","targets":["year","list","must"],"par":12,"separate":16,"trunk":3,"solution":[["font","foot"],["foot","boot"],["boot","boat"],["boat","coat"],["boat","beat"],["beat","bear"],["bear","year"],["coat","cost"],["cost","most"],["cost","lost"],["lost","list"],["most","must"]]},{"id":"bl-f170fd567f6c","date":"2027-08-15","start":"chat","targets":["dust","else","less"],"par":12,"separate":16,"trunk":2,"solution":[["chat","coat"],["coat","cost"],["cost","lost"],["cost","most"],["cost","cast"],["cast","case"],["case","ease"],["ease","else"],["most","must"],["must","dust"],["lost","loss"],["loss","less"]]},{"id":"bl-79a8f978c0ad","date":"2027-08-16","start":"face","targets":["word","mask","cats"],"par":12,"separate":16,"trunk":4,"solution":[["face","fame"],["fame","came"],["came","care"],["care","cars"],["cars","cats"],["cars","bars"],["bars","wars"],["bars","bass"],["bass","mass"],["mass","mask"],["wars","ward"],["ward","word"]]},{"id":"bl-ece18b956e6f","date":"2027-08-17","start":"rest","targets":["beer","bond","paid"],"par":12,"separate":16,"trunk":3,"solution":[["rest","rent"],["rent","sent"],["sent","send"],["send","seed"],["send","sand"],["sand","band"],["sand","said"],["said","paid"],["band","bond"],["seed","seen"],["seen","been"],["been","beer"]]},{"id":"bl-dc7abf367038","date":"2027-08-18","start":"seem","targets":["gang","file","said"],"par":12,"separate":16,"trunk":3,"solution":[["seem","seed"],["seed","send"],["send","sand"],["sand","band"],["sand","said"],["band","land"],["band","bang"],["bang","gang"],["land","lane"],["lane","line"],["line","fine"],["fine","file"]]},{"id":"bl-2fae7a0f0976","date":"2027-08-19","start":"live","targets":["disc","host","just"],"par":12,"separate":16,"trunk":2,"solution":[["live","love"],["love","lose"],["lose","lost"],["lose","rose"],["rose","rise"],["rise","risk"],["risk","disk"],["disk","disc"],["lost","host"],["lost","most"],["most","must"],["must","just"]]},{"id":"bl-28b281e2c519","date":"2027-08-20","start":"note","targets":["cast","fill","mail"],"par":12,"separate":16,"trunk":4,"solution":[["note","node"],["node","mode"],["mode","made"],["made","make"],["make","male"],["make","cake"],["cake","case"],["case","cast"],["male","mall"],["mall","mail"],["mall","fall"],["fall","fill"]]},{"id":"bl-eb2af6b70217","date":"2027-08-21","start":"wash","targets":["face","chat","cold"],"par":12,"separate":16,"trunk":2,"solution":[["wash","cash"],["cash","cast"],["cast","fast"],["cast","cart"],["cast","cost"],["cost","coat"],["coat","chat"],["cart","card"],["card","cord"],["cord","cold"],["fast","fact"],["fact","face"]]},{"id":"bl-0c0fb9a849cb","date":"2027-08-22","start":"band","targets":["some","lost","lord"],"par":12,"separate":16,"trunk":2,"solution":[["band","bond"],["bond","bold"],["bold","cold"],["bold","sold"],["sold","sole"],["sole","role"],["sole","some"],["role","rose"],["rose","lose"],["lose","lost"],["cold","cord"],["cord","lord"]]},{"id":"bl-a9120ebbab7c","date":"2027-08-23","start":"till","targets":["hour","door","lane"],"par":12,"separate":16,"trunk":1,"solution":[["till","pill"],["pill","fill"],["pill","poll"],["poll","pool"],["pool","poor"],["poor","door"],["poor","pour"],["pour","hour"],["fill","file"],["file","fine"],["fine","line"],["line","lane"]]},{"id":"bl-4d6d2063bd2c","date":"2027-08-24","start":"more","targets":["gave","tell","wife"],"par":12,"separate":16,"trunk":3,"solution":[["more","move"],["move","love"],["love","live"],["live","life"],["live","five"],["five","give"],["five","file"],["file","fill"],["fill","fell"],["fell","tell"],["give","gave"],["life","wife"]]},{"id":"bl-6a7f5eaefbbb","date":"2027-08-25","start":"safe","targets":["holy","food","wing"],"par":12,"separate":16,"trunk":1,"solution":[["safe","sale"],["sale","male"],["sale","sole"],["sole","hole"],["hole","hold"],["hold","holy"],["hold","hood"],["hood","food"],["male","mile"],["mile","mine"],["mine","wine"],["wine","wing"]]},{"id":"bl-e84e7bce53ae","date":"2027-08-26","start":"kids","targets":["boss","have","part"],"par":12,"separate":16,"trunk":3,"solution":[["kids","kits"],["kits","hits"],["hits","hats"],["hats","cats"],["hats","hate"],["hate","have"],["cats","cars"],["cars","cart"],["cars","bars"],["bars","bass"],["bass","boss"],["cart","part"]]},{"id":"bl-4404694543ee","date":"2027-08-27","start":"cast","targets":["golf","file","corn"],"par":12,"separate":16,"trunk":3,"solution":[["cast","cart"],["cart","card"],["card","cord"],["cord","cold"],["cord","corn"],["cord","ford"],["ford","form"],["form","firm"],["firm","film"],["film","file"],["cold","gold"],["gold","golf"]]},{"id":"bl-d9e8e3527bc0","date":"2027-08-28","start":"past","targets":["bear","core","room"],"par":12,"separate":16,"trunk":1,"solution":[["past","cast"],["cast","cart"],["cast","cost"],["cost","coat"],["coat","boat"],["boat","boot"],["boat","beat"],["beat","bear"],["boot","root"],["root","room"],["cart","care"],["care","core"]]},{"id":"bl-c455c27c9762","date":"2027-08-29","start":"well","targets":["same","hire","life"],"par":12,"separate":16,"trunk":3,"solution":[["well","fell"],["fell","fill"],["fill","file"],["file","fine"],["file","mile"],["file","fire"],["fire","hire"],["mile","male"],["male","sale"],["sale","same"],["fine","line"],["line","life"]]},{"id":"bl-2df3f543321b","date":"2027-08-30","start":"list","targets":["name","size","same"],"par":12,"separate":16,"trunk":2,"solution":[["list","lift"],["lift","life"],["life","wife"],["life","like"],["like","lake"],["lake","cake"],["cake","came"],["came","same"],["came","name"],["wife","wide"],["wide","side"],["side","size"]]},{"id":"bl-a9b40219b923","date":"2027-08-31","start":"tend","targets":["word","meal","boat"],"par":12,"separate":16,"trunk":1,"solution":[["tend","send"],["send","sent"],["send","sand"],["sand","hand"],["hand","hard"],["hard","ward"],["ward","word"],["sent","seat"],["seat","beat"],["beat","meat"],["beat","boat"],["meat","meal"]]}]};
+  const WORDS = new Set(DATA.words);
+  const DAYS = DATA.days;
+  const HINT_COUNT = 4;
+  const PARAMS = new URLSearchParams(location.search);
+  const VERIFY_MODE = PARAMS.has("verify");
+  const STORAGE_KEY = "branching-ladder:standard:v2";
+  const HARD_STORAGE_KEY = "branching-ladder:hard:v1";
+  const LEGACY_STORAGE_KEY = "branching-ladder";
+  let verifyStore = { version: 2, puzzles: {}, history: {} };
+
+  if (VERIFY_MODE) {
+    window.__BRANCHING_VERIFY__ = Object.freeze({
+      dayCount: DAYS.length,
+      puzzleIds: DAYS.map((puzzle) => puzzle.id),
+      dates: DAYS.map((puzzle) => puzzle.date),
+      storageKeys: { standard: STORAGE_KEY, hard: HARD_STORAGE_KEY },
+      historyFor,
+      migrateLegacy,
+      playOptimal,
+      releasedCountFor,
+      shareText,
+    });
+  }
+
+  const state = {
+    day: 0,
+    parent: {},
+    order: [],
+    revealed: false,
+    hints: 0,
+    completionOpen: false,
+    celebrate: false,
+  };
+  const el = (id) => document.getElementById(id);
+
+  function todayISO() {
+    if (VERIFY_MODE) return DAYS[DAYS.length - 1].date;
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const date = String(now.getDate()).padStart(2, "0");
+    return year + "-" + month + "-" + date;
+  }
+
+  function releasedCountFor(date) {
+    return DAYS.filter((puzzle) => puzzle.date <= date).length;
+  }
+
+  function availableCount() {
+    return VERIFY_MODE ? DAYS.length : releasedCountFor(todayISO());
+  }
+
+  function formatDate(value) {
+    return new Intl.DateTimeFormat(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }).format(new Date(value + "T12:00:00"));
+  }
+
+  function migrateLegacy(legacy) {
+    const migrated = { version: 2, puzzles: {}, history: {} };
+    for (let i = 0; i < DAYS.length; i++) {
+      if (legacy[i] && typeof legacy[i] === "object") {
+        migrated.puzzles[DAYS[i].id] = legacy[i];
+      }
+    }
+    return migrated;
+  }
+
+  const store = {
+    empty() { return { version: 2, puzzles: {}, history: {} }; },
+    read() {
+      if (VERIFY_MODE) return verifyStore;
+      try {
+        const current = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        if (current && current.version === 2 && current.puzzles) {
+          if (!current.history || typeof current.history !== "object") {
+            current.history = {};
+          }
+          return current;
+        }
+
+        // One-time migration from the original day-indexed save format. Once
+        // written under the v2 key, later schedule changes cannot remap it.
+        const legacy = JSON.parse(localStorage.getItem(LEGACY_STORAGE_KEY) || "{}");
+        const migrated = migrateLegacy(legacy);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+        return migrated;
+      } catch { return this.empty(); }
+    },
+    write(d) {
+      if (VERIFY_MODE) { verifyStore = d; return; }
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
+      catch { /* blocked storage: play on without it */ }
+    },
+  };
+
+  function day() { return DAYS[state.day]; }
+
+  function oneApart(a, b) {
+    if (a.length !== b.length) return false;
+    let diff = 0;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) diff++;
+    return diff === 1;
+  }
+
+  function depth(w) {
+    let n = 0;
+    while (state.parent[w] != null) { w = state.parent[w]; n++; }
+    return n;
+  }
+
+  function onTree(w) { return Object.prototype.hasOwnProperty.call(state.parent, w); }
+
+  function reached() { return day().targets.filter(onTree); }
+
+  function solved() { return reached().length === day().targets.length; }
+
+  function completedIn(data, puzzle) {
+    const result = data.history[puzzle.date];
+    return !!result && result.puzzleId === puzzle.id;
+  }
+
+  function historyFor(date) {
+    return store.read().history[date] || null;
+  }
+
+  function streakCount(data = store.read()) {
+    let index = availableCount() - 1;
+    if (index < 0) return 0;
+
+    // A streak may remain alive through today before today's puzzle is done.
+    if (DAYS[index].date === todayISO() && !completedIn(data, DAYS[index])) index--;
+    let streak = 0;
+    while (index >= 0 && completedIn(data, DAYS[index])) {
+      streak++;
+      index--;
+    }
+    return streak;
+  }
+
+  function bestStreakCount(data = store.read()) {
+    let best = 0;
+    let current = 0;
+    for (const puzzle of DAYS.slice(0, availableCount())) {
+      current = completedIn(data, puzzle) ? current + 1 : 0;
+      best = Math.max(best, current);
+    }
+    return best;
+  }
+
+  function playedIn(data, puzzle) {
+    const saved = data.puzzles[puzzle.id];
+    return completedIn(data, puzzle) || !!saved && (
+      saved.revealed
+      || Number(saved.hints) > 0
+      || Array.isArray(saved.order) && saved.order.length > 0
+    );
+  }
+
+  function loadDay(i) {
+    if (availableCount() === 0) {
+      renderLocked();
+      return;
+    }
+    const latest = Math.max(0, availableCount() - 1);
+    state.day = Math.max(0, Math.min(i, latest));
+    const saved = store.read().puzzles[day().id] || {};
+    state.order = Array.isArray(saved.order) ? saved.order : [];
+    state.revealed = !!saved.revealed;
+    state.hints = Math.max(0, Math.min(HINT_COUNT, Number(saved.hints) || 0));
+    rebuild();
+    state.completionOpen = solved();
+    state.celebrate = false;
+    if (solved() && !state.revealed) persist();
+    say("");
+    render();
+  }
+
+  function renderLocked() {
+    el("dayNo").textContent = "—";
+    const date = el("puzzleDate");
+    date.dateTime = DAYS[0].date;
+    date.textContent = "First puzzle: " + formatDate(DAYS[0].date);
+    el("startWord").textContent = "????";
+    el("chips").innerHTML = "";
+    el("tree").innerHTML = "";
+    el("treeSummary").textContent = "No daily puzzle has been released yet.";
+    el("completion").hidden = true;
+    el("comparison").hidden = true;
+    el("hintPanel").hidden = true;
+    el("completedTotal").textContent = "0/0";
+    el("streak").textContent = "0";
+    el("openArchive").disabled = true;
+    for (const id of [
+      "prev", "next", "entry", "addBtn", "undo", "reset",
+      "hintBtn", "reveal", "share",
+    ]) el(id).disabled = true;
+    say("The first daily puzzle unlocks on " + formatDate(DAYS[0].date) + ".");
+  }
+
+  function rebuild() {
+    // Replay the insertion order so parents are always recomputed the same way.
+    const words = state.order.slice();
+    state.parent = { [day().start]: null };
+    state.order = [];
+    for (const w of words) attach(w);
+  }
+
+  function attach(w) {
+    const candidates = Object.keys(state.parent).filter((p) => oneApart(p, w));
+    if (!candidates.length) return false;
+    candidates.sort((a, b) => depth(a) - depth(b));
+    state.parent[w] = candidates[0];
+    state.order.push(w);
+    return true;
+  }
+
+  function persist() {
+    const d = store.read();
+    d.puzzles[day().id] = {
+      order: state.order.slice(),
+      revealed: state.revealed,
+      hints: state.hints,
+    };
+    if (solved() && !state.revealed) {
+      const previous = d.history[day().date];
+      const used = state.order.length;
+      const better = !previous
+        || used < previous.bestRungs
+        || (used === previous.bestRungs && state.hints < previous.bestHints);
+      d.history[day().date] = {
+        puzzleId: day().id,
+        firstCompletedAt: previous?.firstCompletedAt || new Date().toISOString(),
+        lastCompletedAt: new Date().toISOString(),
+        bestRungs: better ? used : previous.bestRungs,
+        bestHints: better ? state.hints : previous.bestHints,
+      };
+    }
+    store.write(d);
+  }
+
+  function say(text, kind) {
+    const n = el("note");
+    n.textContent = text || " ";
+    n.className = "note" + (kind ? " " + kind : "");
+  }
+
+  function add(raw) {
+    const w = raw.trim().toLowerCase();
+    const d = day();
+    const wasSolved = solved();
+
+    if (!w) return;
+    if (!/^[a-z]+$/.test(w)) { say("Letters only.", "bad"); return; }
+    if (w.length !== d.start.length) {
+      say("Every word is " + d.start.length + " letters.", "bad");
+      return;
+    }
+    if (onTree(w)) { say(w.toUpperCase() + " is already on your tree.", "bad"); return; }
+    if (!WORDS.has(w)) { say(w.toUpperCase() + " is not in the word list.", "bad"); return; }
+    if (!attach(w)) {
+      say(w.toUpperCase() + " is not one letter from anything on your tree.", "bad");
+      return;
+    }
+
+    persist();
+    if (solved()) {
+      const used = state.order.length;
+      const delta = used - d.par;
+      if (!wasSolved) {
+        state.completionOpen = true;
+        state.celebrate = true;
+      }
+      say(
+        delta === 0 ? "All three reached in " + used + " rungs. That is par."
+          : delta > 0 ? "All three reached in " + used + " rungs, " + delta + " over par."
+          : "All three reached in " + used + " rungs, " + Math.abs(delta) + " under par.",
+        "good"
+      );
+    } else if (d.targets.includes(w)) {
+      say(w.toUpperCase() + " reached. " + reached().length + " of 3.", "good");
+    } else {
+      say("");
+    }
+    render();
+  }
+
+  function childrenMap() {
+    const kids = {};
+    for (const w of Object.keys(state.parent)) kids[w] = [];
+    for (const w of state.order) kids[state.parent[w]].push(w);
+    return kids;
+  }
+
+  function branchStructure(kids) {
+    const trunk = [day().start];
+    let node = day().start;
+    while (kids[node] && kids[node].length === 1) {
+      node = kids[node][0];
+      trunk.push(node);
+    }
+    return {
+      trunk: new Set(trunk),
+      fork: kids[node] && kids[node].length > 1 ? node : null,
+      rungs: trunk.length - 1,
+    };
+  }
+
+  function wordHTML(w, parent, isTarget, isStart, onTrunk, isFork, removable) {
+    let html = "";
+    for (let i = 0; i < w.length; i++) {
+      const changed = parent && w[i] !== parent[i];
+      html += changed ? "<b>" + w[i].toUpperCase() + "</b>" : w[i].toUpperCase();
+    }
+    const cls = "w"
+      + (isStart ? " start" : "")
+      + (isTarget ? " target" : "")
+      + (onTrunk ? " trunk" : "")
+      + (isFork ? " fork" : "");
+    const word = '<span class="' + cls + '">' + html + "</span>";
+    const rendered = removable
+      ? '<button type="button" class="leaf-control" data-prune="' + w
+        + '" aria-label="Prune leaf ' + w.toUpperCase()
+        + '" title="Prune this leaf">' + word
+        + '<span class="prune-mark" aria-hidden="true">×</span></button>'
+      : word;
+    const badge = isFork ? '<span class="fork-badge">first fork</span>' : "";
+    return rendered + badge;
+  }
+
+  function pruneLeaf(w) {
+    const kids = childrenMap();
+    if (
+      state.revealed
+      || w === day().start
+      || !onTree(w)
+      || (kids[w] && kids[w].length)
+    ) return;
+
+    const wasSolved = solved();
+    const parent = state.parent[w];
+    const wasTarget = day().targets.includes(w);
+    delete state.parent[w];
+    state.order = state.order.filter((word) => word !== w);
+    if (wasSolved && solved()) {
+      state.completionOpen = true;
+      state.celebrate = true;
+    }
+    persist();
+    say(
+      wasSolved && solved()
+        ? "Pruned " + w.toUpperCase() + ". Tree still complete in "
+          + state.order.length + " rungs."
+        : wasTarget
+        ? "Pruned " + w.toUpperCase() + ". " + reached().length + " of 3 targets remain."
+        : "Pruned " + w.toUpperCase() + "."
+    );
+    render();
+
+    const nextLeaf = el("tree").querySelector('[data-prune="' + parent + '"]');
+    if (nextLeaf) nextLeaf.focus();
+    else el("entry").focus();
+  }
+
+  function renderTree() {
+    const d = day();
+    const kids = childrenMap();
+    const targets = new Set(d.targets);
+    const structure = branchStructure(kids);
+
+    function node(w) {
+      const li = document.createElement("li");
+      li.innerHTML = wordHTML(
+        w,
+        state.parent[w],
+        targets.has(w),
+        w === d.start,
+        structure.trunk.has(w),
+        w === structure.fork,
+        w !== d.start && kids[w].length === 0 && !state.revealed
+      );
+      const prune = li.querySelector("[data-prune]");
+      if (prune) prune.addEventListener("click", () => pruneLeaf(w));
+      if (kids[w] && kids[w].length) {
+        const ul = document.createElement("ul");
+        for (const c of kids[w]) ul.appendChild(node(c));
+        li.appendChild(ul);
+      }
+      return li;
+    }
+
+    const root = document.createElement("ul");
+    root.appendChild(node(d.start));
+    const host = el("tree");
+    host.innerHTML = "";
+    host.appendChild(root);
+    host.classList.toggle("celebrating", state.celebrate);
+    if (state.celebrate) {
+      const trunkWords = [...host.querySelectorAll(".w.trunk")];
+      const branchWords = [...host.querySelectorAll(".w:not(.trunk)")];
+      [...trunkWords, ...branchWords].forEach((word, index) => {
+        word.style.setProperty("--completion-delay", index * 70 + "ms");
+      });
+      state.celebrate = false;
+    }
+
+    const summary = el("treeSummary");
+    const shared = el("sharedTrunk");
+    if (structure.fork) {
+      const unit = structure.rungs === 1 ? "rung" : "rungs";
+      summary.textContent = "First fork at " + structure.fork.toUpperCase()
+        + " after " + structure.rungs + " shared " + unit + ".";
+      summary.className = "tree-summary forked";
+      shared.textContent = structure.rungs + " " + unit;
+      host.setAttribute(
+        "aria-label",
+        "Word tree. First fork at " + structure.fork.toUpperCase()
+        + " after " + structure.rungs + " shared " + unit + "."
+      );
+    } else {
+      summary.textContent = state.order.length
+        ? "No fork yet · one path from " + d.start.toUpperCase() + "."
+        : "Build one shared path, then fork toward the three targets.";
+      summary.className = "tree-summary";
+      shared.textContent = "—";
+      host.setAttribute("aria-label", "Word tree. No fork yet.");
+    }
+  }
+
+  function solutionTree() {
+    const d = day();
+    const parent = { [d.start]: null };
+    const kids = { [d.start]: [] };
+    for (const [p, c] of d.solution) {
+      parent[c] = p;
+      if (!kids[p]) kids[p] = [];
+      if (!kids[c]) kids[c] = [];
+      kids[p].push(c);
+    }
+    return { parent, kids };
+  }
+
+  function renderParTree() {
+    const d = day();
+    const host = el("parTree");
+    const { parent, kids } = solutionTree();
+    const targets = new Set(d.targets);
+    const structure = branchStructure(kids);
+
+    function node(w) {
+      const li = document.createElement("li");
+      li.innerHTML = wordHTML(
+        w,
+        parent[w],
+        targets.has(w),
+        w === d.start,
+        structure.trunk.has(w),
+        w === structure.fork,
+        false
+      );
+      if (kids[w].length) {
+        const ul = document.createElement("ul");
+        for (const child of kids[w]) ul.appendChild(node(child));
+        li.appendChild(ul);
+      }
+      return li;
+    }
+
+    const root = document.createElement("ul");
+    root.appendChild(node(d.start));
+    host.innerHTML = "";
+    host.appendChild(root);
+    host.setAttribute(
+      "aria-label",
+      "Official par tree. First fork at " + structure.fork.toUpperCase()
+      + " after " + structure.rungs + " shared rungs."
+    );
+  }
+
+  function optimalStructure() {
+    const kids = {};
+    for (const [parent, child] of day().solution) {
+      if (!kids[parent]) kids[parent] = [];
+      kids[parent].push(child);
+      if (!kids[child]) kids[child] = [];
+    }
+    const path = [day().start];
+    let node = day().start;
+    while (kids[node] && kids[node].length === 1) {
+      node = kids[node][0];
+      path.push(node);
+    }
+    return { first: path[1], fork: node };
+  }
+
+  function ordinal(n) {
+    return ["first", "second", "third", "fourth"][n - 1] || String(n);
+  }
+
+  function hintTexts() {
+    const d = day();
+    const optimal = optimalStructure();
+    let changed = 0;
+    while (d.start[changed] === optimal.first[changed]) changed++;
+    const unit = d.trunk === 1 ? "rung" : "rungs";
+    return [
+      "The optimal tree stays together for " + d.trunk + " shared " + unit
+        + " before splitting.",
+      "First, change the " + ordinal(changed + 1) + " letter of "
+        + d.start.toUpperCase() + ".",
+      "The first shared rung is " + optimal.first.toUpperCase() + ".",
+      "The optimal first fork is " + optimal.fork.toUpperCase()
+        + ". Build toward it before splitting.",
+    ];
+  }
+
+  function renderHints() {
+    const panel = el("hintPanel");
+    const list = el("hintList");
+    panel.hidden = state.hints === 0;
+    el("hintProgress").textContent = state.hints + " of " + HINT_COUNT;
+    list.innerHTML = "";
+    for (const text of hintTexts().slice(0, state.hints)) {
+      const li = document.createElement("li");
+      li.textContent = text;
+      list.appendChild(li);
+    }
+    el("hintsUsed").textContent = state.hints;
+    const button = el("hintBtn");
+    button.textContent = state.hints === 0
+      ? "Hint"
+      : state.hints < HINT_COUNT ? "Next hint" : "All hints shown";
+    button.disabled = state.revealed || solved() || state.hints >= HINT_COUNT;
+  }
+
+  function renderCompletion() {
+    const d = day();
+    const panel = el("completion");
+    const done = solved();
+    panel.hidden = !done || !state.completionOpen;
+    if (!done) return;
+
+    const used = state.order.length;
+    const delta = used - d.par;
+    const structure = branchStructure(childrenMap());
+    el("completionVerdict").textContent = delta === 0 ? "PAR"
+      : delta > 0 ? "+" + delta + " RUNGS"
+      : Math.abs(delta) + " UNDER PAR";
+    el("resultRungs").textContent = used;
+    el("resultPar").textContent = d.par;
+    el("resultHints").textContent = state.hints;
+    el("resultTrunk").textContent = structure.rungs;
+    el("resultSaved").textContent = d.separate - used;
+
+    const improve = el("improve");
+    improve.hidden = delta <= 0 || state.revealed;
+    const compare = el("compare");
+    compare.textContent = state.revealed ? "Par tree shown" : "Compare with par";
+    compare.disabled = state.revealed;
+  }
+
+  function renderComparison() {
+    const panel = el("comparison");
+    panel.hidden = !state.revealed;
+    if (!state.revealed) return;
+    el("comparisonPar").textContent = day().par;
+    renderParTree();
+  }
+
+  function renderDaily() {
+    const d = day();
+    const data = store.read();
+    const count = availableCount();
+    const date = el("puzzleDate");
+    date.dateTime = d.date;
+    date.textContent = formatDate(d.date);
+
+    let completed = 0;
+    for (let index = 0; index < count; index++) {
+      const puzzle = DAYS[index];
+      const done = completedIn(data, puzzle);
+      if (done) completed++;
+    }
+    el("openArchive").disabled = count === 0;
+    el("completedTotal").textContent = completed + "/" + count;
+    el("streak").textContent = streakCount(data);
+    el("prev").disabled = state.day === 0;
+    el("next").disabled = state.day >= count - 1;
+  }
+
+  function renderArchive() {
+    const data = store.read();
+    const count = availableCount();
+    const filter = el("archiveFilter").value;
+    const puzzles = [];
+    let played = 0;
+    let completed = 0;
+
+    for (let index = 0; index < count; index++) {
+      const puzzle = DAYS[index];
+      const done = completedIn(data, puzzle);
+      const started = playedIn(data, puzzle);
+      if (started) played++;
+      if (done) completed++;
+      if (
+        filter === "all"
+        || filter === "completed" && done
+        || filter === "unfinished" && !done
+      ) puzzles.push({ index, puzzle, done, started });
+    }
+
+    el("archivePlayed").textContent = played;
+    el("archiveCompleted").textContent = completed;
+    el("archiveStreak").textContent = streakCount(data);
+    el("archiveBestStreak").textContent = bestStreakCount(data);
+
+    const host = el("archiveList");
+    host.innerHTML = "";
+    if (!puzzles.length) {
+      const empty = document.createElement("p");
+      empty.className = "archive-empty";
+      empty.textContent = filter === "completed"
+        ? "No completed puzzles yet."
+        : "No unfinished puzzles in the released archive.";
+      host.appendChild(empty);
+      return;
+    }
+
+    const monthFormat = new Intl.DateTimeFormat(undefined, {
+      month: "long",
+      year: "numeric",
+    });
+    let monthKey = "";
+    let grid = null;
+    for (const item of puzzles.reverse()) {
+      const date = new Date(item.puzzle.date + "T12:00:00");
+      const key = item.puzzle.date.slice(0, 7);
+      if (key !== monthKey) {
+        monthKey = key;
+        const section = document.createElement("section");
+        section.className = "archive-month";
+        const heading = document.createElement("h3");
+        heading.textContent = monthFormat.format(date);
+        grid = document.createElement("div");
+        grid.className = "archive-grid";
+        section.append(heading, grid);
+        host.appendChild(section);
+      }
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "archive-item" + (item.done ? " complete" : "");
+      if (item.index === state.day) button.setAttribute("aria-current", "date");
+      const best = data.history[item.puzzle.date];
+      const saved = data.puzzles[item.puzzle.id];
+      const status = item.done
+        ? "Complete · best " + best.bestRungs
+        : item.started
+          ? "In progress · " + (saved.order?.length || 0) + " rungs"
+          : "Unplayed";
+      button.innerHTML = "<strong>Day " + (item.index + 1)
+        + (item.puzzle.date === todayISO() ? " · Today" : "")
+        + "</strong><span>" + formatDate(item.puzzle.date) + " · " + status + "</span>";
+      button.addEventListener("click", () => {
+        loadDay(item.index);
+        el("archiveDialog").close();
+      });
+      grid.appendChild(button);
+    }
+  }
+
+  function render() {
+    const d = day();
+    el("dayNo").textContent = state.day + 1;
+    el("startWord").textContent = d.start.toUpperCase();
+    renderDaily();
+
+    const chips = el("chips");
+    chips.innerHTML = "";
+    for (const t of d.targets) {
+      const s = document.createElement("span");
+      s.className = "chip" + (onTree(t) ? " reached" : "");
+      s.textContent = t.toUpperCase();
+      chips.appendChild(s);
+    }
+
+    renderTree();
+    renderHints();
+    renderCompletion();
+    renderComparison();
+
+    const used = state.order.length;
+    el("rungs").textContent = used;
+    el("separate").textContent = d.separate;
+    const par = el("par");
+    if (solved() || state.revealed) {
+      par.innerHTML = used <= d.par && solved()
+        ? '<span class="hit">' + d.par + " · reached</span>"
+        : String(d.par);
+    } else {
+      par.textContent = d.par;
+    }
+
+    el("undo").disabled = used === 0 || state.revealed;
+    el("reset").disabled = used === 0 && !state.revealed;
+    el("reveal").disabled = state.revealed;
+    el("entry").disabled = state.revealed;
+    el("addBtn").disabled = state.revealed;
+    el("hint").textContent = state.revealed
+      ? "This is one optimal tree. Others of the same size may exist."
+      : "Solving the three ladders one at a time works, but costs more rungs than sharing a trunk does.";
+  }
+
+  el("form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    add(el("entry").value);
+    el("entry").value = "";
+    el("entry").focus();
+  });
+
+  el("undo").addEventListener("click", () => {
+    const wasSolved = solved();
+    const last = state.order.pop();
+    if (!last) return;
+    delete state.parent[last];
+    if (wasSolved && solved()) {
+      state.completionOpen = true;
+      state.celebrate = true;
+    }
+    persist();
+    say(wasSolved && solved()
+      ? "Removed " + last.toUpperCase() + ". Tree still complete in "
+        + state.order.length + " rungs."
+      : "Removed " + last.toUpperCase() + ".");
+    render();
+  });
+
+  el("reset").addEventListener("click", () => {
+    state.order = [];
+    state.revealed = false;
+    state.completionOpen = false;
+    state.celebrate = false;
+    rebuild();
+    persist();
+    say("");
+    render();
+  });
+
+  el("hintBtn").addEventListener("click", () => {
+    if (state.hints >= HINT_COUNT || state.revealed || solved()) return;
+    state.hints++;
+    persist();
+    render();
+  });
+
+  el("reveal").addEventListener("click", () => {
+    state.revealed = true;
+    persist();
+    say("Par comparison shown. Your tree remains above.");
+    render();
+  });
+
+  el("improve").addEventListener("click", () => {
+    state.completionOpen = false;
+    say("Keep pruning leaves, then regrow a shorter tree.");
+    render();
+    const firstLeaf = el("tree").querySelector("[data-prune]");
+    (firstLeaf || el("entry")).focus();
+  });
+
+  el("compare").addEventListener("click", () => el("reveal").click());
+
+  el("prev").addEventListener("click", () => loadDay(state.day - 1));
+  el("next").addEventListener("click", () => loadDay(state.day + 1));
+  el("openArchive").addEventListener("click", () => {
+    renderArchive();
+    el("archiveDialog").showModal();
+  });
+  el("closeArchive").addEventListener("click", () => el("archiveDialog").close());
+  el("archiveFilter").addEventListener("change", renderArchive);
+
+  function shareText() {
+    const d = day();
+    const used = state.order.length;
+    const done = solved();
+    const structure = branchStructure(childrenMap());
+    const shared = structure.fork ? structure.rungs : 0;
+    const trunk = "━".repeat(Math.max(1, shared));
+    const targetRows = d.targets.map((target, index) =>
+      (index === d.targets.length - 1 ? "  └─ " : "  ├─ ")
+      + target.toUpperCase() + " " + (onTree(target) ? "✓" : "○")
+    );
+    return [
+      "Branching Ladder #" + (state.day + 1) + " · " + formatDate(d.date)
+        + " · Standard",
+      d.start.toUpperCase() + " " + trunk + "┳",
+      ...targetRows,
+      done
+        ? used + "/" + d.par + " rungs"
+          + (used === d.par ? " · PAR ✓"
+            : used > d.par ? " · +" + (used - d.par)
+            : " · " + (d.par - used) + " under")
+        : reached().length + "/3 targets · " + used + " rungs · par " + d.par,
+      shared + " shared · " + (d.separate - used) + " saved · "
+        + state.hints + " hint" + (state.hints === 1 ? "" : "s"),
+    ].join("\n");
+  }
+
+  async function copyResult() {
+    const text = shareText();
+    try {
+      await navigator.clipboard.writeText(text);
+      say("Result copied to clipboard.", "good");
+    } catch {
+      say("Could not reach the clipboard. " + state.order.length
+        + " rungs, par " + day().par + ".");
+    }
+  }
+
+  el("share").addEventListener("click", copyResult);
+  el("completionShare").addEventListener("click", copyResult);
+
+  function playOptimal(extraRungs = 0) {
+    if (!VERIFY_MODE) return;
+    const { parent } = solutionTree();
+    state.parent = parent;
+    state.order = day().solution.map((edge) => edge[1]);
+    state.revealed = false;
+    for (let n = 0; n < extraRungs; n++) {
+      const candidate = [...WORDS].find((word) =>
+        !onTree(word)
+        && !day().targets.includes(word)
+        && Object.keys(state.parent).some((placed) => oneApart(placed, word))
+      );
+      if (candidate) attach(candidate);
+    }
+    state.completionOpen = true;
+    state.celebrate = true;
+    persist();
+    say("Verification solve loaded.", "good");
+    render();
+  }
+
+  loadDay(VERIFY_MODE ? 0 : availableCount() - 1);
+  el("entry").focus();
+</script>

@@ -1,0 +1,231 @@
+#!/usr/bin/env python3
+"""Run every Branching Ladder release gate, including a headless browser."""
+
+from __future__ import annotations
+
+import filecmp
+import functools
+import http.server
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+import threading
+
+from generate import SCHEDULE_DAYS
+
+
+ROOT = Path(__file__).resolve().parent
+EXPECTED_BROWSER_RESULT = (
+    f"PASS — {SCHEDULE_DAYS}/{SCHEDULE_DAYS} rendered solutions passed."
+)
+
+
+class QuietHandler(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, _format, *_args):
+        pass
+
+
+def fail(message: str) -> None:
+    print(f"FAIL  {message}", file=sys.stderr)
+    raise SystemExit(1)
+
+
+def run(command: list[str], label: str) -> subprocess.CompletedProcess[str]:
+    result = subprocess.run(
+        command,
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+    )
+    if result.returncode:
+        if result.stdout:
+            print(result.stdout, file=sys.stderr, end="")
+        if result.stderr:
+            print(result.stderr, file=sys.stderr, end="")
+        fail(label)
+    print(f"PASS  {label}")
+    return result
+
+
+def browser_executable() -> str:
+    override = os.environ.get("BROWSER_BIN")
+    if override:
+        path = Path(override).expanduser()
+        if path.is_file():
+            return str(path)
+        fail(f"BROWSER_BIN does not point to a file: {path}")
+
+    for name in ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser"):
+        found = shutil.which(name)
+        if found:
+            return found
+
+    for candidate in (
+        Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
+        Path("/Applications/Chromium.app/Contents/MacOS/Chromium"),
+        Path("/usr/bin/google-chrome"),
+        Path("/usr/bin/chromium"),
+    ):
+        if candidate.is_file():
+            return str(candidate)
+
+    fail(
+        "Chrome or Chromium was not found. Install one or set "
+        "BROWSER_BIN=/path/to/browser."
+    )
+    raise AssertionError("unreachable")
+
+
+def node_executable() -> str:
+    override = os.environ.get("NODE_BIN")
+    if override:
+        path = Path(override).expanduser()
+        if path.is_file():
+            return str(path)
+        fail(f"NODE_BIN does not point to a file: {path}")
+    found = shutil.which("node")
+    if found:
+        return found
+    fail("Node.js was not found. Install Node.js 20+ or set NODE_BIN.")
+    raise AssertionError("unreachable")
+
+
+def playwright_environment() -> dict[str, str]:
+    environment = os.environ.copy()
+    candidates = [ROOT / "node_modules"]
+    candidates.extend(
+        Path(entry) for entry in environment.get("NODE_PATH", "").split(os.pathsep)
+        if entry
+    )
+    # Codex workspaces provide a bundled runtime. Normal CI should use
+    # `npm ci`, which makes the first candidate succeed.
+    candidates.append(
+        Path.home()
+        / ".cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules"
+    )
+    for candidate in candidates:
+        if (candidate / "playwright-core").is_dir():
+            environment["NODE_PATH"] = str(candidate)
+            return environment
+    fail("playwright-core is missing; run npm ci before ./release_check")
+    raise AssertionError("unreachable")
+
+
+def check_generated_artifacts(temp: Path) -> None:
+    generated_days = temp / "days.json"
+    generated_review = temp / "vocab_review.txt"
+    run(
+        [
+            sys.executable,
+            "generate.py",
+            "-n",
+            str(SCHEDULE_DAYS),
+            "--pool",
+            "4000",
+            "--seed",
+            "3",
+            "--start-date",
+            "2026-09-01",
+            "-o",
+            str(generated_days),
+            "--review-out",
+            str(generated_review),
+        ],
+        "deterministic puzzle generation",
+    )
+
+    for generated, committed in (
+        (generated_days, ROOT / "days.json"),
+        (generated_review, ROOT / "vocab_review.txt"),
+    ):
+        if not filecmp.cmp(generated, committed, shallow=False):
+            fail(
+                f"{committed.name} is stale; regenerate with "
+                "python3 generate.py -n 365 --pool 4000 --seed 3 "
+                "--start-date 2026-09-01"
+            )
+        print(f"PASS  {committed.name} matches deterministic generation")
+
+    built = temp / "prototype.html"
+    built.write_text(
+        (ROOT / "prototype.template.html").read_text().replace(
+            "__DAYS__", generated_days.read_text()
+        )
+    )
+    if not filecmp.cmp(built, ROOT / "prototype.html", shallow=False):
+        fail("prototype.html is stale; rebuild it from the template and days.json")
+    print("PASS  prototype.html matches template plus generated data")
+
+
+def check_browser(temp: Path) -> None:
+    handler = functools.partial(QuietHandler, directory=str(ROOT))
+    try:
+        server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    except OSError as error:
+        fail(f"could not start the temporary browser server: {error}")
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    url = f"http://127.0.0.1:{server.server_port}/browser_verify.html"
+
+    try:
+        browser = browser_executable()
+        node = node_executable()
+        result = subprocess.run(
+            [
+                node,
+                str(ROOT / "headless_gate.cjs"),
+                browser,
+                url,
+                EXPECTED_BROWSER_RESULT,
+            ],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            timeout=150,
+            env=playwright_environment(),
+        )
+    except subprocess.TimeoutExpired:
+        fail("headless browser gate timed out")
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
+
+    if result.returncode:
+        if result.stderr:
+            print(result.stderr, file=sys.stderr, end="")
+        fail(f"headless browser exited with status {result.returncode}")
+    if EXPECTED_BROWSER_RESULT not in result.stdout:
+        if result.stdout:
+            print(result.stdout, file=sys.stderr, end="")
+        if result.stderr:
+            print(result.stderr, file=sys.stderr, end="")
+        fail(
+            f"headless browser gate did not report "
+            f"{SCHEDULE_DAYS}/{SCHEDULE_DAYS} PASS"
+        )
+    print(f"PASS  headless browser gate — {EXPECTED_BROWSER_RESULT}")
+
+
+def main() -> None:
+    print("Branching Ladder release check\n")
+    with tempfile.TemporaryDirectory(prefix="branching-ladder-release-") as raw_temp:
+        temp = Path(raw_temp)
+        check_generated_artifacts(temp)
+        run(
+            [sys.executable, "-m", "py_compile", "generate.py", "graph.py", "verify.py"],
+            "Python syntax",
+        )
+        verified = run([sys.executable, "verify.py"], "deterministic shipping gates")
+        if verified.stdout:
+            print(verified.stdout, end="")
+        check_browser(temp)
+
+    print("\nRELEASE READY")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,226 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Branching Ladder — browser shipping gate</title>
+
+<style>
+  :root { color-scheme: light dark; font-family: ui-monospace, monospace; }
+  body { max-width: 72rem; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-family: system-ui, sans-serif; }
+  .summary { padding: .75rem 1rem; border: 1px solid currentColor; }
+  .pass { color: #238b68; }
+  .fail { color: #c54a3a; }
+  .layout { display: grid; grid-template-columns: minmax(20rem, 1fr) 34rem; gap: 2rem; }
+  ol { padding-left: 2.5rem; }
+  li { padding: .15rem 0; }
+  iframe { width: 100%; height: 44rem; border: 1px solid #8886; }
+  @media (max-width: 55rem) { .layout { grid-template-columns: 1fr; } }
+</style>
+
+<h1>Branching Ladder browser shipping gate</h1>
+<p class="summary" id="summary" role="status" aria-live="polite">Running…</p>
+
+<div class="layout">
+  <ol id="results"></ol>
+  <iframe id="game" title="Game under verification"></iframe>
+</div>
+
+<script>
+  const summary = document.getElementById("summary");
+  const results = document.getElementById("results");
+  const frame = document.getElementById("game");
+  const failures = [];
+  const harnessErrors = [];
+  addEventListener("error", (event) => harnessErrors.push(event.message || "unknown harness error"));
+  addEventListener("unhandledrejection", (event) => harnessErrors.push(String(event.reason || "unhandled rejection")));
+  window.__BROWSER_GATE__ = { status: "running", failures };
+
+  const loaded = new Promise((resolve) => frame.addEventListener("load", resolve, { once: true }));
+  frame.src = "prototype.html?verify=1";
+
+  function nextPaint() {
+    return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  }
+
+  function record(day, checks) {
+    const failed = checks.filter((check) => !check.ok);
+    const li = document.createElement("li");
+    li.className = failed.length ? "fail" : "pass";
+    li.textContent = failed.length
+      ? "Day " + day + ": FAIL — " + failed.map((check) => check.message).join("; ")
+      : "Day " + day + ": completion and par comparison passed";
+    results.appendChild(li);
+    for (const check of failed) failures.push("Day " + day + ": " + check.message);
+  }
+
+  async function run() {
+    await loaded;
+    const win = frame.contentWindow;
+    const doc = frame.contentDocument;
+    const meta = win.__BRANCHING_VERIFY__;
+    if (!meta || !Number.isInteger(meta.dayCount)) {
+      throw new Error("prototype did not expose verification metadata");
+    }
+    if (
+      meta.dates.length !== meta.dayCount
+      || meta.releasedCountFor("0000-01-01") !== 0
+      || meta.releasedCountFor(meta.dates[0]) !== 1
+      || meta.releasedCountFor(meta.dates.at(-1)) !== meta.dayCount
+    ) {
+      throw new Error("dated release boundaries are incorrect");
+    }
+    if (meta.storageKeys.standard === meta.storageKeys.hard) {
+      throw new Error("Standard and Hard Mode storage keys are not separate");
+    }
+    const legacySample = { 0: { order: ["test"], revealed: false, hints: 1 } };
+    const migratedSample = meta.migrateLegacy(legacySample);
+    if (
+      migratedSample.version !== 2
+      || migratedSample.puzzles[meta.puzzleIds[0]] !== legacySample[0]
+      || !migratedSample.history
+    ) {
+      throw new Error("legacy progress did not migrate to the stable puzzle ID");
+    }
+
+    meta.playOptimal(1);
+    await nextPaint();
+    const overParBest = meta.historyFor(meta.dates[0]);
+    if (doc.getElementById("improve").hidden) {
+      throw new Error("over-par completion did not offer Keep improving");
+    }
+    if (overParBest.bestRungs !== Number(doc.getElementById("rungs").textContent)) {
+      throw new Error("over-par completion history was not recorded");
+    }
+    doc.getElementById("improve").click();
+    await nextPaint();
+    if (!doc.getElementById("completion").hidden || doc.getElementById("entry").disabled) {
+      throw new Error("Keep improving did not return to editable play");
+    }
+    doc.getElementById("undo").click();
+    await nextPaint();
+    if (
+      doc.getElementById("completion").hidden
+      || doc.getElementById("completionVerdict").textContent !== "PAR"
+    ) {
+      throw new Error("improving to par did not reopen the completion result");
+    }
+    if (meta.historyFor(meta.dates[0]).bestRungs !== Number.parseInt(doc.getElementById("par").textContent, 10)) {
+      throw new Error("completion history did not retain the improved best score");
+    }
+    doc.getElementById("reset").click();
+    await nextPaint();
+
+    for (let day = 1; day <= meta.dayCount; day++) {
+      meta.playOptimal();
+      await nextPaint();
+
+      const rungs = Number(doc.getElementById("rungs").textContent);
+      const par = Number.parseInt(doc.getElementById("par").textContent, 10);
+      const playerNodeCount = doc.querySelectorAll("#tree li").length;
+      const visualShare = meta.shareText();
+      const completionChecks = [
+        { ok: Number(doc.getElementById("dayNo").textContent) === day, message: "wrong day rendered" },
+        { ok: doc.getElementById("puzzleDate").dateTime === meta.dates[day - 1], message: "wrong puzzle date rendered" },
+        { ok: !doc.getElementById("openArchive").disabled, message: "archive is unavailable" },
+        { ok: doc.querySelectorAll(".chip.reached").length === 3, message: "not all target chips reached" },
+        { ok: doc.querySelectorAll("#tree .w.target").length === 3, message: "not all targets rendered in player tree" },
+        { ok: rungs === par, message: "completed rungs do not equal par" },
+        { ok: playerNodeCount === par + 1, message: "completed node count is not par + start" },
+        { ok: !doc.getElementById("completion").hidden, message: "completion results are hidden" },
+        { ok: doc.getElementById("completionVerdict").textContent === "PAR", message: "par verdict is missing" },
+        { ok: Number(doc.getElementById("resultSaved").textContent) > 0, message: "rung savings are missing" },
+        { ok: doc.getElementById("improve").hidden, message: "par solve offers Keep improving" },
+        { ok: doc.getElementById("tree").classList.contains("celebrating"), message: "completion path animation was not applied" },
+        { ok: visualShare.includes("┳") && visualShare.includes("├─") && visualShare.includes("└─"), message: "visual share tree is missing" },
+        { ok: visualShare.includes(rungs + "/" + par + " rungs"), message: "share score is incorrect" },
+      ];
+
+      // The completion action must preserve the player's exact tree while
+      // adding the official solution beneath it.
+      doc.getElementById("compare").click();
+      await nextPaint();
+
+      record(day, [
+        ...completionChecks,
+        { ok: doc.getElementById("orderRule")?.textContent.includes("any order"), message: "Standard Mode does not state the any-order rule" },
+        { ok: !doc.getElementById("comparison").hidden, message: "par comparison is hidden" },
+        { ok: doc.querySelectorAll("#parTree .w.target").length === 3, message: "not all targets rendered in par tree" },
+        { ok: doc.querySelectorAll("#parTree li").length === par + 1, message: "par-tree node count is not par + start" },
+        { ok: doc.querySelectorAll("#tree li").length === playerNodeCount, message: "comparison replaced the player tree" },
+        { ok: doc.querySelectorAll("[data-prune]").length === 0, message: "revealed tree exposes prune controls" },
+        { ok: doc.getElementById("entry").disabled, message: "input remains enabled after reveal" },
+        { ok: doc.getElementById("note").textContent.startsWith("Par comparison shown."), message: "comparison did not complete" },
+        { ok: win.__BRANCHING_ERRORS__.length === 0, message: "game reported a browser error" },
+      ]);
+
+      if (day < meta.dayCount) {
+        doc.getElementById("next").click();
+        await nextPaint();
+      }
+    }
+
+    doc.getElementById("openArchive").click();
+    await nextPaint();
+    const archiveDialog = doc.getElementById("archiveDialog");
+    if (
+      !archiveDialog.open
+      || archiveDialog.querySelectorAll(".archive-item").length !== meta.dayCount
+      || Number(doc.getElementById("archivePlayed").textContent) !== meta.dayCount
+      || Number(doc.getElementById("archiveCompleted").textContent) !== meta.dayCount
+      || Number(doc.getElementById("archiveStreak").textContent) !== meta.dayCount
+      || Number(doc.getElementById("archiveBestStreak").textContent) !== meta.dayCount
+    ) {
+      failures.push("Archive did not show the complete annual history");
+    }
+
+    const archiveFilter = doc.getElementById("archiveFilter");
+    archiveFilter.value = "unfinished";
+    archiveFilter.dispatchEvent(new Event("change"));
+    await nextPaint();
+    if (
+      archiveDialog.querySelectorAll(".archive-item").length !== 0
+      || !archiveDialog.querySelector(".archive-empty")
+    ) {
+      failures.push("Archive unfinished filter is incorrect");
+    }
+    archiveFilter.value = "completed";
+    archiveFilter.dispatchEvent(new Event("change"));
+    await nextPaint();
+    if (archiveDialog.querySelectorAll(".archive-item").length !== meta.dayCount) {
+      failures.push("Archive completed filter is incorrect");
+    }
+    doc.getElementById("closeArchive").click();
+
+    if (
+      doc.getElementById("completedTotal").textContent !== meta.dayCount + "/" + meta.dayCount
+      || Number(doc.getElementById("streak").textContent) !== meta.dayCount
+    ) {
+      failures.push("Daily history or streak did not reach " + meta.dayCount);
+    }
+
+    for (const error of harnessErrors) failures.push("Harness: " + error);
+
+    const passed = meta.dayCount - new Set(
+      failures
+        .map((failure) => failure.match(/^Day (\d+)/))
+        .filter(Boolean)
+        .map((match) => match[1])
+    ).size;
+    summary.textContent = failures.length
+      ? "FAIL — " + passed + "/" + meta.dayCount + " days passed; " + failures.length + " checks failed."
+      : "PASS — " + meta.dayCount + "/" + meta.dayCount + " rendered solutions passed.";
+    summary.className = "summary " + (failures.length ? "fail" : "pass");
+    window.__BROWSER_GATE__ = {
+      status: failures.length ? "failed" : "passed",
+      days: meta.dayCount,
+      failures: failures.slice(),
+    };
+  }
+
+  run().catch((error) => {
+    failures.push(error.message);
+    summary.textContent = "FAIL — " + error.message;
+    summary.className = "summary fail";
+    window.__BROWSER_GATE__ = { status: "failed", failures: failures.slice() };
+  });
+</script>

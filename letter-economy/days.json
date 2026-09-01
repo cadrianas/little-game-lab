@@ -1,0 +1,438 @@
+[
+  {
+    "letters": [
+      "p",
+      "y",
+      "l",
+      "s",
+      "i",
+      "a",
+      "t"
+    ],
+    "prices": {
+      "p": 1,
+      "y": 1,
+      "l": 2,
+      "s": 2,
+      "i": 3,
+      "a": 4,
+      "t": 5
+    },
+    "budget": 12,
+    "charge": "per_use",
+    "answer": "spills",
+    "answer_cost": 12,
+    "answer_rank": 20296,
+    "optimum_len": 6,
+    "optimal_words": [
+      "psylla",
+      "slippy",
+      "spills",
+      "splays"
+    ],
+    "trap_word": "apply",
+    "trap_len": 5,
+    "insight_gap": 1,
+    "slack": 0,
+    "top_repeat": 0.33,
+    "n_affordable": 132,
+    "ladder": {
+      "4": 80,
+      "5": 48,
+      "6": 4
+    },
+    "mode": "inverted"
+  },
+  {
+    "letters": [
+      "m",
+      "w",
+      "d",
+      "n",
+      "i",
+      "o",
+      "t"
+    ],
+    "prices": {
+      "w": 1,
+      "m": 1,
+      "d": 2,
+      "n": 2,
+      "i": 3,
+      "o": 4,
+      "t": 5
+    },
+    "budget": 13,
+    "charge": "per_use",
+    "answer": "window",
+    "answer_cost": 13,
+    "answer_rank": 776,
+    "optimum_len": 6,
+    "optimal_words": [
+      "inwind",
+      "minnow",
+      "window",
+      "winnow"
+    ],
+    "trap_word": "wind",
+    "trap_len": 4,
+    "insight_gap": 2,
+    "slack": 0,
+    "top_repeat": 0.33,
+    "n_affordable": 40,
+    "ladder": {
+      "4": 28,
+      "5": 8,
+      "6": 4
+    },
+    "mode": "inverted"
+  },
+  {
+    "letters": [
+      "b",
+      "l",
+      "d",
+      "s",
+      "a",
+      "t",
+      "e"
+    ],
+    "prices": {
+      "b": 1,
+      "l": 1,
+      "d": 2,
+      "s": 2,
+      "a": 3,
+      "t": 4,
+      "e": 5
+    },
+    "budget": 11,
+    "charge": "per_use",
+    "answer": "ballad",
+    "answer_cost": 11,
+    "answer_rank": 19414,
+    "optimum_len": 6,
+    "optimal_words": [
+      "ballad"
+    ],
+    "trap_word": "ball",
+    "trap_len": 4,
+    "insight_gap": 2,
+    "slack": 0,
+    "top_repeat": 0.33,
+    "n_affordable": 108,
+    "ladder": {
+      "4": 82,
+      "5": 25,
+      "6": 1
+    },
+    "mode": "inverted"
+  },
+  {
+    "letters": [
+      "o",
+      "t",
+      "i",
+      "n",
+      "d",
+      "m",
+      "w"
+    ],
+    "prices": {
+      "t": 1,
+      "o": 1,
+      "i": 2,
+      "n": 2,
+      "d": 3,
+      "m": 4,
+      "w": 5
+    },
+    "budget": 9,
+    "charge": "per_use",
+    "answer": "notion",
+    "answer_cost": 9,
+    "answer_rank": 7726,
+    "optimum_len": 6,
+    "optimal_words": [
+      "notion"
+    ],
+    "trap_word": "otto",
+    "trap_len": 4,
+    "insight_gap": 2,
+    "slack": 0,
+    "top_repeat": 0.33,
+    "n_affordable": 41,
+    "ladder": {
+      "4": 30,
+      "5": 10,
+      "6": 1
+    },
+    "mode": "standard"
+  },
+  {
+    "letters": [
+      "e",
+      "t",
+      "i",
+      "n",
+      "s",
+      "d",
+      "f"
+    ],
+    "prices": {
+      "e": 1,
+      "t": 1,
+      "i": 2,
+      "n": 2,
+      "s": 3,
+      "d": 4,
+      "f": 5
+    },
+    "budget": 15,
+    "charge": "per_use",
+    "answer": "intestine",
+    "answer_cost": 15,
+    "answer_rank": 22631,
+    "optimum_len": 9,
+    "optimal_words": [
+      "intestine",
+      "nineteens",
+      "teensiest"
+    ],
+    "trap_word": "teen",
+    "trap_len": 4,
+    "insight_gap": 5,
+    "slack": 0,
+    "top_repeat": 0.22,
+    "n_affordable": 329,
+    "ladder": {
+      "4": 94,
+      "5": 87,
+      "6": 85,
+      "7": 41,
+      "8": 19,
+      "9": 3
+    },
+    "mode": "standard"
+  },
+  {
+    "letters": [
+      "a",
+      "t",
+      "i",
+      "o",
+      "n",
+      "c",
+      "v"
+    ],
+    "prices": {
+      "t": 1,
+      "a": 1,
+      "o": 2,
+      "i": 2,
+      "n": 3,
+      "c": 4,
+      "v": 5
+    },
+    "budget": 15,
+    "charge": "per_use",
+    "answer": "notation",
+    "answer_cost": 15,
+    "answer_rank": 10624,
+    "optimum_len": 8,
+    "optimal_words": [
+      "natation",
+      "notation"
+    ],
+    "trap_word": "tattoo",
+    "trap_len": 6,
+    "insight_gap": 2,
+    "slack": 0,
+    "top_repeat": 0.25,
+    "n_affordable": 129,
+    "ladder": {
+      "4": 47,
+      "5": 39,
+      "6": 31,
+      "7": 10,
+      "8": 2
+    },
+    "mode": "standard"
+  },
+  {
+    "letters": [
+      "c",
+      "l",
+      "r",
+      "s",
+      "n",
+      "i",
+      "e"
+    ],
+    "prices": {
+      "c": 1,
+      "l": 1,
+      "r": 2,
+      "s": 2,
+      "n": 3,
+      "i": 4,
+      "e": 5
+    },
+    "budget": 16,
+    "charge": "per_use",
+    "answer": "clinics",
+    "answer_cost": 16,
+    "answer_rank": 7129,
+    "optimum_len": 7,
+    "optimal_words": [
+      "circler",
+      "circles",
+      "clerics",
+      "clinics"
+    ],
+    "trap_word": "cells",
+    "trap_len": 5,
+    "insight_gap": 2,
+    "slack": 0,
+    "top_repeat": 0.29,
+    "n_affordable": 173,
+    "ladder": {
+      "4": 73,
+      "5": 69,
+      "6": 27,
+      "7": 4
+    },
+    "mode": "inverted"
+  },
+  {
+    "letters": [
+      "e",
+      "t",
+      "a",
+      "r",
+      "c",
+      "u",
+      "p"
+    ],
+    "prices": {
+      "e": 1,
+      "t": 1,
+      "a": 2,
+      "r": 2,
+      "c": 3,
+      "u": 4,
+      "p": 5
+    },
+    "budget": 10,
+    "charge": "per_use",
+    "answer": "retreat",
+    "answer_cost": 10,
+    "answer_rank": 8205,
+    "optimum_len": 7,
+    "optimal_words": [
+      "retreat",
+      "treater"
+    ],
+    "trap_word": "tree",
+    "trap_len": 4,
+    "insight_gap": 3,
+    "slack": 0,
+    "top_repeat": 0.29,
+    "n_affordable": 115,
+    "ladder": {
+      "4": 56,
+      "5": 38,
+      "6": 19,
+      "7": 2
+    },
+    "mode": "standard"
+  },
+  {
+    "letters": [
+      "a",
+      "o",
+      "n",
+      "r",
+      "c",
+      "m",
+      "y"
+    ],
+    "prices": {
+      "a": 1,
+      "o": 1,
+      "n": 2,
+      "r": 2,
+      "c": 3,
+      "m": 4,
+      "y": 5
+    },
+    "budget": 10,
+    "charge": "per_use",
+    "answer": "corona",
+    "answer_cost": 10,
+    "answer_rank": 14362,
+    "optimum_len": 6,
+    "optimal_words": [
+      "arcana",
+      "coocoo",
+      "corona",
+      "racoon"
+    ],
+    "trap_word": "anon",
+    "trap_len": 4,
+    "insight_gap": 2,
+    "slack": 0,
+    "top_repeat": 0.33,
+    "n_affordable": 64,
+    "ladder": {
+      "4": 44,
+      "5": 16,
+      "6": 4
+    },
+    "mode": "standard"
+  },
+  {
+    "letters": [
+      "c",
+      "f",
+      "o",
+      "r",
+      "a",
+      "t",
+      "e"
+    ],
+    "prices": {
+      "f": 1,
+      "c": 1,
+      "r": 2,
+      "o": 2,
+      "a": 3,
+      "t": 4,
+      "e": 5
+    },
+    "budget": 15,
+    "charge": "per_use",
+    "answer": "offeror",
+    "answer_cost": 15,
+    "answer_rank": 23518,
+    "optimum_len": 7,
+    "optimal_words": [
+      "coactor",
+      "feoffor",
+      "offeror"
+    ],
+    "trap_word": "coco",
+    "trap_len": 4,
+    "insight_gap": 3,
+    "slack": 0,
+    "top_repeat": 0.29,
+    "n_affordable": 160,
+    "ladder": {
+      "4": 89,
+      "5": 53,
+      "6": 15,
+      "7": 3
+    },
+    "mode": "inverted"
+  }
+]

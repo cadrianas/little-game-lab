@@ -1,0 +1,1405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f2efe6">
+<meta name="description" content="Letter Economy is a daily word game where every letter has a price and the longest affordable word wins.">
+<title>Letter Economy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --paper: #eeefe9;
+    --card: #f8f9f5;
+    --ink: #191c1f;
+    --muted: #6b7079;
+    --rule: #d3d5cc;
+    --rule-soft: #e2e4dc;
+    --coin: #9c6a15;
+    --coin-soft: #e8d9b6;
+    --over: #97382a;
+    --par: #2c6a53;
+    --shadow: rgba(25, 28, 31, .08);
+
+    --step-0: .8125rem;
+    --step-1: .9375rem;
+    --step-2: 1.125rem;
+    --step-3: 1.5rem;
+    --step-4: 2rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #131619;
+      --card: #1a1e22;
+      --ink: #e5e6e1;
+      --muted: #888e97;
+      --rule: #2b3036;
+      --rule-soft: #23282d;
+      --coin: #dda948;
+      --coin-soft: #4a3c1e;
+      --over: #cd6d55;
+      --par: #55a07e;
+      --shadow: rgba(0, 0, 0, .4);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #131619;
+    --card: #1a1e22;
+    --ink: #e5e6e1;
+    --muted: #888e97;
+    --rule: #2b3036;
+    --rule-soft: #23282d;
+    --coin: #dda948;
+    --coin-soft: #4a3c1e;
+    --over: #cd6d55;
+    --par: #55a07e;
+    --shadow: rgba(0, 0, 0, .4);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size: var(--step-1);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 33rem;
+    margin: 0 auto;
+    padding: 1.75rem 1.125rem 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .masthead { display: flex; flex-direction: column; gap: .3rem; }
+
+  h1 {
+    font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    font-weight: 800;
+    font-size: var(--step-3);
+    letter-spacing: -.02em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .tagline { color: var(--muted); font-size: var(--step-0); margin: 0; }
+
+  .label {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .6875rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .num { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+
+  /* ---- day bar ---------------------------------------------------- */
+
+  .daybar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    border-block: 1px solid var(--rule);
+    padding: .5rem 0;
+  }
+
+  .daybar .who { display: flex; align-items: baseline; gap: .5rem; }
+
+  .stepper { display: flex; gap: .375rem; }
+
+  button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    cursor: pointer;
+    /* without this the native chrome paints a bevel over our own background */
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--coin);
+    outline-offset: 2px;
+  }
+
+  .stepper button {
+    width: 1.75rem;
+    height: 1.75rem;
+    display: grid;
+    place-items: center;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    line-height: 1;
+  }
+
+  .stepper button:hover:not(:disabled) { background: var(--rule-soft); }
+  .stepper button:disabled { opacity: .35; cursor: default; }
+
+  /* ---- shelf ------------------------------------------------------ */
+
+  .shelf {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: .375rem;
+  }
+
+  .tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .125rem;
+    padding: .5rem .125rem .375rem;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    transition: transform .12s ease, background .12s ease, border-color .12s ease;
+  }
+
+  .tile:hover { background: var(--rule-soft); }
+  .tile:active { transform: translateY(1px); }
+
+  .tile .ch {
+    font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.0625rem, 4.4vw, 1.375rem);
+    line-height: 1.1;
+  }
+
+  .tile .pr {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .6875rem;
+    font-weight: 600;
+    color: var(--coin);
+  }
+
+  .tile.spent { border-color: var(--coin); }
+
+  /* ---- composer --------------------------------------------------- */
+
+  .composer {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: .875rem;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+
+  .draft {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: .75rem;
+    min-height: 2.5rem;
+  }
+
+  .draft-word {
+    font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    font-weight: 700;
+    font-size: var(--step-4);
+    letter-spacing: .04em;
+    line-height: 1;
+    word-break: break-all;
+  }
+
+  .draft-word .placeholder { color: var(--muted); font-weight: 500; font-size: var(--step-2); letter-spacing: 0; }
+
+  .draft-cost {
+    text-align: right;
+    white-space: nowrap;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: var(--step-2);
+    font-weight: 600;
+    color: var(--coin);
+  }
+
+  .draft-cost.over { color: var(--over); }
+  .draft-cost small { display: block; font-size: .625rem; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+  /* segmented spend meter: one segment per letter, width = its price */
+  .meter {
+    display: flex;
+    gap: 2px;
+    height: .625rem;
+    background: var(--rule-soft);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .meter i {
+    display: block;
+    background: var(--coin);
+    transition: width .18s ease;
+  }
+
+  .meter i.over { background: var(--over); }
+
+  .meter-scale {
+    display: flex;
+    justify-content: space-between;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .6875rem;
+    color: var(--muted);
+  }
+
+  .actions { display: flex; gap: .5rem; }
+
+  .actions button {
+    padding: .5rem .75rem;
+    font-size: var(--step-0);
+    font-weight: 500;
+  }
+
+  .actions button:hover:not(:disabled) { background: var(--rule-soft); }
+  .actions button:disabled { opacity: .4; cursor: default; }
+
+  .bank {
+    flex: 1;
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+    font-weight: 600;
+  }
+
+  .bank:hover:not(:disabled) { background: var(--ink); opacity: .88; }
+
+  /* an empty composer should read as quiet, not as a heavy grey slab */
+  .bank:disabled {
+    background: none;
+    color: var(--muted);
+    border-color: var(--rule);
+    opacity: 1;
+  }
+
+  .note { font-size: var(--step-0); min-height: 1.25rem; }
+  .note.bad { color: var(--over); }
+  .note.good { color: var(--par); }
+
+  /* ---- basket ----------------------------------------------------- */
+
+  .basket { display: flex; flex-direction: column; gap: .5rem; }
+
+  .basket-head { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; }
+
+  .basket-count {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: var(--step-0);
+    font-weight: 600;
+  }
+
+  .ticks { display: flex; flex-wrap: wrap; gap: 3px; }
+
+  .ticks span {
+    width: .5rem;
+    height: .5rem;
+    border-radius: 1px;
+    background: var(--rule-soft);
+    border: 1px solid var(--rule);
+    transition: background .15s ease, border-color .15s ease;
+  }
+
+  .ticks span.got { background: var(--ink); border-color: var(--ink); }
+
+  .breakdown {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem .875rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .6875rem;
+    color: var(--muted);
+  }
+
+  .breakdown b { font-weight: 600; color: var(--ink); }
+  .breakdown .done b, .breakdown .done { color: var(--par); }
+
+  /* ---- ledger ----------------------------------------------------- */
+
+  .ledger { display: flex; flex-direction: column; gap: .5rem; }
+
+  .ledger ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ledger li {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    padding: .375rem 0;
+    border-bottom: 1px dashed var(--rule);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: var(--step-0);
+  }
+
+  .ledger li .w { font-weight: 600; letter-spacing: .06em; }
+  .ledger li .dots { flex: 1; border-bottom: 1px dotted var(--rule); transform: translateY(-.2em); }
+  .ledger li .len { color: var(--muted); }
+  .ledger li .cost { color: var(--coin); font-weight: 600; }
+  .ledger li.best .w { color: var(--par); }
+
+  .stats {
+    display: flex;
+    flex-direction: column;
+    gap: .9rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--rule);
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--card) 80%, transparent);
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .5rem;
+  }
+
+  .stat {
+    min-width: 0;
+    padding: .65rem .35rem;
+    border-radius: 10px;
+    background: var(--card);
+    text-align: center;
+  }
+
+  .stat b {
+    display: block;
+    font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    font-size: 1.35rem;
+    line-height: 1;
+  }
+
+  .stat span {
+    display: block;
+    margin-top: .3rem;
+    color: var(--muted);
+    font-size: .625rem;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+
+  .distribution { display: flex; flex-direction: column; gap: .38rem; }
+
+  .dist-row {
+    display: grid;
+    grid-template-columns: 1.5rem 1fr 1.75rem;
+    align-items: center;
+    gap: .45rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .6875rem;
+  }
+
+  .dist-row .track {
+    height: .8rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--rule-soft);
+  }
+
+  .dist-row .fill {
+    display: block;
+    width: 0;
+    height: 100%;
+    min-width: 0;
+    border-radius: inherit;
+    background: var(--muted);
+    transition: width .35s ease;
+  }
+
+  .dist-row.today { color: var(--par); font-weight: 600; }
+  .dist-row.today .fill { background: var(--par); }
+
+  .celebration {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .celebration span {
+    position: absolute;
+    top: -3rem;
+    left: var(--x);
+    font-size: var(--size);
+    animation: market-fall var(--duration) cubic-bezier(.22, .7, .28, 1) var(--delay) forwards;
+    filter: drop-shadow(0 3px 2px rgba(0, 0, 0, .16));
+  }
+
+  .celebration span.letter-confetti {
+    display: grid;
+    width: 1.65em;
+    aspect-ratio: 1;
+    place-items: center;
+    border: 1px solid #18241f;
+    border-radius: .25em;
+    background: #fffdf7;
+    color: #18241f;
+    font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(var(--size) * .72);
+    font-weight: 800;
+  }
+
+  @keyframes market-fall {
+    0% { transform: translate3d(0, -2rem, 0) rotate(0); opacity: 0; }
+    10% { opacity: 1; }
+    100% { transform: translate3d(var(--drift), 110vh, 0) rotate(var(--spin)); opacity: .95; }
+  }
+
+  .ledger li .tag {
+    font-size: .625rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .empty { color: var(--muted); font-size: var(--step-0); font-style: italic; }
+
+  /* ---- result ----------------------------------------------------- */
+
+  .result {
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: .875rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    background: var(--card);
+  }
+
+  .result .row { display: flex; justify-content: space-between; gap: 1rem; font-size: var(--step-0); }
+  .result .row b { font-family: "IBM Plex Mono", ui-monospace, monospace; font-weight: 600; }
+  .result .hit { color: var(--par); }
+
+  .foot { color: var(--muted); font-size: var(--step-0); border-top: 1px solid var(--rule); padding-top: .75rem; }
+  .foot p { margin: 0 0 .5rem; }
+  .foot p:last-child { margin-bottom: 0; }
+
+  kbd {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .75em;
+    border: 1px solid var(--rule);
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    padding: 0 .3em;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  /* ---- visual direction: the daily word market ------------------ */
+
+  :root {
+    --paper: #f2efe6;
+    --card: #fffdf7;
+    --ink: #17231f;
+    --muted: #68736d;
+    --rule: #d7d5c9;
+    --rule-soft: #e9e6dc;
+    --coin: #c8672d;
+    --coin-soft: #f7d7b8;
+    --over: #b13b38;
+    --par: #24735a;
+    --par-soft: #d8eee5;
+    --night: #17352d;
+    --sun: #f3b83f;
+    --shadow: rgba(36, 47, 42, .12);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #111815;
+      --card: #19231f;
+      --ink: #edf0e8;
+      --muted: #9ba69f;
+      --rule: #34423c;
+      --rule-soft: #25312c;
+      --coin: #ef9a61;
+      --coin-soft: #513321;
+      --over: #ee8278;
+      --par: #70c9a6;
+      --par-soft: #203e33;
+      --night: #dbeee5;
+      --sun: #f5bd4d;
+      --shadow: rgba(0, 0, 0, .35);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #111815;
+    --card: #19231f;
+    --ink: #edf0e8;
+    --muted: #9ba69f;
+    --rule: #34423c;
+    --rule-soft: #25312c;
+    --coin: #ef9a61;
+    --coin-soft: #513321;
+    --over: #ee8278;
+    --par: #70c9a6;
+    --par-soft: #203e33;
+    --night: #dbeee5;
+    --sun: #f5bd4d;
+    --shadow: rgba(0, 0, 0, .35);
+  }
+
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--sun) 18%, transparent) 0, transparent 24rem),
+      radial-gradient(circle at 90% 18%, color-mix(in srgb, var(--par) 11%, transparent) 0, transparent 28rem),
+      var(--paper);
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: .28;
+    background-image: linear-gradient(color-mix(in srgb, var(--ink) 5%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--ink) 5%, transparent) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: linear-gradient(to bottom, black, transparent 70%);
+  }
+
+  .wrap {
+    position: relative;
+    max-width: 42rem;
+    padding: clamp(1.25rem, 4vw, 3rem) clamp(1rem, 4vw, 2rem) 5rem;
+    gap: 1rem;
+  }
+
+  .masthead {
+    gap: .75rem;
+    padding-bottom: .35rem;
+  }
+
+  .brandline {
+    display: flex;
+    align-items: center;
+    gap: .875rem;
+  }
+
+  .brandmark {
+    width: 3rem;
+    aspect-ratio: 1;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--sun);
+    color: #18241f;
+    border: 2px solid #18241f;
+    box-shadow: 3px 3px 0 #18241f;
+    font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    font-weight: 800;
+    font-size: .8125rem;
+    letter-spacing: -.04em;
+    transform: rotate(-5deg);
+  }
+
+  .eyebrow {
+    margin-bottom: .12rem;
+    color: var(--coin);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .6875rem;
+    font-weight: 600;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-size: clamp(1.65rem, 6vw, 2.35rem);
+    line-height: .98;
+    letter-spacing: -.045em;
+  }
+
+  .tagline {
+    max-width: 38rem;
+    padding-left: 3.875rem;
+    color: var(--muted);
+    font-size: .875rem;
+    line-height: 1.45;
+  }
+
+  .daybar {
+    padding: .65rem .75rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--card) 82%, transparent);
+    box-shadow: 0 8px 24px -20px var(--ink);
+    backdrop-filter: blur(8px);
+  }
+
+  .daybar .who { padding-left: .25rem; }
+  #dayNo { font-weight: 600; }
+
+  .stepper button {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--card);
+  }
+
+  .shelf {
+    gap: clamp(.3rem, 1.5vw, .55rem);
+    padding: .25rem 0;
+  }
+
+  .tile {
+    position: relative;
+    min-width: 0;
+    gap: .35rem;
+    padding: .75rem .15rem .55rem;
+    border: 1px solid color-mix(in srgb, var(--ink) 20%, var(--rule));
+    border-radius: 12px;
+    background: var(--card);
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--ink) 16%, var(--rule)), 0 12px 20px -18px var(--ink);
+  }
+
+  .tile:hover {
+    transform: translateY(-2px);
+    background: var(--card);
+    border-color: var(--coin);
+  }
+
+  .tile:active { transform: translateY(2px); box-shadow: none; }
+  .tile.spent { border-color: var(--coin); background: var(--coin-soft); }
+
+  .tile .ch {
+    font-size: clamp(1.15rem, 5vw, 1.65rem);
+    letter-spacing: -.03em;
+  }
+
+  .tile .pr {
+    min-width: 1.35rem;
+    padding: .12rem .28rem;
+    border-radius: 999px;
+    background: var(--coin-soft);
+    color: var(--coin);
+    line-height: 1.1;
+  }
+
+  .composer {
+    padding: clamp(1rem, 4vw, 1.4rem);
+    gap: 1rem;
+    border-radius: 20px;
+    border-color: color-mix(in srgb, var(--ink) 20%, var(--rule));
+    box-shadow: 0 18px 40px -28px var(--ink), 0 3px 0 color-mix(in srgb, var(--ink) 12%, var(--rule));
+  }
+
+  .draft { min-height: 3.35rem; }
+  .draft-word { font-size: clamp(2rem, 9vw, 3.35rem); letter-spacing: .02em; }
+  .draft-word .placeholder { font-size: clamp(1.1rem, 4vw, 1.35rem); }
+
+  .draft-cost {
+    min-width: 4.25rem;
+    padding: .45rem .55rem;
+    border-radius: 10px;
+    background: var(--coin-soft);
+    font-size: 1.25rem;
+  }
+
+  .draft-cost small { color: var(--coin); }
+  .draft-cost.over { background: color-mix(in srgb, var(--over) 15%, var(--card)); }
+
+  .meter {
+    height: .75rem;
+    gap: 3px;
+    border-radius: 999px;
+    background: var(--rule-soft);
+    box-shadow: inset 0 1px 2px color-mix(in srgb, var(--ink) 12%, transparent);
+  }
+
+  .meter i:first-child { border-radius: 999px 0 0 999px; }
+  .meter i:last-child { border-radius: 0 999px 999px 0; }
+
+  .actions { gap: .625rem; }
+
+  .actions button {
+    min-height: 2.65rem;
+    border-radius: 10px;
+    padding: .6rem .9rem;
+  }
+
+  .bank {
+    background: var(--night);
+    color: var(--paper);
+    border-color: var(--night);
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--night) 68%, black);
+  }
+
+  .bank:hover:not(:disabled) { transform: translateY(-1px); opacity: 1; }
+  .bank:active:not(:disabled) { transform: translateY(2px); box-shadow: none; }
+
+  .note {
+    display: flex;
+    align-items: center;
+    min-height: 1.5rem;
+    font-weight: 500;
+  }
+
+  .result,
+  .basket {
+    border-radius: 16px;
+    padding: 1rem 1.1rem;
+  }
+
+  .result {
+    position: relative;
+    overflow: hidden;
+    border: 0;
+    background: var(--night);
+    color: var(--paper);
+    box-shadow: 0 16px 32px -24px var(--ink);
+  }
+
+  .result::after {
+    content: "";
+    position: absolute;
+    width: 8rem;
+    height: 8rem;
+    right: -4rem;
+    top: -4rem;
+    border: 1.25rem solid color-mix(in srgb, var(--sun) 28%, transparent);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .result .label { color: var(--sun); }
+  .result .row { position: relative; z-index: 1; font-size: .9rem; }
+  .result .row b { font-size: 1rem; }
+  .result .hit { color: var(--sun); }
+  .result .actions { position: relative; z-index: 1; margin-top: .25rem; }
+  .result button { border-color: color-mix(in srgb, white 28%, transparent); }
+  .result button:hover:not(:disabled) { background: color-mix(in srgb, white 10%, transparent); }
+
+  .hintbox {
+    position: relative;
+    z-index: 1;
+    min-height: 2.5rem;
+    padding: .65rem .75rem;
+    border-radius: 10px;
+    background: color-mix(in srgb, white 9%, transparent);
+    color: color-mix(in srgb, var(--paper) 82%, var(--muted));
+    font-size: .8125rem;
+    line-height: 1.45;
+  }
+
+  .hintbox strong { color: var(--sun); font-weight: 600; }
+
+  .basket {
+    gap: .75rem;
+    border: 1px solid color-mix(in srgb, var(--par) 35%, var(--rule));
+    background: var(--par-soft);
+  }
+
+  .basket-count {
+    padding: .2rem .5rem;
+    border-radius: 999px;
+    background: var(--card);
+    color: var(--par);
+  }
+
+  .ticks { gap: 5px; }
+  .ticks span { flex: 1; width: auto; max-width: 2.5rem; height: .65rem; border-radius: 999px; background: var(--card); }
+  .ticks span.got { background: var(--par); border-color: var(--par); }
+  .breakdown { gap: .35rem .5rem; }
+
+  .breakdown span {
+    padding: .25rem .45rem;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--card) 72%, transparent);
+  }
+
+  .ledger {
+    padding: .4rem .15rem 0;
+    gap: .65rem;
+  }
+
+  .ledger li { padding: .55rem 0; }
+  .ledger li.best .w { color: var(--par); }
+
+  .foot {
+    margin-top: .5rem;
+    padding: 1rem .25rem 0;
+    line-height: 1.55;
+  }
+
+  @media (max-width: 30rem) {
+    .tagline { padding-left: 0; }
+    .brandmark { width: 2.65rem; }
+    .actions { flex-wrap: wrap; }
+    .actions .bank { flex-basis: 100%; }
+    .result .actions button { flex: 1; }
+    .draft { align-items: center; }
+    .draft-cost { min-width: 3.75rem; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .celebration { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="brandline">
+      <span class="brandmark" aria-hidden="true">LE</span>
+      <div>
+        <div class="eyebrow">The daily word market</div>
+        <h1>Letter Economy</h1>
+      </div>
+    </div>
+    <p class="tagline">Seven letters, each with a price. Repeats are charged every time. Spend no more than the budget. Find the longest word you can afford.</p>
+  </header>
+
+  <div class="daybar">
+    <div class="who">
+      <span class="label">Day</span>
+      <span class="num" id="dayNo">1</span>
+      <span class="label" id="dayMode">&nbsp;</span>
+    </div>
+    <div class="stepper">
+      <button id="prev" type="button" aria-label="Previous day">&larr;</button>
+      <button id="next" type="button" aria-label="Next day">&rarr;</button>
+    </div>
+  </div>
+
+  <div class="shelf" id="shelf"></div>
+
+  <div class="composer">
+    <div class="draft">
+      <div class="draft-word" id="draftWord"></div>
+      <div class="draft-cost" id="draftCost"><span id="costNow">0</span><small>spent</small></div>
+    </div>
+    <div class="meter" id="meter" role="progressbar" aria-label="Budget spent" aria-valuemin="0"></div>
+    <div class="meter-scale">
+      <span>0</span>
+      <span id="budgetLabel">budget 12</span>
+    </div>
+    <div class="actions">
+      <button class="bank" id="bank" type="button">Bank word</button>
+      <button id="back" type="button">Delete</button>
+      <button id="clear" type="button">Clear</button>
+    </div>
+    <div class="note" id="note" aria-live="polite">&nbsp;</div>
+  </div>
+
+  <section class="result" aria-labelledby="mainChallengeLabel">
+    <span class="label" id="mainChallengeLabel">Main challenge</span>
+    <div class="row"><span>Your longest word</span><b id="yourBest">&mdash;</b></div>
+    <div class="row"><span>Valid tries</span><b id="attemptCount">0</b></div>
+    <div class="row"><span>Market best</span><b id="bestStatus">Still searching</b></div>
+    <div class="hintbox" id="hintText" aria-live="polite">Hints are optional and become more specific as you use them.</div>
+    <div class="actions">
+      <button id="hint" type="button">Get a hint</button>
+      <button id="share" type="button">Copy result</button>
+    </div>
+  </section>
+
+  <section class="basket" aria-labelledby="challengeLabel">
+    <div class="basket-head">
+      <span class="label" id="challengeLabel">Side challenge</span>
+      <span class="basket-count" id="challengeCount">0 of 9</span>
+    </div>
+    <div class="ticks" id="ticks"></div>
+    <div class="breakdown" id="breakdown"></div>
+  </section>
+
+  <section class="ledger">
+    <span class="label">Banked</span>
+    <ol id="ledger"></ol>
+    <p class="empty" id="ledgerEmpty">Nothing banked yet.</p>
+  </section>
+
+  <section class="stats" aria-labelledby="statsLabel">
+    <span class="label" id="statsLabel">Your stats · this browser</span>
+    <div class="stat-grid">
+      <div class="stat"><b id="statWins">0</b><span>Wins</span></div>
+      <div class="stat"><b id="statAverage">—</b><span>Avg. extra tries</span></div>
+      <div class="stat"><b id="statCurrent">0</b><span>Current streak</span></div>
+      <div class="stat"><b id="statBest">0</b><span>Best streak</span></div>
+    </div>
+    <span class="label">Extra tries</span>
+    <div class="distribution" id="distribution"></div>
+  </section>
+
+  <footer class="foot">
+    <p>Type on a keyboard or tap the letters. <kbd>Enter</kbd> banks a word, <kbd>Backspace</kbd> deletes.</p>
+    <p>Each unique, valid, affordable word counts as a try until you reach the market best. Later side-challenge finds do not add tries.</p>
+    <p>Your streak and extra-tries histogram stay only in this browser. No account is needed.</p>
+    <p>Optional side challenge: find any affordable words needed to fill each length goal. There is no hidden word list.</p>
+    <p id="modeNote">Prices shift from day to day: sometimes familiar letters are bargains, and sometimes they are luxuries.</p>
+  </footer>
+</div>
+<div class="celebration" id="celebration" aria-hidden="true"></div>
+
+<script>
+  const DAYS = __DAYS__;
+  const MIN_LEN = 4;
+
+  const state = {
+    day: 0,
+    draft: "",
+    banked: [],
+    hints: 0,
+    attempts: 0,
+    completed: false,
+    extraTries: null,
+  };
+  const el = (id) => document.getElementById(id);
+
+  const store = {
+    read() {
+      try { return JSON.parse(localStorage.getItem("letter-economy") || "{}"); }
+      catch { return {}; }
+    },
+    write(data) {
+      try { localStorage.setItem("letter-economy", JSON.stringify(data)); }
+      catch { /* private window, blocked storage: play on without it */ }
+    },
+  };
+
+  function day() { return DAYS[state.day]; }
+
+  function priceOf(ch) {
+    const d = day();
+    const i = d.letters.indexOf(ch);
+    return i === -1 ? null : d.prices[i];
+  }
+
+  function costOf(word) {
+    let total = 0;
+    for (const ch of word) {
+      const p = priceOf(ch);
+      if (p === null) return null;
+      total += p;
+    }
+    return total;
+  }
+
+  function loadDay(i) {
+    state.day = (i + DAYS.length) % DAYS.length;
+    state.draft = "";
+    const saved = store.read()[day().id] || {};
+    state.banked = Array.isArray(saved.banked) ? saved.banked : [];
+    state.hints = Number.isInteger(saved.hints) ? Math.max(0, Math.min(3, saved.hints)) : 0;
+    state.attempts = Number.isInteger(saved.attempts) ? Math.max(0, saved.attempts) : 0;
+    state.completed = !!saved.completed;
+    state.extraTries = Number.isInteger(saved.extraTries) ? Math.max(0, saved.extraTries) : null;
+    render();
+  }
+
+  function persist() {
+    const data = store.read();
+    data[day().id] = {
+      banked: state.banked,
+      hints: state.hints,
+      attempts: state.attempts,
+      completed: state.completed,
+      extraTries: state.extraTries,
+    };
+    store.write(data);
+  }
+
+  function bestBanked() {
+    let best = null;
+    for (const w of state.banked) {
+      if (!best || w.length > best.length) best = w;
+    }
+    return best;
+  }
+
+  function challengeProgress() {
+    const targets = day().challenge;
+    const byLength = {};
+    for (const w of state.banked) byLength[w.length] = (byLength[w.length] || 0) + 1;
+    let found = 0;
+    let total = 0;
+    for (const [length, target] of Object.entries(targets)) {
+      found += Math.min(byLength[length] || 0, target);
+      total += target;
+    }
+    return { byLength, found, total };
+  }
+
+  function say(text, kind) {
+    const n = el("note");
+    n.textContent = text || " ";
+    n.className = "note" + (kind ? " " + kind : "");
+  }
+
+  function push(ch) {
+    if (priceOf(ch) === null) {
+      say("There is no " + ch.toUpperCase() + " on the board.", "bad");
+      return;
+    }
+    state.draft += ch;
+    say("");
+    render();
+  }
+
+  function bank() {
+    const w = state.draft;
+    const d = day();
+
+    if (w.length < MIN_LEN) {
+      say("Words must be at least " + MIN_LEN + " letters.", "bad");
+      return;
+    }
+    if (state.banked.includes(w)) {
+      say("You have already banked " + w.toUpperCase() + ".", "bad");
+      return;
+    }
+    if (!d.words.includes(w)) {
+      say(w.toUpperCase() + " is not in the dictionary.", "bad");
+      return;
+    }
+    const cost = costOf(w);
+    if (cost > d.budget) {
+      say(w.toUpperCase() + " costs " + cost + ". Your budget is " + d.budget + ".", "bad");
+      return;
+    }
+
+    const prevBest = bestBanked();
+    const beforeAtLength = state.banked.filter((word) => word.length === w.length).length;
+    if (!state.completed) state.attempts += 1;
+    const justWon = !state.completed && w.length >= d.par;
+    if (justWon) {
+      state.completed = true;
+      state.extraTries = Math.max(0, state.attempts - 1);
+    }
+    state.banked.push(w);
+    state.draft = "";
+    persist();
+
+    const progress = challengeProgress();
+    const target = d.challenge[w.length] || 0;
+    const tail = target && beforeAtLength < target
+      ? " Side challenge " + progress.found + " of " + progress.total + "."
+      : "";
+
+    if (!prevBest || w.length > prevBest.length) {
+      say(
+        (justWon
+          ? w.toUpperCase() + " for " + cost + ". You found the market best!"
+          : w.toUpperCase() + " for " + cost + " — new best at " + w.length + " letters.") + tail,
+        "good"
+      );
+    } else {
+      say(w.toUpperCase() + " banked for " + cost + "." + tail, tail ? "good" : "");
+    }
+    render();
+    if (justWon) celebrate(w);
+  }
+
+  function renderShelf() {
+    const d = day();
+    const shelf = el("shelf");
+    shelf.innerHTML = "";
+    const used = new Set(state.draft);
+    d.letters.forEach((ch, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "tile" + (used.has(ch) ? " spent" : "");
+      b.setAttribute(
+        "aria-label",
+        ch.toUpperCase() + ", price " + d.prices[i] +
+          (d.prices[i] === 1 ? " coin" : " coins")
+      );
+      b.innerHTML =
+        '<span class="ch">' + ch.toUpperCase() + '</span>' +
+        '<span class="pr">' + d.prices[i] + '</span>';
+      b.addEventListener("click", () => push(ch));
+      shelf.appendChild(b);
+    });
+  }
+
+  function renderDraft() {
+    const d = day();
+    const cost = costOf(state.draft) || 0;
+    const over = cost > d.budget;
+
+    el("draftWord").innerHTML = state.draft
+      ? state.draft.toUpperCase()
+      : '<span class="placeholder">Tap or type letters…</span>';
+
+    el("costNow").textContent = cost;
+    el("draftCost").className = "draft-cost" + (over ? " over" : "");
+    el("budgetLabel").textContent = "budget " + d.budget;
+
+    const meter = el("meter");
+    meter.innerHTML = "";
+    meter.setAttribute("aria-valuenow", Math.min(cost, d.budget));
+    meter.setAttribute("aria-valuemax", d.budget);
+    meter.setAttribute(
+      "aria-valuetext",
+      cost + " of " + d.budget + " coins spent" + (over ? ", over budget" : "")
+    );
+    let running = 0;
+    for (const ch of state.draft) {
+      const p = priceOf(ch);
+      running += p;
+      const seg = document.createElement("i");
+      seg.style.width = (p / d.budget * 100) + "%";
+      if (running > d.budget) seg.classList.add("over");
+      meter.appendChild(seg);
+    }
+
+    el("bank").disabled = state.draft.length === 0;
+    el("back").disabled = state.draft.length === 0;
+    el("clear").disabled = state.draft.length === 0;
+  }
+
+  function renderChallenge() {
+    const d = day();
+    const progress = challengeProgress();
+
+    el("challengeCount").textContent = progress.found + " of " + progress.total;
+
+    const ticks = el("ticks");
+    ticks.innerHTML = "";
+    for (let i = 0; i < progress.total; i++) {
+      const s = document.createElement("span");
+      if (i < progress.found) s.className = "got";
+      ticks.appendChild(s);
+    }
+
+    // Counts by length guide the hunt without naming any word.
+    const bd = el("breakdown");
+    bd.innerHTML = "";
+    for (const [len, count] of Object.entries(d.challenge)) {
+      const have = Math.min(progress.byLength[len] || 0, count);
+      const span = document.createElement("span");
+      if (have >= count) span.className = "done";
+      span.innerHTML = len + "&hairsp;-letter <b>" + have + "/" + count + "</b>";
+      bd.appendChild(span);
+    }
+  }
+
+  function renderLedger() {
+    const list = el("ledger");
+    list.innerHTML = "";
+    const best = bestBanked();
+    const sorted = [...state.banked].sort((a, b) => b.length - a.length || a.localeCompare(b));
+    for (const w of sorted) {
+      const li = document.createElement("li");
+      li.className = w === best ? "best" : "";
+      li.innerHTML =
+        '<span class="w">' + w.toUpperCase() + '</span>' +
+        '<span class="dots"></span>' +
+        '<span class="len">' + w.length + ' letters</span>' +
+        '<span class="cost">' + costOf(w) + '</span>';
+      list.appendChild(li);
+    }
+    el("ledgerEmpty").style.display = state.banked.length ? "none" : "";
+  }
+
+  function renderResult() {
+    const d = day();
+    const best = bestBanked();
+    const reachedBest = !!best && best.length >= d.par;
+    el("yourBest").textContent = best
+      ? best.toUpperCase() + " · " + best.length
+      : "—";
+    el("attemptCount").textContent = state.attempts;
+    el("bestStatus").innerHTML = reachedBest
+      ? '<span class="hit">Maximum reached</span>'
+      : "Still searching";
+    el("dayMode").textContent = d.rarity === "deep_cut" ? "Deep Cut" : "";
+
+    const deepCut = d.rarity === "deep_cut";
+    const hints = deepCut ? [
+      "<strong>" + d.partOfSpeech + "</strong> — " + d.definition,
+      "It starts with <strong>" + d.answer[0].toUpperCase() + "</strong> and ends with <strong>" + d.answer.slice(-1).toUpperCase() + "</strong>.",
+      "It uses <strong>" + new Set(d.answer).size + " distinct letters</strong> from the board.",
+    ] : [
+      "One longest word starts with <strong>" + d.answer[0].toUpperCase() + "</strong>.",
+      "It ends with <strong>" + d.answer.slice(-1).toUpperCase() + "</strong>.",
+      "It uses <strong>" + new Set(d.answer).size + " distinct letters</strong> from the board.",
+    ];
+    el("hintText").innerHTML = state.hints
+      ? hints.slice(0, state.hints).join(" &nbsp;·&nbsp; ")
+      : deepCut
+        ? "Deep Cut day: your first hint gives the definition and part of speech."
+        : "Hints are optional. Your first hint reveals a starting letter.";
+    el("hint").textContent = state.hints >= hints.length
+      ? "All hints used"
+      : "Get hint " + (state.hints + 1) + " of " + hints.length;
+    el("hint").disabled = state.hints >= hints.length;
+  }
+
+  function statsSummary() {
+    const data = store.read();
+    const completed = [];
+    const completedIndexes = new Set();
+    DAYS.forEach((puzzle, index) => {
+      const saved = data[puzzle.id] || {};
+      if (!saved.completed || !Number.isInteger(saved.extraTries)) return;
+      completed.push({ index, extra: Math.max(0, saved.extraTries) });
+      completedIndexes.add(index);
+    });
+
+    let bestStreak = 0;
+    let run = 0;
+    for (let i = 0; i < DAYS.length; i++) {
+      run = completedIndexes.has(i) ? run + 1 : 0;
+      bestStreak = Math.max(bestStreak, run);
+    }
+
+    let currentStreak = 0;
+    if (completed.length) {
+      let i = Math.max(...completed.map((item) => item.index));
+      while (i >= 0 && completedIndexes.has(i)) {
+        currentStreak += 1;
+        i -= 1;
+      }
+    }
+
+    const distribution = Array(7).fill(0);
+    for (const item of completed) distribution[Math.min(6, item.extra)] += 1;
+    const average = completed.length
+      ? completed.reduce((sum, item) => sum + item.extra, 0) / completed.length
+      : null;
+    return { wins: completed.length, average, currentStreak, bestStreak, distribution };
+  }
+
+  function renderStats() {
+    const stats = statsSummary();
+    el("statWins").textContent = stats.wins;
+    el("statAverage").textContent = stats.average === null ? "—" : stats.average.toFixed(1);
+    el("statCurrent").textContent = stats.currentStreak;
+    el("statBest").textContent = stats.bestStreak;
+
+    const max = Math.max(1, ...stats.distribution);
+    const todayBucket = state.completed && state.extraTries !== null
+      ? Math.min(6, state.extraTries)
+      : -1;
+    const chart = el("distribution");
+    chart.innerHTML = "";
+    stats.distribution.forEach((count, bucket) => {
+      const row = document.createElement("div");
+      row.className = "dist-row" + (bucket === todayBucket ? " today" : "");
+      const width = count ? Math.max(8, count / max * 100) : 0;
+      row.innerHTML =
+        "<span>" + (bucket === 6 ? "6+" : bucket) + "</span>" +
+        '<span class="track"><i class="fill" style="width:' + width + '%"></i></span>' +
+        "<span>" + count + "</span>";
+      chart.appendChild(row);
+    });
+  }
+
+  function celebrate(word) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const layer = el("celebration");
+    layer.innerHTML = "";
+    for (let i = 0; i < 28; i++) {
+      const piece = document.createElement("span");
+      const isLetter = i % 4 === 0;
+      if (isLetter) piece.className = "letter-confetti";
+      piece.textContent = isLetter ? word[i % word.length].toUpperCase() : "🪙";
+      piece.style.setProperty("--x", (2 + Math.random() * 94) + "%");
+      piece.style.setProperty("--size", (.85 + Math.random() * 1.15) + "rem");
+      piece.style.setProperty("--duration", (1.5 + Math.random() * .9) + "s");
+      piece.style.setProperty("--delay", (Math.random() * .35) + "s");
+      piece.style.setProperty("--drift", (-55 + Math.random() * 110) + "px");
+      piece.style.setProperty("--spin", (-300 + Math.random() * 600) + "deg");
+      layer.appendChild(piece);
+    }
+    window.setTimeout(() => { layer.innerHTML = ""; }, 2900);
+  }
+
+  function render() {
+    el("dayNo").textContent = state.day + 1;
+    renderShelf();
+    renderDraft();
+    renderChallenge();
+    renderLedger();
+    renderResult();
+    renderStats();
+  }
+
+  el("bank").addEventListener("click", bank);
+  el("back").addEventListener("click", () => { state.draft = state.draft.slice(0, -1); say(""); render(); });
+  el("clear").addEventListener("click", () => { state.draft = ""; say(""); render(); });
+  el("prev").addEventListener("click", () => loadDay(state.day - 1));
+  el("next").addEventListener("click", () => loadDay(state.day + 1));
+
+  el("hint").addEventListener("click", () => {
+    state.hints = Math.min(3, state.hints + 1);
+    persist();
+    render();
+  });
+
+  el("share").addEventListener("click", async () => {
+    const d = day();
+    const best = bestBanked();
+    const len = best ? best.length : 0;
+    const progress = challengeProgress();
+    const text = [
+      "Letter Economy #" + (state.day + 1),
+      "Budget " + d.budget + " · spent " + (best ? costOf(best) : 0),
+      "█".repeat(len) + "  " + len + " letters",
+      state.completed
+        ? "Market best ✓ · " + state.attempts +
+          (state.attempts === 1 ? " try" : " tries") +
+          " · " + state.extraTries + " extra"
+        : "Still searching · " + state.attempts +
+          (state.attempts === 1 ? " try" : " tries"),
+      "Hints " + state.hints + "/3",
+      "Side challenge " + progress.found + "/" + progress.total +
+        (progress.found === progress.total ? " ✓" : ""),
+    ].join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      say("Result copied to clipboard.", "good");
+    } catch {
+      say("Could not reach the clipboard. Your longest word was " + len + " letters.");
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === "Enter") { e.preventDefault(); bank(); return; }
+    if (e.key === "Backspace") {
+      e.preventDefault();
+      state.draft = state.draft.slice(0, -1);
+      say("");
+      render();
+      return;
+    }
+    if (/^[a-zA-Z]$/.test(e.key)) { e.preventDefault(); push(e.key.toLowerCase()); }
+  });
+
+  loadDay(0);
+</script>
+</body>
+</html>

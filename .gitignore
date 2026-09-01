@@ -1,0 +1,10 @@
+.DS_Store
+**/__pycache__/
+**/node_modules/
+*.pyc
+
+# Separate experiment without a playable web prototype
+switchyard/
+
+# Unrelated design export
+split-decision-social-preview.png
