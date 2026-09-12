@@ -9,6 +9,6 @@ html=html[:a]+'''  <nav class="garden-library" aria-label="Choose an evening wal
 html=html.replace('Firefly — A moonlit logic puzzle','Milo & the Firefly Garden').replace('<h1>Firefly</h1>','<h1>Milo &amp; the Firefly Garden</h1>').replace('<p>A moonlit logic puzzle</p>','<p>A little light. A quiet evening together.</p>')
 html=html.replace('A Little Game Lab prototype · Progress stays on this device','An evening with Milo · Your progress stays on this device')
 html=html.replace('</head>','<link rel="stylesheet" href="milo.css"><link rel="stylesheet" href="standalone.css">\n</head>')
-html=html.replace('</body>','<script src="milo.js"></script><script src="standalone.js"></script><script src="music.js"></script>\n</body>')
+html=html.replace('</body>','<script src="milo.js"></script><script src="standalone.js"></script><script src="music.js"></script><script src="celebration.js"></script>\n</body>')
 (ROOT/'index.html').write_text(html)
 print('Built standalone Milo garden.')

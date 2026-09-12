@@ -135,6 +135,6 @@ $("#undoButton").addEventListener("click",()=>{if(!history.length)return;state=h
 $("#shareButton").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(shareText());$("#shareButton").textContent="Copied!"}catch(_){$("#shareButton").textContent="Copy unavailable"}});$("#helpButton").addEventListener("click",()=>$("#howTo").showModal());$("#closeHowTo").addEventListener("click",()=>{$("#howTo").close();try{localStorage.setItem(STORE+":seen","1")}catch(_){}});
 reset();try{if(!localStorage.getItem(STORE+":seen"))$("#howTo").showModal()}catch(_){}
 </script>
-<script src="milo.js"></script><script src="standalone.js"></script><script src="music.js"></script>
+<script src="milo.js"></script><script src="standalone.js"></script><script src="music.js"></script><script src="celebration.js"></script>
 </body>
 </html>

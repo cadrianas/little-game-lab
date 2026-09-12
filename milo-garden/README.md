@@ -21,3 +21,5 @@ For static hosting or offline distribution, ship `index.html`, `milo.css`, `stan
 ## Pencil and undo
 
 Pencil marks are tentative fireflies and do not count toward any clue or completion. Turn Pencil off and tap a tentative firefly to confirm it. Undo retains the last 10 board changes per walk, including across reloads. Existing saved grids remain compatible.
+
+Completing a garden opens a dismissible Milo pop-up with a brief confetti animation. Reduced-motion preferences disable the confetti. Reopening a saved completed garden does not trigger the pop-up; its celebration can be replayed from the completed garden controls. Include `celebration.js` when distributing the game.
