@@ -1,11 +1,12 @@
 # Little Game Lab
 
-A friends-and-family playtest hub for four experimental daily games:
+A friends-and-family playtest hub for five experimental games:
 
 - Word Orbit
 - World Orbit
 - Letter Economy
 - Branching Ladder
+- Milo & the Firefly Garden (365 layouts, optional music)
 
 The repository is a static website suitable for GitHub Pages. Open
 `index.html` for the hub, or open any game's `prototype.html` directly.
