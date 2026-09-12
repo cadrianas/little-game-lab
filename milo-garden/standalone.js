@@ -6,10 +6,10 @@ const gardenSelect=document.getElementById('gardenSelect');
 DATA.puzzles.forEach((p,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${i+1}. ${p.name}`;gardenSelect.append(o);});
 // Carry existing completion records forward when opening from the same origin.
 try{if(!localStorage.getItem(STORE)){const old=localStorage.getItem('firefly:wide:v1');if(old)localStorage.setItem(STORE,old);}}catch{}
-function persistWalk(){if(changingWalk)return;walks[puzzle().id]={state:[...state],moves,hints};try{localStorage.setItem(PROGRESS,JSON.stringify(walks));localStorage.setItem(PROGRESS+':last',String(puzzleIndex));}catch{document.querySelector('.footer-note').textContent='Saving is unavailable in this browser. You can still enjoy the garden.';}}
+function persistWalk(){if(changingWalk)return;walks[puzzle().id]={state:[...state],moves,hints,history:history.slice(-10).map(s=>[...s])};try{localStorage.setItem(PROGRESS,JSON.stringify(walks));localStorage.setItem(PROGRESS+':last',String(puzzleIndex));}catch{document.querySelector('.footer-note').textContent='Saving is unavailable in this browser. You can still enjoy the garden.';}}
 function libraryStatus(){gardenSelect.value=String(puzzleIndex);let complete={};try{complete=JSON.parse(localStorage.getItem(STORE)||'{}')||{};}catch{}const count=DATA.puzzles.filter(p=>Object.hasOwn(complete,p.id)).length;document.getElementById('collectionProgress').textContent=`${count} of ${DATA.puzzles.length} gardens glowing`;}
 const companionRender=render;
-render=function(){companionRender();persistWalk();libraryStatus();};
+render=function(){companionRender();$("#undoButton").disabled=!history.length;$("#undoButton").textContent=`Undo (${history.length}/10)`;persistWalk();libraryStatus();};
 const companionReset=reset;
 reset=function(nextIndex){
  const restart=nextIndex===undefined,target=restart?puzzleIndex:nextIndex;
@@ -17,8 +17,10 @@ reset=function(nextIndex){
  persistWalk();changingWalk=true;
  companionReset(target);
  const entry=walks[puzzle().id];
- if(!restart&&entry&&Array.isArray(entry.state)&&entry.state.length===puzzle().size**2&&entry.state.every((v,i)=>Number.isInteger(v)&&v>=0&&v<=2&&(!flowerMap().has(key(Math.floor(i/puzzle().size),i%puzzle().size))||v===0))){
-  state=[...entry.state];moves=Number.isInteger(entry.moves)&&entry.moves>=0?entry.moves:0;hints=Number.isInteger(entry.hints)&&entry.hints>=0?entry.hints:0;
+ if(!restart&&entry&&Array.isArray(entry.state)&&entry.state.length===puzzle().size**2&&entry.state.every((v,i)=>Number.isInteger(v)&&v>=0&&v<=3&&(!flowerMap().has(key(Math.floor(i/puzzle().size),i%puzzle().size))||v===0))){
+  state=[...entry.state];
+  if(Array.isArray(entry.history))history=entry.history.slice(-10).filter(s=>Array.isArray(s)&&s.length===state.length&&s.every((v,i)=>Number.isInteger(v)&&v>=0&&v<=3&&(!flowerMap().has(key(Math.floor(i/puzzle().size),i%puzzle().size))||v===0))).map(s=>[...s]);
+  moves=Number.isInteger(entry.moves)&&entry.moves>=0?entry.moves:0;hints=Number.isInteger(entry.hints)&&entry.hints>=0?entry.hints:0;
  }
  changingWalk=false;render();
  setFeedback(finished?'The garden is glowing. Milo has settled down beside you.':'A quiet evening, just where you left it.');

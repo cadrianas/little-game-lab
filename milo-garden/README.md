@@ -17,3 +17,7 @@ Tap Music to start an original synthesized arrangement: soft sine tones with a s
 - `python3 build.py`: embed the bank in `index.html`.
 
 For static hosting or offline distribution, ship `index.html`, `milo.css`, `standalone.css`, `milo.js`, `standalone.js`, `music.js`, and the three `milo-*.png` images. The accompanying ZIP contains these runtime files only. The 365 layouts are freely selectable rather than date-locked.
+
+## Pencil and undo
+
+Pencil marks are tentative fireflies and do not count toward any clue or completion. Turn Pencil off and tap a tentative firefly to confirm it. Undo retains the last 10 board changes per walk, including across reloads. Existing saved grids remain compatible.
